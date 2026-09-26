@@ -1,0 +1,9 @@
+node_modules/
+*.png
+verify.mjs
+package.json
+package-lock.json
+
+# Local only
+CLAUDE.md
+*.zip

@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Adapter Designer &mdash; Wheel Adapters USA</title>
+  <meta name="description" content="Prototype wheel adapter configurator: live scale drawing, validation rules, pricing and order pipeline.">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* Baseline the artifact platform normally supplies. Keep this block. */
+    :root {
+      color-scheme: light;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body { margin: 0; }
+    body { font: 14px/1.5 system-ui, -apple-system, sans-serif; background: #f2f3f1; }
+    img { max-width: 100%; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+
+<style>
+/* ==========================================================
+   BRAND TOKENS — swap these four to match the real logo.
+   --accent   primary action + wheel-side studs   (flag red)
+   --navy     headers, active states              (deep steel navy)
+   --cyan     vehicle-side drawing lines          (must stay distinct from accent)
+   --paper    page ground
+   ========================================================== */
+:root{
+  color-scheme: light;
+  --accent:#bf1e2e;
+  --accent-ink:#8d1421;
+  --accent-soft:#fae9ea;
+  --navy:#132435;
+  --ink:#132435;
+  --paper:#eef1f4;
+  --card:#ffffff;
+  --line:#d3dae1;
+  --line-2:#bcc6cf;
+  --steel:#5a6a78;
+  --steel-2:#8895a2;
+  --cyan:#1d6f86;
+  --cyan-soft:#e2eef2;
+  --flag:#bf1e2e;
+  --flag-soft:#fae9ea;
+  --go:#2f6b4b;
+  --go-soft:#e4f0ea;
+  --grid:#e1e6eb;
+  --shadow:0 1px 2px rgba(19,36,53,.07),0 4px 14px rgba(19,36,53,.06);
+  --f-disp:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --accent:#e8505f;
+    --accent-ink:#f28791;
+    --accent-soft:#3a1519;
+    --navy:#0d1926;
+    --ink:#e6ecf2;
+    --paper:#0d1926;
+    --card:#152435;
+    --line:#26384c;
+    --line-2:#354a61;
+    --steel:#93a3b3;
+    --steel-2:#6a7d90;
+    --cyan:#4fa8c4;
+    --cyan-soft:#102934;
+    --flag:#e8505f;
+    --flag-soft:#3a1519;
+    --go:#6aab86;
+    --go-soft:#152a20;
+    --grid:#1b2b3c;
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --accent:#e8505f; --accent-ink:#f28791; --accent-soft:#3a1519;
+  --navy:#0d1926; --ink:#e6ecf2; --paper:#0d1926; --card:#152435;
+  --line:#26384c; --line-2:#354a61; --steel:#93a3b3; --steel-2:#6a7d90;
+  --cyan:#4fa8c4; --cyan-soft:#102934; --flag:#e8505f; --flag-soft:#3a1519;
+  --go:#6aab86; --go-soft:#152a20; --grid:#1b2b3c;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--f-body);font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:var(--f-disp);font-weight:600;text-wrap:balance;margin:0;letter-spacing:.005em}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.eyebrow{
+  font-family:var(--f-disp);font-size:12px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--steel);
+}
+
+/* ---------- shell ---------- */
+.topbar{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:40;
+  background:var(--navy);border-bottom:3px solid var(--accent);
+}
+.topbar-in{
+  max-width:1180px;margin:0 auto;padding:11px 16px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+/* ---- LOGO SLOT: drop the real mark in here as an <img> data URI ---- */
+.mark{display:flex;align-items:center;gap:10px;min-width:0;color:#fff}
+.mark svg,.mark img{flex:none;display:block}
+.mark img{height:34px;width:auto;max-width:190px}
+.wordmark{font-family:var(--f-disp);font-size:20px;font-weight:700;line-height:1;
+  letter-spacing:.015em;text-transform:uppercase;color:#fff;white-space:nowrap}
+.wordmark em{font-style:normal;color:var(--accent-ink)}
+:root:not([data-theme="light"]) .wordmark em{color:#ff8a93}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .wordmark em{color:#ff5c69}}
+.mark span{display:block;font-family:var(--f-mono);font-size:10.5px;
+  color:rgba(255,255,255,.62);letter-spacing:.02em;margin-top:2px}
+.ruleset{
+  margin-left:auto;font-family:var(--f-mono);font-size:11px;color:rgba(255,255,255,.72);
+  border:1px solid rgba(255,255,255,.26);border-radius:999px;padding:3px 10px;white-space:nowrap;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px;padding-block:22px 64px}
+
+/* ---------- step rail ---------- */
+.rail{display:flex;gap:2px;margin-bottom:22px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--line)}
+.rail button{
+  flex:1;min-width:0;background:var(--card);border:0;cursor:pointer;
+  padding:9px 6px 10px;text-align:left;color:var(--steel);font-family:var(--f-body);
+  display:flex;flex-direction:column;gap:1px;transition:background .15s,color .15s;
+}
+.rail button:hover{background:var(--paper)}
+.rail button[aria-current="true"]{background:var(--ink);color:var(--paper)}
+.rail button[aria-current="true"] .rn{color:var(--accent)}
+.rail .rn{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;color:var(--steel-2)}
+.rail .rl{font-family:var(--f-disp);font-size:14.5px;font-weight:600;letter-spacing:.02em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rail button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:20px;align-items:start}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow)}
+.panel-hd{padding:14px 16px 12px;border-bottom:1px solid var(--line)}
+.panel-hd h2{font-size:21px}
+.panel-hd p{margin:3px 0 0;font-size:13.5px;color:var(--steel);max-width:58ch}
+.panel-bd{padding:16px}
+
+/* ---------- form ---------- */
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:560px){.fields{grid-template-columns:1fr}}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f.full{grid-column:1/-1}
+.f label{font-family:var(--f-disp);font-size:13.5px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--steel)}
+.f .hint{font-size:12.5px;color:var(--steel-2);line-height:1.4}
+select,input[type=number]{
+  font-family:var(--f-mono);font-size:14.5px;font-variant-numeric:tabular-nums;
+  padding:9px 10px;border:1px solid var(--line-2);border-radius:6px;
+  background:var(--paper);color:var(--ink);width:100%;
+}
+select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{
+  font-family:var(--f-mono);font-size:13.5px;padding:7px 11px;border-radius:6px;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--paper);color:var(--ink);
+}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* ---------- help ---------- */
+.help-hero{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.help-hero h2{font-size:30px}
+.help-hero p{margin:4px 0 0;color:var(--steel);max-width:52ch;font-size:14.5px}
+.help-hero button{margin-left:auto;flex:none}
+.toc{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px;padding-bottom:18px;
+  border-bottom:1px solid var(--line)}
+.toc a{font-family:var(--f-mono);font-size:12px;color:var(--steel);text-decoration:none;
+  border:1px solid var(--line);border-radius:999px;padding:4px 11px;background:var(--card)}
+.toc a:hover{border-color:var(--accent);color:var(--accent-ink)}
+.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.help{max-width:66ch}
+.help h3{font-size:22px;margin:30px 0 8px;scroll-margin-top:80px}
+.help h3:first-child{margin-top:0}
+.help p{margin:0 0 11px;font-size:15px;line-height:1.65}
+.help code{font-family:var(--f-mono);font-size:13px;background:var(--card);
+  border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.k-block{color:var(--accent-ink)}
+.k-flag{color:var(--cyan)}
+.defs{margin:0 0 14px;display:grid;grid-template-columns:minmax(150px,auto) 1fr;gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+@media (max-width:520px){.defs{grid-template-columns:1fr}}
+.defs dt{background:var(--card);padding:9px 12px;font-family:var(--f-disp);font-size:15px;
+  font-weight:600;letter-spacing:.01em}
+.defs dd{background:var(--card);padding:9px 12px;margin:0;font-size:14px;color:var(--steel);
+  line-height:1.55}
+.stagelist{margin:0 0 12px;padding-left:20px;font-size:15px;line-height:1.7}
+.stagelist b{font-family:var(--f-disp);font-size:16px;letter-spacing:.01em}
+
+/* ---------- spotlight tour ---------- */
+#tourmask{position:absolute;top:0;left:0;width:100%;height:0;z-index:200}
+.spot{position:absolute;border-radius:9px;border:2px solid var(--accent);
+  box-shadow:0 0 0 9999px rgba(10,20,32,.66);pointer-events:none}
+@media (prefers-reduced-motion:no-preference){
+  .spot{transition:top .28s ease,left .28s ease,width .28s ease,height .28s ease}
+}
+.tip{position:absolute;width:min(330px,calc(100vw - 26px));background:var(--card);
+  border:1px solid var(--line-2);border-radius:10px;padding:14px 15px 13px;
+  box-shadow:0 8px 28px rgba(10,20,32,.28)}
+.tip-n{font-size:11px;color:var(--steel-2);letter-spacing:.06em}
+.tip b{font-family:var(--f-disp);font-size:19px;font-weight:600;display:block;
+  margin-top:2px;letter-spacing:.01em}
+.tip p{margin:5px 0 0;font-size:14px;line-height:1.55;color:var(--steel)}
+.tip-a{display:flex;gap:7px;margin-top:13px;align-items:center}
+.tip-a #tourskip{margin-right:auto}
+.tip-a button:disabled{opacity:.4;cursor:not-allowed}
+
+/* ---------- admin ---------- */
+.verbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;
+  padding:12px 15px;background:var(--card);border:1px solid var(--line);
+  border-left:4px solid var(--accent);border-radius:0 9px 9px 0}
+.verbar-l b{font-family:var(--f-disp);font-size:19px;font-weight:700;display:block;letter-spacing:.02em}
+.verbar-l span{font-family:var(--f-mono);font-size:12px;color:var(--steel)}
+.verbar-l span.dirty{color:var(--accent-ink);font-weight:500}
+.verbar button{margin-left:0}
+.verbar #publish{margin-left:auto}
+.admin-note{font-size:13px;color:var(--steel);margin-bottom:18px;max-width:64ch;line-height:1.5}
+.adm-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:16px;align-items:start}
+@media (max-width:900px){.adm-grid{grid-template-columns:1fr}}
+.adm-side{display:flex;flex-direction:column;gap:16px}
+.rule{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:var(--paper);
+  padding:10px 12px}
+.rule.off{opacity:.5}
+.rule-hd{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.rule-id{font-size:12.5px;color:var(--steel);font-weight:500}
+.rule-title{font-family:var(--f-disp);font-size:16px;font-weight:600;letter-spacing:.01em;
+  min-width:0;overflow-wrap:anywhere}
+.lvl{margin-left:auto;width:auto;font-size:12.5px;padding:4px 7px;font-family:var(--f-disp);
+  font-weight:600;letter-spacing:.03em}
+.tgl{width:34px;height:19px;border-radius:999px;border:1px solid var(--line-2);
+  background:var(--line);cursor:pointer;padding:0;position:relative;flex:none}
+.tgl span{position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;
+  background:var(--card);transition:transform .16s}
+.tgl[aria-pressed="true"]{background:var(--go);border-color:var(--go)}
+.tgl[aria-pressed="true"] span{transform:translateX(15px)}
+.tgl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rule-bd{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:8px;
+  font-size:13px;color:var(--steel)}
+.rule-kind{font-family:var(--f-disp);font-size:12px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--steel-2);border:1px solid var(--line);
+  border-radius:999px;padding:2px 9px;margin-right:4px}
+input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
+.pgrid{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:14px}
+.plabel{font-family:var(--f-disp);font-size:12.5px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--steel);width:100%}
+.punit{display:flex;flex-direction:column;gap:3px;font-family:var(--f-mono);font-size:11px;
+  color:var(--steel-2);flex:1;min-width:72px}
+.punit input{width:100%;padding:6px 7px;font-size:13.5px}
+.ck{display:flex;align-items:baseline;gap:9px;padding:8px 0;border-bottom:1px solid var(--line);
+  flex-wrap:wrap}
+.ck:last-child{border-bottom:0}
+.ck-l{flex:1;min-width:0;font-size:13px;overflow-wrap:anywhere}
+.ck-v{font-family:var(--f-disp);font-size:17px;font-weight:700}
+.ck-w{font-size:11.5px}
+.ck.ok .ck-w{color:var(--go)}
+.ck.off .ck-v,.ck.off .ck-w{color:var(--accent-ink)}
+.aud{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.aud:last-child{border-bottom:0}
+.aud-when{font-size:11.5px;color:var(--steel-2);min-width:88px}
+.aud-who{font-family:var(--f-disp);font-size:14px;font-weight:600;min-width:80px}
+.aud-what{flex:1;min-width:200px;font-size:13px;color:var(--steel)}
+.admin-tab{border-color:rgba(255,255,255,.22)!important}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:2px;margin-left:8px}
+.tabs button{
+  font-family:var(--f-disp);font-size:14.5px;font-weight:600;letter-spacing:.03em;
+  padding:7px 13px;border-radius:6px;cursor:pointer;border:1px solid transparent;
+  background:transparent;color:rgba(255,255,255,.66);white-space:nowrap;
+}
+.tabs button b{font-family:var(--f-mono);font-size:11px;font-weight:500;
+  background:rgba(255,255,255,.16);border-radius:999px;padding:1px 6px;margin-left:5px}
+.tabs button[aria-pressed="true"]{background:rgba(255,255,255,.12);color:#fff}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* Four tabs do not fit a phone in one row — give them their own line and tighten up. */
+@media (max-width:620px){
+  .tabs{width:100%;margin:2px 0 0;flex-wrap:wrap}
+  .tabs button{padding:6px 9px;font-size:13.5px}
+  .tabs button b{margin-left:4px;padding:1px 5px}
+  .ruleset{margin-left:0}
+}
+
+/* ---------- submissions ---------- */
+#subs{display:flex;flex-direction:column;gap:10px}
+.sub{
+  display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:14px;align-items:center;
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:13px 15px;box-shadow:var(--shadow);
+}
+@media (max-width:660px){
+  .sub{grid-template-columns:56px minmax(0,1fr);row-gap:11px}
+  .sub-side{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
+}
+.sub-thumb svg{display:block;width:100%;height:auto}
+.sub-main{min-width:0}
+.sub-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.sub-id{font-size:15px;font-weight:600;letter-spacing:.02em}
+.pill{
+  font-family:var(--f-disp);font-size:12px;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;padding:2px 9px;border-radius:999px;white-space:nowrap;
+}
+.s-draft{background:var(--paper);color:var(--steel);border:1px solid var(--line-2)}
+.s-live{background:var(--cyan-soft);color:var(--cyan)}
+.s-act{background:var(--accent-soft);color:var(--accent-ink)}
+.s-done{background:var(--go-soft);color:var(--go)}
+.sub-spec{font-size:13px;color:var(--ink);margin-top:3px;overflow-wrap:anywhere}
+.sub-note{font-size:12.5px;color:var(--steel);margin-top:2px;overflow-wrap:anywhere}
+.track{display:flex;gap:3px;margin-top:8px}
+.tick{flex:1;height:3px;border-radius:2px;background:var(--line);max-width:34px}
+.tick.on{background:var(--cyan)}
+.sub-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right}
+.sub-price{font-family:var(--f-disp);font-size:20px;font-weight:700;letter-spacing:.01em}
+.win{font-family:var(--f-mono);font-size:11.5px;color:var(--steel);white-space:nowrap}
+.win.urgent{color:var(--accent-ink);font-weight:500}
+.win.closed{color:var(--steel-2)}
+.btn-sm{
+  font-family:var(--f-disp);font-size:13.5px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;padding:7px 13px;border-radius:6px;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--paper);color:var(--ink);white-space:nowrap;
+}
+.btn-sm.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-sm:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.editbar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;
+  padding:11px 14px;border-radius:8px;background:var(--cyan-soft);border:1px solid var(--cyan);
+}
+.editbar b{font-family:var(--f-disp);font-size:16px;font-weight:600;color:var(--cyan);
+  display:block;letter-spacing:.02em}
+.editbar span{font-family:var(--f-mono);font-size:12px;color:var(--ink);opacity:.8}
+.editbar button{margin-left:auto}
+
+/* ---------- vehicle picker ---------- */
+.modes{display:flex;gap:2px;background:var(--line);border:1px solid var(--line);
+  border-radius:7px;overflow:hidden}
+.modes button{
+  flex:1;min-width:0;background:var(--card);border:0;cursor:pointer;padding:9px 8px;
+  font-family:var(--f-disp);font-size:14.5px;font-weight:600;letter-spacing:.03em;
+  color:var(--steel);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.modes button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.modes button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (max-width:640px){.picks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pick{
+  display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;
+  padding:10px 11px;border:1px solid var(--line-2);border-radius:7px;cursor:pointer;
+  background:var(--paper);color:var(--ink);min-width:0;
+}
+.pick b{font-family:var(--f-disp);font-size:15px;font-weight:600;line-height:1.15;
+  letter-spacing:.01em;overflow-wrap:anywhere}
+.pick span{font-family:var(--f-mono);font-size:11.5px;color:var(--steel)}
+.pick[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.pick[aria-pressed="true"] b{color:var(--accent-ink)}
+.pick[aria-pressed="true"] span{color:var(--accent)}
+.pick:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.filled{display:flex;gap:10px;padding:10px 12px;border-radius:7px;
+  background:var(--cyan-soft);border:1px solid var(--cyan);color:var(--cyan)}
+.filled .ic{flex:none;font-size:15px;line-height:1.4}
+.filled b{font-family:var(--f-disp);font-size:15px;font-weight:600;display:block;letter-spacing:.02em}
+.filled p{margin:2px 0 0;font-size:13px;color:var(--ink);opacity:.86;line-height:1.45}
+
+/* ---------- required-field errors ---------- */
+.alert{
+  display:flex;gap:10px;padding:11px 13px;border-radius:7px;margin-bottom:16px;
+  background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent-ink);
+}
+.alert .ic{flex:none;font-family:var(--f-disp);font-size:17px;font-weight:700;line-height:1.25}
+.alert b{font-family:var(--f-disp);font-size:15.5px;font-weight:600;display:block;letter-spacing:.02em}
+.alert ul{margin:3px 0 0;padding-left:17px;font-size:13.5px;color:var(--ink);opacity:.88;line-height:1.5}
+@media (prefers-reduced-motion:no-preference){
+  .alert{animation:nudge .32s ease-out}
+  @keyframes nudge{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+}
+.f.bad input,.f.bad select{border-color:var(--accent);background:var(--accent-soft)}
+.f.bad label{color:var(--accent-ink)}
+.err{font-size:12.5px;color:var(--accent-ink);font-weight:500;line-height:1.4}
+.why{font-size:12.5px;color:var(--steel);line-height:1.4;max-width:34ch}
+
+/* ---------- checks ---------- */
+.checks{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.chk{display:flex;gap:10px;padding:10px 12px;border-radius:7px;font-size:13.5px;line-height:1.45;
+  border:1px solid transparent}
+.chk .ic{flex:none;width:17px;height:17px;margin-top:1px}
+.chk b{font-family:var(--f-disp);font-size:15px;font-weight:600;letter-spacing:.02em;display:block}
+.chk code{font-family:var(--f-mono);font-size:12px;color:inherit;opacity:.72}
+.chk.block{background:var(--flag-soft);border-color:var(--flag);color:var(--flag)}
+.chk.flag{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.chk.ok{background:var(--go-soft);border-color:var(--go);color:var(--go)}
+.chk .body{min-width:0}
+.chk .body p{margin:2px 0 0;color:var(--ink);opacity:.86}
+
+/* ---------- drawing ---------- */
+.draw{position:sticky;top:calc(env(safe-area-inset-top,0px) + 68px)}
+@media (max-width:900px){.draw{position:static;order:-1}}
+.draw-hd{display:flex;align-items:baseline;gap:10px;padding:12px 16px 10px;border-bottom:1px solid var(--line)}
+.draw-hd h2{font-size:17px}
+.draw-hd .rev{margin-left:auto;font-family:var(--f-mono);font-size:11px;color:var(--steel-2)}
+.canvas{background:var(--paper);border-bottom:1px solid var(--line);padding:6px}
+.canvas svg{display:block;width:100%;height:auto;max-width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 16px;border-bottom:1px solid var(--line);
+  font-family:var(--f-mono);font-size:11.5px;color:var(--steel)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:baseline}
+.tb{padding:12px 16px 14px}
+.tb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.tb-grid div{background:var(--card);padding:7px 10px;min-width:0}
+.tb-grid dt{font-family:var(--f-disp);font-size:11px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--steel-2);margin:0}
+.tb-grid dd{margin:1px 0 0;font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums;
+  overflow-wrap:anywhere}
+
+/* ---------- price ---------- */
+.price{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;
+  padding:14px 16px;border-top:1px solid var(--line);background:var(--card)}
+.price .amt{font-family:var(--f-disp);font-size:34px;font-weight:700;line-height:1;letter-spacing:.01em}
+.price .amt.quote{font-size:24px;color:var(--accent)}
+.price .per{font-size:12.5px;color:var(--steel);max-width:30ch}
+.price .per b{display:block;font-family:var(--f-disp);font-size:13px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--steel-2)}
+
+/* ---------- review ---------- */
+.legalbox{border:1px solid var(--line-2);border-radius:8px;padding:14px;background:var(--paper);margin-top:4px}
+.legalbox p{margin:0;font-size:14px;line-height:1.6}
+.legalnote{display:flex;gap:8px;margin-top:10px;font-size:12.5px;color:var(--accent);
+  font-family:var(--f-mono);line-height:1.4}
+.accept{display:flex;gap:11px;align-items:flex-start;margin-top:14px;cursor:pointer;font-size:14.5px}
+.accept input{flex:none;width:19px;height:19px;margin:1px 0 0;accent-color:var(--accent)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;align-items:center}
+.btn{font-family:var(--f-disp);font-size:16px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;padding:11px 20px;border-radius:7px;cursor:pointer;border:1px solid transparent}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:disabled{opacity:.42;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line-2)}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.saved{font-family:var(--f-mono);font-size:12px;color:var(--steel-2)}
+
+/* ---------- pipeline ---------- */
+.pipe{margin-top:40px}
+.pipe-hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.pipe-hd h2{font-size:23px}
+.pipe-hd p{margin:0;font-size:13.5px;color:var(--steel)}
+.stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:9px;overflow:hidden}
+@media (max-width:820px){.stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:440px){.stages{grid-template-columns:1fr}}
+.stage{background:var(--card);padding:12px 13px 14px;min-width:0}
+.stage .n{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;color:var(--steel-2)}
+.stage h3{font-size:16.5px;margin:2px 0 3px}
+.stage p{margin:0;font-size:12.5px;color:var(--steel);line-height:1.45}
+.stage.live{background:var(--accent-soft)}
+.stage.live h3{color:var(--accent)}
+.notes{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.note{font-family:var(--f-mono);font-size:11.5px;color:var(--steel);
+  border:1px solid var(--line);border-radius:999px;padding:4px 11px;background:var(--card)}
+
+.foot{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
+  font-size:12.5px;color:var(--steel-2);line-height:1.6;max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="mark">
+      <!-- LOGO SLOT — replace this <svg> with <img src="data:image/png;base64,..." alt="Wheel Adapters USA"> -->
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <circle cx="15" cy="15" r="13.2" fill="none" stroke="#fff" stroke-width="1.5"/>
+        <circle cx="15" cy="15" r="4" fill="none" stroke="#fff" stroke-width="1.5"/>
+        <circle cx="15" cy="5.6" r="1.8" fill="var(--accent)"/>
+        <circle cx="23" cy="11.4" r="1.8" fill="#fff"/>
+        <circle cx="19.9" cy="20.8" r="1.8" fill="#fff"/>
+        <circle cx="10.1" cy="20.8" r="1.8" fill="#fff"/>
+        <circle cx="7" cy="11.4" r="1.8" fill="#fff"/>
+      </svg>
+      <div>
+        <div class="wordmark">Wheel Adapters <em>USA</em></div>
+        <span>design.wheeladaptersusa.com</span>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <button type="button" data-view="design" aria-pressed="true">New design</button>
+      <button type="button" data-view="list" aria-pressed="false">My designs <b>6</b></button>
+      <button type="button" data-view="admin" aria-pressed="false" class="admin-tab">Admin</button>
+      <button type="button" data-view="help" aria-pressed="false">Help</button>
+    </nav>
+    <div class="ruleset" id="rulestamp">Rule set v1.0 · draft</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<section id="view-list" hidden>
+  <div class="pipe-hd">
+    <h2>My designs</h2>
+    <p>Everything you have started or sent us. Drawings are rebuilt from your saved
+       specifications, so nothing goes stale.</p>
+  </div>
+  <div id="subs"></div>
+  <div class="notes">
+    <span class="note">Edits stay open 12 hours after you submit</span>
+    <span class="note">After that, a change needs re-approval and may add cost</span>
+  </div>
+</section>
+
+<section id="view-help" hidden>
+
+  <div class="help-hero">
+    <div>
+      <h2>Help</h2>
+      <p>How the designer works, what the checks mean, and what happens after you
+         send us a drawing.</p>
+    </div>
+    <button type="button" class="btn btn-primary" id="starttour">Take the tour</button>
+  </div>
+
+  <nav class="toc" aria-label="Help contents">
+    <a href="#h-start">Getting started</a>
+    <a href="#h-inputs">The eight measurements</a>
+    <a href="#h-checks">Flags and blocks</a>
+    <a href="#h-price">Pricing</a>
+    <a href="#h-stages">After you submit</a>
+    <a href="#h-edit">Changing a design</a>
+    <a href="#h-admin">For our team</a>
+    <a href="#h-terms">Terms</a>
+  </nav>
+
+  <article class="help">
+
+    <h3 id="h-start">Getting started</h3>
+    <p>There are three ways to begin. <b>Popular trucks</b> fills in the common ones in a
+       single tap. <b>Find my vehicle</b> walks make, model and year range. <b>I know my
+       specs</b> skips straight to entering numbers.</p>
+    <p>Whichever you use, the measurements stay visible and editable. The lookup is a
+       starting point, not a guarantee &mdash; trim, drivetrain and dually axles all change
+       hub specs. Check the numbers against your actual hub before you submit.</p>
+
+    <h3 id="h-inputs">The eight measurements</h3>
+    <dl class="defs">
+      <dt>Hub bolt pattern</dt>
+      <dd>Number of studs on the vehicle hub and the circle they sit on, like 6x5.5.
+          Count the studs, then measure the circle.</dd>
+      <dt>Hub bore</dt>
+      <dd>Outside diameter of the centre hub the wheel slides over, in millimetres.</dd>
+      <dt>Vehicle stud thread</dt>
+      <dd>Thread on the studs already on your truck. This is what the adapter threads onto.</dd>
+      <dt>Wheel bolt pattern</dt>
+      <dd>Pattern of the wheel you are fitting. Usually in the wheel listing.</dd>
+      <dt>Wheel centre bore</dt>
+      <dd>Diameter of the hole in the back of the wheel, in millimetres.</dd>
+      <dt>Thickness</dt>
+      <dd>How far the adapter pushes the wheel out, measured face to face. Studs add
+          height on top of this.</dd>
+      <dt>Pressed stud thread</dt>
+      <dd>Thread on the new studs your wheel mounts to. It does not have to match the
+          vehicle side.</dd>
+      <dt>Quantity</dt>
+      <dd>Two per axle. Most orders are 2 or 4.</dd>
+    </dl>
+
+    <h3 id="h-checks">Flags and blocks</h3>
+    <p>Every change you make runs against our rule set, written by the people who machine
+       these parts. Two outcomes matter:</p>
+    <p><b class="k-block">Block</b> means we will not build it. Usually the geometry does not
+       leave enough material between the through-bolts and the pressed studs. Changing the
+       thickness will not fix a block &mdash; the specs have to change.</p>
+    <p><b class="k-flag">Flag</b> means it is probably fine but a person needs to look first.
+       Flagged designs go through instead of getting a price on the spot, and our team quotes
+       them by email.</p>
+    <p>Each check shows its rule number, like <code>R-201</code>. Quote that number if you
+       call us about it.</p>
+
+    <h3 id="h-price">Pricing</h3>
+    <p>Standard combinations price instantly, per pair, with free shipping in the USA.
+       Anything carrying a flag shows <b>Quote required</b> instead &mdash; we price those by
+       hand because they need a set of eyes on them first.</p>
+    <p>Price depends on lug count, thickness, and whether the adapter changes bolt pattern
+       or just spaces the wheel out.</p>
+
+    <h3 id="h-stages">After you submit</h3>
+    <ol class="stagelist">
+      <li><b>Draft</b> &mdash; the drawing built from your numbers. Nothing sent yet.</li>
+      <li><b>Submitted</b> &mdash; it reaches our office for review.</li>
+      <li><b>Under review</b> &mdash; checked for safety, design, production cost and time.</li>
+      <li><b>Quoted</b> &mdash; we create an invoice and email it to you.</li>
+      <li><b>Paid</b> &mdash; payment creates your order number.</li>
+      <li><b>Production</b> &mdash; a production order goes to the floor.</li>
+      <li><b>Quality control</b> &mdash; checked at the QC station.</li>
+      <li><b>Shipped</b> &mdash; tracking number and photographs of your parts.</li>
+    </ol>
+    <p>You get an email at every change.</p>
+
+    <h3 id="h-edit">Changing a design</h3>
+    <p>You have <b>12 hours</b> from submitting to change a design yourself. Open
+       <b>My designs</b> and the countdown is on the row. Inside that window, Edit loads it
+       back into the designer.</p>
+    <p>After 12 hours, or once we have quoted it, changes need re-approval and may add cost
+       &mdash; the longer a job sits, the longer it takes to fulfil. Use <b>Request a change</b>
+       and our team will pick it up.</p>
+    <p>An unsent draft has no time limit. It stays in your list until you submit or delete it.</p>
+
+    <h3 id="h-admin">For our team</h3>
+    <p>The <b>Admin</b> tab holds the rule set and the pricing formula. Rules can be switched
+       off, retuned, or moved between Block and Flag without a developer.</p>
+    <p>Changes stack up as unsaved edits and go live the moment you press Publish, which
+       increments the version and writes to the change log. The catalogue check beside the
+       pricing form shows live whether the formula still reproduces our published prices
+       &mdash; if a number turns red, stop.</p>
+    <p>Two people should review any rule change before it is published. These parts hold
+       wheels onto trucks.</p>
+
+    <h3 id="h-terms">Terms</h3>
+    <dl class="defs">
+      <dt>Bolt circle diameter</dt>
+      <dd>The circle the studs sit on. The 5.5 in 6x5.5 is this, in inches.</dd>
+      <dt>Hub centric</dt>
+      <dd>The wheel is carried by the centre bore rather than the studs. Preferred, and
+          quieter at speed.</dd>
+      <dt>Lug centric</dt>
+      <dd>The wheel is centred by the lug nuts alone. Works, but needs careful torquing.</dd>
+      <dt>Spacer vs adapter</dt>
+      <dd>A spacer keeps the same bolt pattern and only pushes the wheel out. An adapter
+          changes the pattern as well.</dd>
+      <dt>6061-T6 billet</dt>
+      <dd>The aluminium we cut these from. Solid extruded stock, not cast.</dd>
+    </dl>
+
+  </article>
+</section>
+
+<section id="view-admin" hidden>
+
+  <div class="verbar">
+    <div class="verbar-l">
+      <b id="verlabel">Rule set v1.0</b>
+      <span id="verstate">Live &middot; no unsaved changes</span>
+    </div>
+    <button type="button" class="btn-sm" id="discard" hidden>Discard</button>
+    <button type="button" class="btn-sm primary" id="publish" disabled>Publish</button>
+  </div>
+
+  <div class="admin-note">
+    Changes here take effect for every customer the moment you publish. Two people
+    should review a rule change before it goes live.
+  </div>
+
+  <div class="adm-grid">
+    <section class="panel">
+      <div class="panel-hd">
+        <h2>Validation rules</h2>
+        <p>What the designer will and will not let a customer submit. Blocks stop the
+           order. Flags let it through but route it to your team for a quote.</p>
+      </div>
+      <div class="panel-bd"><div id="rulelist"></div></div>
+    </section>
+
+    <div class="adm-side">
+      <section class="panel">
+        <div class="panel-hd"><h2>Pricing</h2>
+          <p>Price per pair, before thickness and conversion.</p></div>
+        <div class="panel-bd"><div id="priceform"></div></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-hd"><h2>Check against the catalogue</h2>
+          <p>Live result of the formula above.</p></div>
+        <div class="panel-bd"><div id="pricecheck"></div></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="pipe">
+    <div class="pipe-hd"><h2>Change log</h2>
+      <p>Every publish, who did it and when. Append only.</p></div>
+    <div id="audit"></div>
+  </section>
+
+</section>
+
+<div id="view-design">
+
+  <div id="editbar"></div>
+
+  <nav class="rail" id="rail" aria-label="Design steps"></nav>
+
+  <div class="cols">
+
+    <section class="panel" aria-labelledby="steptitle">
+      <div class="panel-hd">
+        <h2 id="steptitle">Vehicle side</h2>
+        <p id="stepblurb">What the adapter bolts onto. Read these off the hub, not off the wheel.</p>
+      </div>
+      <div class="panel-bd">
+        <div id="alertzone" aria-live="assertive"></div>
+        <div class="fields" id="fields"></div>
+        <div class="checks" id="checks"></div>
+        <div id="reviewzone" hidden>
+          <div class="legalbox">
+            <p id="legaltext"></p>
+            <div class="legalnote">
+              <span>&#9888;</span>
+              <span>Draft language supplied by the shop. Attorney review required before this goes live.</span>
+            </div>
+          </div>
+          <label class="accept" for="accept">
+            <input type="checkbox" id="accept">
+            <span>I have verified these specifications against my vehicle and I accept the terms above.</span>
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" id="back" type="button">Back</button>
+          <button class="btn btn-primary" id="next" type="button">Continue</button>
+          <span class="why" id="why"></span>
+          <span class="saved mono" id="saved"></span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel draw" aria-label="Live drawing">
+      <div class="draw-hd">
+        <h2>Drawing</h2>
+        <span class="rev mono" id="rev">REV A · DRAFT</span>
+      </div>
+      <div class="canvas"><div id="face"></div></div>
+      <div class="legend">
+        <span><i style="background:var(--cyan)"></i>Vehicle studs pass through</span>
+        <span><i style="background:var(--accent)"></i>Pressed wheel studs</span>
+      </div>
+      <div class="tb">
+        <div class="tb-grid" id="titleblock"></div>
+      </div>
+      <div class="price">
+        <div class="amt" id="amt">&mdash;</div>
+        <div class="per" id="per"><b>Pricing</b>&nbsp;</div>
+      </div>
+    </aside>
+
+  </div>
+
+  <section class="pipe">
+    <div class="pipe-hd">
+      <h2>What happens after you submit</h2>
+      <p>Eight stages. You get an email at every change.</p>
+    </div>
+    <div class="stages" id="stages"></div>
+    <div class="notes">
+      <span class="note">Edits allowed for 12 hours after submit</span>
+      <span class="note">After approval, changes need re-approval and may add cost</span>
+      <span class="note">Review by Design &amp; Sales &mdash; CA and OR</span>
+      <span class="note">Drafts saved automatically, even unfinished</span>
+    </div>
+  </section>
+
+</div>
+
+  <p class="foot">
+    Prototype for internal review. The eight inputs, the validation rules and the price formula are
+    placeholders standing in for the real ones &mdash; every number here needs sign-off from the shop
+    before anyone sees it. Geometry is drawn to scale from the values entered.
+  </p>
+
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   Structure maps 1:1 to React components when this gets ported:
+     Rail        -> <StepRail steps current onSelect />
+     renderStep  -> <VehicleStep/> <WheelStep/> <AdapterStep/> <ReviewStep/>
+     validate    -> useValidation(design)  [pure, no DOM]
+     priceOf     -> usePricing(design, issues)  [pure, no DOM]
+     faceSvg     -> <FaceDrawing design />  [pure, returns markup]
+   validate/priceOf/faceSvg touch no DOM, so they port unchanged.
+----------------------------------------------------------------*/
+
+/* Bolt patterns: lugs + bolt circle diameter in inches. */
+var PATTERNS = {
+  "4x100":   {lugs:4, bcd:3.937,  label:"4x100"},
+  "4x4.5":   {lugs:4, bcd:4.5,    label:"4x4.5 (4x114.3)"},
+  "5x100":   {lugs:5, bcd:3.937,  label:"5x100"},
+  "5x4.5":   {lugs:5, bcd:4.5,    label:"5x4.5 (5x114.3)"},
+  "5x4.75":  {lugs:5, bcd:4.75,   label:"5x4.75 (5x120.65)"},
+  "5x120":   {lugs:5, bcd:4.724,  label:"5x120"},
+  "5x5":     {lugs:5, bcd:5.0,    label:"5x5 (5x127)"},
+  "5x5.5":   {lugs:5, bcd:5.5,    label:"5x5.5 (5x139.7)"},
+  "5x150":   {lugs:5, bcd:5.906,  label:"5x150"},
+  "5x135":   {lugs:5, bcd:5.315,  label:"5x135"},
+  "6x5.5":   {lugs:6, bcd:5.5,    label:"6x5.5 (6x139.7)"},
+  "6x135":   {lugs:6, bcd:5.315,  label:"6x135"},
+  "8x6.5":   {lugs:8, bcd:6.5,    label:"8x6.5 (8x165.1)"},
+  "8x170":   {lugs:8, bcd:6.693,  label:"8x170"},
+  "8x180":   {lugs:8, bcd:7.087,  label:"8x180"},
+  "8x200":   {lugs:8, bcd:7.874,  label:"8x200"}
+};
+var THREADS = {
+  "12x1.5":  {dia:12.0, label:"12x1.5"},
+  "12x1.25": {dia:12.0, label:"12x1.25"},
+  "14x1.5":  {dia:14.0, label:"14x1.5"},
+  "14x2.0":  {dia:14.0, label:"14x2.0"},
+  "1/2-20":  {dia:12.7, label:'1/2"-20'},
+  "9/16-18": {dia:14.3, label:'9/16"-18'}
+};
+var THICKNESS = [1, 1.25, 1.5, 2, 2.5, 3];
+
+/* =====================================================================
+   FITMENT TABLE v0.1 — SEED DATA, NOT VERIFIED.
+   Every row needs sign-off from the shop before this ships. In production
+   this should be generated from 28 years of order history, which is a far
+   better source than any table typed by hand.
+   p = hub bolt pattern · b = hub bore (mm) · t = vehicle stud thread
+   ===================================================================== */
+var VEHICLES = [
+  {mk:"Chevrolet", md:"Silverado 1500",      yr:"1999–2018", p:"6x5.5", b:78.1,  t:"14x1.5"},
+  {mk:"Chevrolet", md:"Silverado 1500",      yr:"2019–2026", p:"6x5.5", b:78.1,  t:"14x1.5"},
+  {mk:"Chevrolet", md:"Silverado 2500/3500", yr:"2001–2010", p:"8x6.5", b:116.7, t:"14x1.5"},
+  {mk:"Chevrolet", md:"Silverado 2500/3500", yr:"2011–2026", p:"8x180", b:124.2, t:"14x1.5"},
+  {mk:"Chevrolet", md:"Tahoe / Suburban",    yr:"2000–2026", p:"6x5.5", b:78.1,  t:"14x1.5"},
+  {mk:"Ford",      md:"F-150",               yr:"2004–2014", p:"6x135", b:87.1,  t:"14x2.0"},
+  {mk:"Ford",      md:"F-150",               yr:"2015–2026", p:"6x135", b:87.1,  t:"14x1.5"},
+  {mk:"Ford",      md:"F-250 / F-350",       yr:"1999–2004", p:"8x170", b:125.0, t:"14x2.0"},
+  {mk:"Ford",      md:"F-250 / F-350",       yr:"2005–2026", p:"8x170", b:125.0, t:"14x1.5"},
+  {mk:"Ford",      md:"Bronco",              yr:"2021–2026", p:"6x5.5", b:93.1,  t:"14x1.5"},
+  {mk:"Ford",      md:"Mustang",             yr:"2005–2026", p:"5x4.5", b:70.5,  t:"1/2-20"},
+  {mk:"Ram",       md:"1500",                yr:"2002–2010", p:"5x5.5", b:77.8,  t:"14x1.5"},
+  {mk:"Ram",       md:"1500",                yr:"2012–2026", p:"5x5.5", b:77.8,  t:"14x1.5"},
+  {mk:"Ram",       md:"2500 / 3500",         yr:"1994–2010", p:"8x6.5", b:121.3, t:"9/16-18"},
+  {mk:"Ram",       md:"2500 / 3500",         yr:"2013–2026", p:"8x6.5", b:121.3, t:"14x1.5"},
+  {mk:"Jeep",      md:"Wrangler JL / Gladiator", yr:"2018–2026", p:"5x5",   b:71.5, t:"1/2-20"},
+  {mk:"Jeep",      md:"Wrangler JK",         yr:"2007–2018", p:"5x5",   b:71.5,  t:"1/2-20"},
+  {mk:"Jeep",      md:"Wrangler TJ / YJ",    yr:"1987–2006", p:"5x4.5", b:71.5,  t:"1/2-20"},
+  {mk:"Jeep",      md:"Grand Cherokee",      yr:"2011–2026", p:"5x5",   b:71.5,  t:"14x1.5"},
+  {mk:"GMC",       md:"Sierra 1500",         yr:"1999–2018", p:"6x5.5", b:78.1,  t:"14x1.5"},
+  {mk:"GMC",       md:"Sierra 1500",         yr:"2019–2026", p:"6x5.5", b:78.1,  t:"14x1.5"},
+  {mk:"Toyota",    md:"Tacoma",              yr:"2005–2026", p:"6x5.5", b:106.0, t:"12x1.5"},
+  {mk:"Toyota",    md:"4Runner",             yr:"2003–2026", p:"6x5.5", b:106.0, t:"12x1.5"},
+  {mk:"Toyota",    md:"Tundra",              yr:"2007–2021", p:"5x150", b:110.0, t:"14x1.5"},
+  {mk:"Nissan",    md:"Titan",               yr:"2004–2015", p:"6x5.5", b:77.8,  t:"12x1.25"}
+];
+
+/* Quick picks — swap for the shop's actual top sellers by volume. */
+var POPULAR = [
+  {label:"Silverado / Sierra 1500", sub:"6x5.5", i:0},
+  {label:"F-150 2015+",             sub:"6x135", i:6},
+  {label:"Wrangler JK / JL",        sub:"5x5",   i:15},
+  {label:"Ram 2500 / 3500",         sub:"8x6.5", i:14},
+  {label:"Tacoma / 4Runner",        sub:"6x5.5", i:21},
+  {label:"F-250 / F-350",           sub:"8x170", i:8}
+];
+
+/* Opens on the shop's best seller so the page is never an empty shell. */
+var design = {
+  hubPattern:"6x5.5", hubBore:78.1, vehicleThread:"14x1.5",
+  wheelPattern:"5x4.5", wheelBore:87.1,
+  thickness:2, studThread:"14x1.5", qty:2,
+  mode:"popular", vehicle:0,
+  pickMake:"Chevrolet", pickModel:"Silverado 1500"
+};
+
+/* =====================================================================
+   SUBMISSIONS — demo data spanning the whole pipeline so the list view
+   shows every state. In production these come from Postgres, keyed to the
+   Shopify customer id. Each row stores the PARAMETERS, so the drawing is
+   regenerated rather than stored as a stale image.
+   ===================================================================== */
+var EDIT_WINDOW_H = 12;
+var STAGES = ["Draft","Submitted","Under review","Quoted","Paid","Production","Quality control","Shipped"];
+var HOUR = 3600000;
+
+function ago(h){ return Date.now() - h * HOUR; }
+
+var SUBMISSIONS = [
+  {id:"WA-4821", stage:0, at:null, note:"Started on your phone",
+   d:{hubPattern:"6x135", hubBore:87.1, vehicleThread:"14x1.5", wheelPattern:"5x4.5",
+      wheelBore:70.5, thickness:1.5, studThread:"1/2-20", qty:2}},
+  {id:"WA-4795", stage:1, at:ago(3.3), note:"With the office",
+   d:{hubPattern:"6x5.5", hubBore:78.1, vehicleThread:"14x1.5", wheelPattern:"5x4.5",
+      wheelBore:87.1, thickness:2, studThread:"14x1.5", qty:2}},
+  {id:"WA-4702", stage:2, at:ago(11.6), note:"Being checked for safety and cost",
+   d:{hubPattern:"8x6.5", hubBore:121.3, vehicleThread:"9/16-18", wheelPattern:"8x180",
+      wheelBore:124.2, thickness:2.5, studThread:"14x1.5", qty:4}},
+  {id:"WA-4655", stage:3, at:ago(38), note:"Invoice sent — awaiting payment", quote:157.95,
+   d:{hubPattern:"8x170", hubBore:125, vehicleThread:"14x1.5", wheelPattern:"8x6.5",
+      wheelBore:116.7, thickness:2, studThread:"14x1.5", qty:2}},
+  {id:"WA-4610", stage:5, at:ago(140), note:"On the floor — order #10442", quote:129.95,
+   d:{hubPattern:"5x5", hubBore:71.5, vehicleThread:"1/2-20", wheelPattern:"5x4.5",
+      wheelBore:71.5, thickness:1.25, studThread:"1/2-20", qty:2}},
+  {id:"WA-4588", stage:7, at:ago(400), note:"Tracking 9400 1102 0086 5512 3390 77", quote:114.95,
+   d:{hubPattern:"6x5.5", hubBore:106, vehicleThread:"12x1.5", wheelPattern:"6x135",
+      wheelBore:87.1, thickness:1, studThread:"12x1.5", qty:4}}
+];
+
+/* Hours left in the edit window, or null when it never applied. */
+function editLeft(s){
+  if (s.stage === 0) return Infinity;            /* an unsent draft is always editable */
+  if (s.stage > 2) return -1;                    /* quoted and beyond needs re-approval */
+  return EDIT_WINDOW_H - (Date.now() - s.at) / HOUR;
+}
+function fmtLeft(h){
+  if (h === Infinity) return "Not submitted yet";
+  if (h <= 0) return "Edit window closed";
+  var hh = Math.floor(h), mm = Math.floor((h - hh) * 60), ss = Math.floor(((h - hh) * 60 - mm) * 60);
+  return hh > 0 ? hh + "h " + mm + "m left" : mm + "m " + (ss < 10 ? "0" : "") + ss + "s left";
+}
+function fmtWhen(t){
+  if (!t) return "—";
+  var h = (Date.now() - t) / HOUR;
+  if (h < 1) return Math.round(h * 60) + " min ago";
+  if (h < 24) return Math.round(h) + " hours ago";
+  return Math.round(h / 24) + " days ago";
+}
+
+var STEPS = [
+  {n:"01", label:"Vehicle",  title:"Vehicle side",
+   blurb:"What the adapter bolts onto. Read these off the hub, not off the wheel."},
+  {n:"02", label:"Wheel",    title:"Wheel side",
+   blurb:"What you are mounting. The bolt pattern stamped on the wheel or in its listing."},
+  {n:"03", label:"Adapter",  title:"The adapter",
+   blurb:"Thickness, studs and quantity. Thickness is measured face to face, not including studs."},
+  {n:"04", label:"Review",   title:"Review and submit",
+   blurb:"Check the drawing against your vehicle. Once you submit, this goes to our design team in CA and OR."}
+];
+var step = 0;
+var shownErrors = {};   /* only populated after a failed Continue press */
+var view = "design";
+var editing = null;     /* submission id currently being edited, if any */
+
+/* Required fields per step. Selects always carry a value, so the gates are the
+   measured numbers and the acceptance box. */
+function stepErrors(s){
+  var e = {};
+  if (s === 0){
+    if (!design.hubBore) e.hubBore = "Enter the hub bore in millimetres.";
+    else if (design.hubBore < 40 || design.hubBore > 200)
+      e.hubBore = "Hub bores run about 40 to 200 mm. Check the measurement.";
+  }
+  if (s === 1){
+    if (!design.wheelBore) e.wheelBore = "Enter the wheel centre bore in millimetres.";
+    else if (design.wheelBore < 40 || design.wheelBore > 200)
+      e.wheelBore = "Centre bores run about 40 to 200 mm. Check the measurement.";
+  }
+  if (s === 3){
+    /* The step rail allows free navigation, so submit re-checks everything upstream. */
+    var up = {};
+    Object.keys(stepErrors(0)).forEach(function(k){ up[k] = stepErrors(0)[k]; });
+    Object.keys(stepErrors(1)).forEach(function(k){ up[k] = stepErrors(1)[k]; });
+    Object.keys(up).forEach(function(k){ e[k] = up[k]; });
+    if (!el("accept").checked) e.accept = "Tick the box to confirm you have verified the specs.";
+  }
+  return e;
+}
+
+var LEGAL = "I understand that I am building a part based on the specifications I have supplied. " +
+  "I am confirming this order to Wheel Adapters USA to be built for me. My design is a final drawing, " +
+  "and whether it works or not, I hold the Company harmless. I further understand that this is my " +
+  "project and not a joint project. I am responsible to order, arrange, calculate, change, fit, " +
+  "install, and drive the vehicle I am working on.";
+
+/* =====================================================================
+   RULE SET — data, not code. Each rule is a row the shop can switch off,
+   retune or re-level without a developer. evalRule() is the only place
+   that knows how a kind is computed; adding a kind is the one thing that
+   still needs a code change.
+   ===================================================================== */
+var RULES = [
+  {id:"R-101", on:true, level:"block", kind:"lugDrop", p:{from:8, to:5},
+   title:"8 lug down to 5 lug",
+   msg:"There is not enough material between the through-bolts and the pressed studs to do this safely at any thickness."},
+  {id:"R-102", on:true, level:"block", kind:"lugDrop", p:{from:6, to:4},
+   title:"Lug count drop too large",
+   msg:"Going from {sl} lug down to {dl} lug leaves insufficient stud spacing."},
+  {id:"R-110", on:true, level:"block", kind:"patternPair", p:{a:"8x200", b:"8x6.5"},
+   title:"8x200 to 8x6.5",
+   msg:"The bolt circles overlap through the adapter body. This conversion is not producible."},
+  {id:"R-201", on:true, level:"flag", kind:"bcdReduction", p:{max:1.25},
+   title:"Large bolt pattern reduction",
+   msg:"Dropping {v}\" of bolt circle diameter needs a strength review before we quote."},
+  {id:"R-202", on:true, level:"flag", kind:"radialGap", p:{min:0.35},
+   title:"Bolt circles sit close together",
+   msg:"Only {v}\" of radial separation. Our machinist will check stud-to-hole clearance."},
+  {id:"R-203", on:true, level:"flag", kind:"thinConversion", p:{min:1.5},
+   title:"Thin adapter for a pattern change",
+   msg:"Pattern conversions under {t}\" need a stud engagement review."},
+  {id:"R-301", on:true, level:"flag", kind:"lipClearance", p:{min:4},
+   title:"Centring lip crowds the studs",
+   msg:"Only {v} mm of wall between the wheel lip and the pressed studs. Needs a machinist check."},
+  {id:"R-302", on:true, level:"flag", kind:"pocketClearance", p:{min:4},
+   title:"Hub pocket crowds the through-holes",
+   msg:"Only {v} mm of wall between the hub pocket and the vehicle stud holes. Confirm the hub measurement."},
+  {id:"R-303", on:true, level:"flag", kind:"minWheelBore", p:{min:50},
+   title:"Wheel bore unusually small",
+   msg:"Under {v} mm we will confirm the measurement before cutting."}
+];
+
+var KINDS = {
+  lugDrop:        {label:"Lug count drop",        unit:"lugs", field:"from/to"},
+  patternPair:    {label:"Specific pattern pair", unit:"",     field:"pair"},
+  bcdReduction:   {label:"Bolt circle reduction", unit:"in",   field:"max"},
+  radialGap:      {label:"Radial separation",     unit:"in",   field:"min"},
+  thinConversion: {label:"Thickness on a conversion", unit:"in", field:"min"},
+  lipClearance:   {label:"Wheel lip clearance",   unit:"mm",   field:"min"},
+  pocketClearance:{label:"Hub pocket clearance",  unit:"mm",   field:"min"},
+  minWheelBore:   {label:"Minimum wheel bore",    unit:"mm",   field:"min"}
+};
+
+/* Returns substitution values when the rule trips, or null when it does not. */
+function evalRule(r, d, src, dst){
+  var v;
+  if (r.kind === "lugDrop")
+    return (src.lugs >= r.p.from && dst.lugs <= r.p.to) ? {sl:src.lugs, dl:dst.lugs} : null;
+  if (r.kind === "patternPair")
+    return (d.hubPattern === r.p.a && d.wheelPattern === r.p.b) ? {} : null;
+  if (r.kind === "bcdReduction"){
+    v = src.bcd - dst.bcd;
+    return v > r.p.max ? {v:v.toFixed(2)} : null;
+  }
+  if (r.kind === "radialGap"){
+    if (src.lugs === dst.lugs) return null;
+    v = Math.abs(src.bcd - dst.bcd) / 2;
+    return v < r.p.min ? {v:v.toFixed(2)} : null;
+  }
+  if (r.kind === "thinConversion")
+    return (src.lugs !== dst.lugs && d.thickness < r.p.min) ? {t:r.p.min.toFixed(2)} : null;
+  if (r.kind === "lipClearance"){
+    v = (dst.bcd * 25.4 / 2) - (THREADS[d.studThread].dia / 2) - (d.wheelBore / 2);
+    return v < r.p.min ? {v:v.toFixed(1)} : null;
+  }
+  if (r.kind === "pocketClearance"){
+    v = (src.bcd * 25.4 / 2) - ((THREADS[d.vehicleThread].dia + 2.4) / 2) - (d.hubBore / 2);
+    return v < r.p.min ? {v:v.toFixed(1)} : null;
+  }
+  if (r.kind === "minWheelBore")
+    return d.wheelBore < r.p.min ? {v:r.p.min} : null;
+  return null;
+}
+
+function fill(msg, sub){
+  return msg.replace(/\{(\w+)\}/g, function(m, k){ return sub[k] !== undefined ? sub[k] : m; });
+}
+
+function validate(d){
+  var src = PATTERNS[d.hubPattern], dst = PATTERNS[d.wheelPattern], out = [];
+  RULES.forEach(function(r){
+    if (!r.on) return;
+    var sub = evalRule(r, d, src, dst);
+    if (sub) out.push({id:r.id, level:r.level, title:r.title, body:fill(r.msg, sub)});
+  });
+  if (!out.length) out.push({id:"R-000", level:"ok", title:"Buildable as drawn",
+    body:"Clears every rule in the current set. Standard lead time applies."});
+  return out;
+}
+
+/* =====================================================================
+   PRICING — editable in admin. base is the price per PAIR before the
+   thickness multiplier and the conversion surcharge.
+   ===================================================================== */
+var PRICING = {
+  base:  {4:70, 5:75, 6:80, 8:105},
+  thick: {1:0.85, 1.25:0.92, 1.5:1.0, 2:1.12, 2.5:1.3, 3:1.45},
+  conversion: 40
+};
+
+function priceOf(d, issues){
+  if (issues.some(function(i){return i.level === "block"})) return {mode:"blocked"};
+  if (issues.some(function(i){return i.level === "flag"}))  return {mode:"quote"};
+  var src = PATTERNS[d.hubPattern], dst = PATTERNS[d.wheelPattern];
+  var base = PRICING.base[Math.max(src.lugs, dst.lugs)] || 80;
+  var tf = PRICING.thick[d.thickness] || 1;
+  var pairRaw = base * tf;
+  if (d.hubPattern !== d.wheelPattern) pairRaw += PRICING.conversion;
+  var pair = Math.round(pairRaw) - 0.05;
+  return {mode:"price", pair:pair, total:pair * (d.qty / 2)};
+}
+
+/* ---------------- drawing ---------------- */
+/* compact=true draws the face only, for list thumbnails. */
+function faceSvg(d, compact){
+  var src = PATTERNS[d.hubPattern], dst = PATTERNS[d.wheelPattern];
+  var od = Math.max(src.bcd, dst.bcd) + 2.0;
+  if (compact){
+    var c = 50, cs = 46 / od, s2 = [];
+    s2.push('<svg viewBox="0 0 100 100" role="img" aria-label="' + d.hubPattern + " to " +
+      d.wheelPattern + ' adapter">');
+    s2.push('<circle cx="50" cy="50" r="' + (od / 2 * cs).toFixed(1) +
+      '" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.4"/>');
+    s2.push('<circle cx="50" cy="50" r="' + (d.hubBore / 25.4 / 2 * cs).toFixed(1) +
+      '" fill="var(--card)" stroke="var(--ink)" stroke-width="1"/>');
+    var j, ang;
+    for (j = 0; j < src.lugs; j++){
+      ang = (-90 + j * 360 / src.lugs) * Math.PI / 180;
+      s2.push('<circle cx="' + (c + src.bcd / 2 * cs * Math.cos(ang)).toFixed(1) +
+        '" cy="' + (c + src.bcd / 2 * cs * Math.sin(ang)).toFixed(1) +
+        '" r="2.4" fill="none" stroke="var(--cyan)" stroke-width="1.3"/>');
+    }
+    for (j = 0; j < dst.lugs; j++){
+      ang = (-90 + 360 / dst.lugs / 2 + j * 360 / dst.lugs) * Math.PI / 180;
+      s2.push('<circle cx="' + (c + dst.bcd / 2 * cs * Math.cos(ang)).toFixed(1) +
+        '" cy="' + (c + dst.bcd / 2 * cs * Math.sin(ang)).toFixed(1) +
+        '" r="2.6" fill="var(--accent)"/>');
+    }
+    s2.push("</svg>");
+    return s2.join("");
+  }
+  var W = 340, cx = 150, cy = 168;
+  var S = 222 / od;                     // px per inch
+  var R = od / 2 * S;
+  var hubR = d.hubBore / 25.4 / 2 * S;
+  var srcHoleR = (THREADS[d.vehicleThread].dia + 2.4) / 25.4 / 2 * S;
+  var dstStudR = THREADS[d.studThread].dia / 25.4 / 2 * S;
+  var s = [];
+
+  s.push('<svg viewBox="0 0 ' + W + ' 352" role="img" aria-label="Adapter face and side profile drawn to scale">');
+  s.push('<defs><pattern id="hatch" width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">' +
+         '<line x1="0" y1="0" x2="0" y2="5" stroke="var(--line-2)" stroke-width="1"/></pattern></defs>');
+
+  /* construction grid */
+  s.push('<g stroke="var(--grid)" stroke-width="1">');
+  for (var g = 12; g < 352; g += 24) s.push('<line x1="0" y1="' + g + '" x2="' + W + '" y2="' + g + '"/>');
+  for (var g2 = 12; g2 < W; g2 += 24) s.push('<line x1="' + g2 + '" y1="0" x2="' + g2 + '" y2="352"/>');
+  s.push('</g>');
+
+  /* body */
+  s.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + R.toFixed(1) + '" fill="url(#hatch)" opacity=".45"/>');
+  s.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + R.toFixed(1) + '" fill="none" stroke="var(--ink)" stroke-width="1.6"/>');
+
+  /* centre lines */
+  s.push('<g stroke="var(--steel-2)" stroke-width=".8" stroke-dasharray="9 3 2 3" opacity=".8">');
+  s.push('<line x1="' + (cx - R - 14) + '" y1="' + cy + '" x2="' + (cx + R + 14) + '" y2="' + cy + '"/>');
+  s.push('<line x1="' + cx + '" y1="' + (cy - R - 14) + '" x2="' + cx + '" y2="' + (cy + R + 14) + '"/>');
+  s.push('</g>');
+
+  /* bolt circles */
+  s.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + (src.bcd / 2 * S).toFixed(1) +
+         '" fill="none" stroke="var(--cyan)" stroke-width=".9" stroke-dasharray="4 4" opacity=".85"/>');
+  s.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + (dst.bcd / 2 * S).toFixed(1) +
+         '" fill="none" stroke="var(--accent)" stroke-width=".9" stroke-dasharray="4 4" opacity=".85"/>');
+
+  /* centre bore */
+  s.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + hubR.toFixed(1) +
+         '" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>');
+
+  /* vehicle-side through holes */
+  var i, a, x, y;
+  for (i = 0; i < src.lugs; i++){
+    a = (-90 + i * 360 / src.lugs) * Math.PI / 180;
+    x = cx + src.bcd / 2 * S * Math.cos(a);
+    y = cy + src.bcd / 2 * S * Math.sin(a);
+    s.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + srcHoleR.toFixed(1) +
+           '" fill="var(--paper)" stroke="var(--cyan)" stroke-width="1.5"/>');
+  }
+  /* wheel-side pressed studs, clocked off the through holes */
+  var off = 360 / dst.lugs / 2;
+  for (i = 0; i < dst.lugs; i++){
+    a = (-90 + off + i * 360 / dst.lugs) * Math.PI / 180;
+    x = cx + dst.bcd / 2 * S * Math.cos(a);
+    y = cy + dst.bcd / 2 * S * Math.sin(a);
+    s.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + dstStudR.toFixed(1) +
+           '" fill="var(--accent)" stroke="var(--ink)" stroke-width=".8"/>');
+  }
+
+  /* OD dimension */
+  var dy = cy + R + 22;
+  s.push('<g stroke="var(--steel)" stroke-width=".9">');
+  s.push('<line x1="' + (cx - R) + '" y1="' + dy + '" x2="' + (cx + R) + '" y2="' + dy + '"/>');
+  s.push('<line x1="' + (cx - R) + '" y1="' + (dy - 4) + '" x2="' + (cx - R) + '" y2="' + (dy + 4) + '"/>');
+  s.push('<line x1="' + (cx + R) + '" y1="' + (dy - 4) + '" x2="' + (cx + R) + '" y2="' + (dy + 4) + '"/>');
+  s.push('</g>');
+  s.push('<text x="' + cx + '" y="' + (dy + 15) + '" text-anchor="middle" fill="var(--steel)" ' +
+         'font-family="IBM Plex Mono, monospace" font-size="11">&#8709; ' + od.toFixed(2) + '" OD</text>');
+
+  /* side profile */
+  var px = 306, tw = Math.max(8, Math.min(24, d.thickness * S * 0.42)), ph = R * 1.5;
+  var py = cy - ph / 2;
+  s.push('<rect x="' + (px - tw / 2) + '" y="' + py + '" width="' + tw + '" height="' + ph +
+         '" fill="url(#hatch)" stroke="var(--ink)" stroke-width="1.3"/>');
+  s.push('<g stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round">');
+  s.push('<line x1="' + (px + tw / 2) + '" y1="' + (py + 12) + '" x2="' + (px + tw / 2 + 13) + '" y2="' + (py + 12) + '"/>');
+  s.push('<line x1="' + (px + tw / 2) + '" y1="' + (py + ph - 12) + '" x2="' + (px + tw / 2 + 13) + '" y2="' + (py + ph - 12) + '"/>');
+  s.push('</g>');
+  s.push('<text x="' + px + '" y="' + (py - 8) + '" text-anchor="middle" fill="var(--steel)" ' +
+         'font-family="IBM Plex Mono, monospace" font-size="11">' + d.thickness.toFixed(2) + '"</text>');
+  s.push('<text x="' + px + '" y="' + (py + ph + 16) + '" text-anchor="middle" fill="var(--steel-2)" ' +
+         'font-family="IBM Plex Mono, monospace" font-size="9.5">SIDE</text>');
+
+  s.push('</svg>');
+  return s.join("");
+}
+
+/* ---------------- render ---------------- */
+function el(id){ return document.getElementById(id); }
+
+function fieldSelect(key, label, hint, map){
+  var o = '<div class="f"><label for="' + key + '">' + label + '</label>' +
+          '<select id="' + key + '" data-key="' + key + '">';
+  for (var k in map){
+    o += '<option value="' + k + '"' + (design[key] === k ? ' selected' : '') + '>' +
+         (map[k].label || k) + '</option>';
+  }
+  o += '</select><span class="hint">' + hint + '</span></div>';
+  return o;
+}
+/* Error styling is painted onto existing nodes by paintErrors(), never rebuilt here.
+   Rebuilding mid-click shifts the layout and the button press misses. */
+function fieldNum(key, label, hint, stepv){
+  return '<div class="f"><label for="' + key + '">' + label + '</label>' +
+    '<input type="number" id="' + key + '" data-key="' + key + '" value="' +
+    (design[key] || "") + '" step="' + stepv + '" min="0" inputmode="decimal" ' +
+    'aria-describedby="' + key + '-err">' +
+    '<span class="hint">' + hint + "</span>" +
+    '<span class="err" id="' + key + '-err" hidden></span></div>';
+}
+
+function paintErrors(){
+  var nodes = document.querySelectorAll("#fields [data-key]");
+  for (var i = 0; i < nodes.length; i++){
+    var n = nodes[i], k = n.getAttribute("data-key"), f = n.parentNode;
+    if (!f || f.className.indexOf("f") !== 0) continue;
+    var msg = shownErrors[k];
+    var errEl = f.querySelector(".err"), hintEl = f.querySelector(".hint");
+    if (msg){
+      f.className = "f bad" + (f.className.indexOf("full") > -1 ? " full" : "");
+      if (errEl){ errEl.textContent = msg; errEl.hidden = false; }
+      if (hintEl) hintEl.hidden = true;
+      n.setAttribute("aria-invalid", "true");
+    } else {
+      f.className = "f" + (f.className.indexOf("full") > -1 ? " full" : "");
+      if (errEl) errEl.hidden = true;
+      if (hintEl) hintEl.hidden = false;
+      n.removeAttribute("aria-invalid");
+    }
+  }
+}
+
+function renderFields(){
+  var h = "";
+  if (step === 0){
+    h += '<div class="f full"><div class="modes">' +
+      [["popular","Popular trucks"],["vehicle","Find my vehicle"],["manual","I know my specs"]]
+      .map(function(m){
+        return '<button type="button" data-mode="' + m[0] + '" aria-pressed="' +
+          (design.mode === m[0]) + '">' + m[1] + "</button>";
+      }).join("") + "</div></div>";
+
+    if (design.mode === "popular"){
+      h += '<div class="f full"><div class="picks">';
+      POPULAR.forEach(function(p){
+        var on = design.vehicle === p.i;
+        h += '<button type="button" class="pick" data-veh="' + p.i + '" aria-pressed="' + on + '">' +
+          "<b>" + p.label + "</b><span>" + p.sub + "</span></button>";
+      });
+      h += "</div><span class=\"hint\">Not here? Try <b>Find my vehicle</b> or enter specs by hand.</span></div>";
+    }
+
+    if (design.mode === "vehicle"){
+      var makes = [], seen = {};
+      VEHICLES.forEach(function(v){ if (!seen[v.mk]){ seen[v.mk] = 1; makes.push(v.mk); } });
+      h += '<div class="f"><label for="pickMake">Make</label><select id="pickMake" data-key="pickMake">' +
+        makes.map(function(m){
+          return '<option value="' + m + '"' + (design.pickMake === m ? " selected" : "") + ">" + m + "</option>";
+        }).join("") + "</select></div>";
+
+      var models = [], seen2 = {};
+      VEHICLES.forEach(function(v){
+        if (v.mk === design.pickMake && !seen2[v.md]){ seen2[v.md] = 1; models.push(v.md); }
+      });
+      if (models.indexOf(design.pickModel) === -1) design.pickModel = models[0];
+      h += '<div class="f"><label for="pickModel">Model</label><select id="pickModel" data-key="pickModel">' +
+        models.map(function(m){
+          return '<option value="' + m + '"' + (design.pickModel === m ? " selected" : "") + ">" + m + "</option>";
+        }).join("") + "</select></div>";
+
+      h += '<div class="f full"><label>Year range</label><div class="seg">';
+      VEHICLES.forEach(function(v, i){
+        if (v.mk === design.pickMake && v.md === design.pickModel){
+          h += '<button type="button" data-veh="' + i + '" aria-pressed="' +
+            (design.vehicle === i) + '">' + v.yr + "</button>";
+        }
+      });
+      h += '</div><span class="hint">Dually, 2WD and 4WD can differ. Check the hub if you are unsure.</span></div>';
+    }
+
+    if (design.vehicle !== null && design.mode !== "manual"){
+      var v = VEHICLES[design.vehicle];
+      h += '<div class="f full"><div class="filled"><span class="ic">&#10003;</span>' +
+        "<div><b>Filled from a " + v.yr + " " + v.mk + " " + v.md + "</b>" +
+        "<p>Check these three against your actual hub before you submit. " +
+        "Trim and drivetrain can change them.</p></div></div></div>";
+    }
+
+    h += fieldSelect("hubPattern", "Hub bolt pattern", "Studs on the vehicle hub.", PATTERNS);
+    h += fieldNum("hubBore", "Hub bore (mm)", "Outside diameter of the centre hub.", "0.1");
+    h += fieldSelect("vehicleThread", "Vehicle stud thread", "What threads onto the car's studs.", THREADS);
+  } else if (step === 1){
+    h += fieldSelect("wheelPattern", "Wheel bolt pattern", "Pattern of the wheel you are fitting.", PATTERNS);
+    h += fieldNum("wheelBore", "Wheel centre bore (mm)", "Centre hole in the back of the wheel.", "0.1");
+  } else if (step === 2){
+    h += '<div class="f full"><label>Thickness</label><div class="seg" id="thickseg">';
+    THICKNESS.forEach(function(t){
+      h += '<button type="button" data-thick="' + t + '" aria-pressed="' +
+           (design.thickness === t) + '">' + t.toFixed(2) + '"</button>';
+    });
+    h += '</div><span class="hint">Face to face. Studs add height on top of this.</span></div>';
+    h += fieldSelect("studThread", "Pressed stud thread", "Studs the new wheel mounts to.", THREADS);
+    h += '<div class="f"><label>Quantity</label><div class="seg" id="qtyseg">' +
+         ['2','4'].map(function(q){
+           return '<button type="button" data-qty="' + q + '" aria-pressed="' +
+             (design.qty === +q) + '">' + q + ' pieces</button>';
+         }).join('') + '</div><span class="hint">Two per axle.</span></div>';
+  }
+  el("fields").innerHTML = h;
+}
+
+function renderChecks(issues){
+  var glyph = {block:"&#10005;", flag:"&#9888;", ok:"&#10003;"};
+  el("checks").innerHTML = issues.map(function(i){
+    return '<div class="chk ' + i.level + '"><span class="ic">' + glyph[i.level] + '</span>' +
+      '<span class="body"><b>' + i.title + ' <code>' + i.id + '</code></b>' +
+      '<p>' + i.body + '</p></span></div>';
+  }).join("");
+}
+
+function renderTitleBlock(d, issues){
+  var src = PATTERNS[d.hubPattern], dst = PATTERNS[d.wheelPattern];
+  var blocked = issues.some(function(i){return i.level === "block"});
+  var rows = [
+    ["Conversion", src.label.split(" ")[0] + " → " + dst.label.split(" ")[0]],
+    ["Thickness", d.thickness.toFixed(2) + '"'],
+    ["Hub bore", d.hubBore.toFixed(1) + " mm"],
+    ["Wheel bore", d.wheelBore.toFixed(1) + " mm"],
+    ["Studs", THREADS[d.studThread].label],
+    ["Material", "6061-T6 billet"],
+    ["Quantity", d.qty + " pc"],
+    ["Status", blocked ? "NOT BUILDABLE" : "DRAFT"]
+  ];
+  el("titleblock").innerHTML = rows.map(function(r){
+    return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>";
+  }).join("");
+}
+
+function renderPrice(p){
+  var a = el("amt"), per = el("per");
+  a.className = "amt";
+  if (p.mode === "blocked"){
+    a.classList.add("quote");
+    a.textContent = "Not buildable";
+    per.innerHTML = "<b>Pricing</b>Change the specs above to continue.";
+  } else if (p.mode === "quote"){
+    a.classList.add("quote");
+    a.textContent = "Quote required";
+    per.innerHTML = "<b>Pricing</b>Flagged for engineering review. We will price it and email you.";
+  } else {
+    a.textContent = "$" + p.total.toFixed(2);
+    per.innerHTML = "<b>Pricing</b>$" + p.pair.toFixed(2) + " per pair, free shipping in the USA.";
+  }
+}
+
+/* ---------------- admin ---------------- */
+var VERSION = {major:1, minor:0};
+var dirty = 0;
+var AUDIT = [
+  {at:ago(2), who:"Dana R.", what:"Published rule set v1.0 — initial set from the shop floor"},
+  {at:ago(26), who:"Marcus T.", what:"Raised R-201 reduction limit from 1.00\" to 1.25\" after the Tundra job"},
+  {at:ago(74), who:"Dana R.", what:"Added R-110 after the 8x200 sample cracked in test"}
+];
+
+/* The catalogue prices the formula has to keep reproducing. */
+var CATALOGUE = [
+  {label:"6x5.5 → 5x4.5, 2.00\"", want:129.95,
+   d:{hubPattern:"6x5.5", wheelPattern:"5x4.5", thickness:2, qty:2}},
+  {label:"8x6.5 → 8x180, 2.00\"", want:157.95,
+   d:{hubPattern:"8x6.5", wheelPattern:"8x180", thickness:2, qty:2}},
+  {label:"6x5.5 spacer, 1.00\"", want:67.95,
+   d:{hubPattern:"6x5.5", wheelPattern:"6x5.5", thickness:1, qty:2}}
+];
+
+function touch(){ dirty++; renderAdmin(); render(true); }
+
+function renderRules(){
+  var h = "";
+  RULES.forEach(function(r, i){
+    var k = KINDS[r.kind];
+    h += '<div class="rule' + (r.on ? "" : " off") + '">';
+    h += '<div class="rule-hd">';
+    h += '<button type="button" class="tgl" data-toggle="' + i + '" aria-pressed="' + r.on +
+         '" aria-label="' + (r.on ? "Disable " : "Enable ") + r.id + '"><span></span></button>';
+    h += '<span class="rule-id mono">' + r.id + "</span>";
+    h += '<span class="rule-title">' + r.title + "</span>";
+    h += '<select class="lvl" data-level="' + i + '" aria-label="Severity for ' + r.id + '">' +
+         '<option value="block"' + (r.level === "block" ? " selected" : "") + ">Block</option>" +
+         '<option value="flag"' + (r.level === "flag" ? " selected" : "") + ">Flag</option></select>";
+    h += "</div>";
+    h += '<div class="rule-bd"><span class="rule-kind">' + k.label + "</span>";
+    if (r.kind === "lugDrop"){
+      h += "<span>hub</span><input type='number' class='mini' data-rp='" + i +
+           ".from' value='" + r.p.from + "' min='3' max='10'><span>lug or more → wheel</span>" +
+           "<input type='number' class='mini' data-rp='" + i + ".to' value='" + r.p.to +
+           "' min='3' max='10'><span>lug or fewer</span>";
+    } else if (r.kind === "patternPair"){
+      h += "<span class='mono'>" + r.p.a + " → " + r.p.b + "</span>";
+    } else {
+      var f = k.field;
+      h += "<span>" + (f === "max" ? "over" : "under") + "</span>" +
+           "<input type='number' class='mini' data-rp='" + i + "." + f + "' value='" + r.p[f] +
+           "' step='0.05' min='0'><span>" + k.unit + "</span>";
+    }
+    h += "</div></div>";
+  });
+  el("rulelist").innerHTML = h;
+}
+
+function renderPricing(){
+  var h = '<div class="pgrid"><span class="plabel">Base per pair</span>';
+  [4,5,6,8].forEach(function(l){
+    h += "<label class='punit'>" + l + " lug<input type='number' data-pb='" + l +
+         "' value='" + PRICING.base[l] + "' step='1' min='0'></label>";
+  });
+  h += "</div>";
+  h += '<div class="pgrid"><span class="plabel">Thickness multiplier</span>';
+  [1,1.25,1.5,2,2.5,3].forEach(function(t){
+    h += "<label class='punit'>" + t.toFixed(2) + "\"<input type='number' data-pt='" + t +
+         "' value='" + PRICING.thick[t] + "' step='0.01' min='0'></label>";
+  });
+  h += "</div>";
+  h += '<div class="pgrid"><span class="plabel">Conversion surcharge</span>' +
+       "<label class='punit'>added once<input type='number' data-pc='1' value='" +
+       PRICING.conversion + "' step='1' min='0'></label></div>";
+  el("priceform").innerHTML = h;
+}
+
+function renderPriceCheck(){
+  var h = "";
+  CATALOGUE.forEach(function(c){
+    var d = {}; for (var kk in design) d[kk] = design[kk];
+    for (var j in c.d) d[j] = c.d[j];
+    var got = priceOf(d, [{level:"ok"}]);
+    var val = got.mode === "price" ? got.pair : null;
+    var ok = val !== null && Math.abs(val - c.want) < 0.005;
+    h += '<div class="ck' + (ok ? " ok" : " off") + '">' +
+      "<span class='ck-l'>" + c.label + "</span>" +
+      "<span class='ck-v mono'>" + (val === null ? "—" : "$" + val.toFixed(2)) + "</span>" +
+      "<span class='ck-w mono'>" + (ok ? "matches" : "was $" + c.want.toFixed(2)) + "</span></div>";
+  });
+  el("pricecheck").innerHTML = h;
+}
+
+function renderAudit(){
+  el("audit").innerHTML = AUDIT.map(function(a){
+    return '<div class="aud"><span class="aud-when mono">' + fmtWhen(a.at) + "</span>" +
+      '<span class="aud-who">' + a.who + "</span>" +
+      '<span class="aud-what">' + a.what + "</span></div>";
+  }).join("");
+}
+
+function renderAdmin(){
+  el("verlabel").textContent = "Rule set v" + VERSION.major + "." + VERSION.minor;
+  el("verstate").textContent = dirty
+    ? dirty + (dirty === 1 ? " unsaved change" : " unsaved changes")
+    : "Live · no unsaved changes";
+  el("verstate").className = dirty ? "dirty" : "";
+  el("publish").disabled = !dirty;
+  el("publish").textContent = dirty
+    ? "Publish v" + VERSION.major + "." + (VERSION.minor + 1) : "Publish";
+  el("discard").hidden = !dirty;
+  renderRules(); renderPricing(); renderPriceCheck(); renderAudit();
+}
+
+function renderDesigns(){
+  var h = "";
+  SUBMISSIONS.forEach(function(s){
+    var left = editLeft(s);
+    var urgent = left !== Infinity && left > 0 && left < 1;
+    var open = left > 0;
+    var pillClass = s.stage === 0 ? "s-draft"
+      : s.stage <= 2 ? "s-live" : s.stage === 3 ? "s-act" : "s-done";
+
+    h += '<article class="sub">';
+    h += '<div class="sub-thumb">' + faceSvg(s.d, true) + "</div>";
+
+    h += '<div class="sub-main">';
+    h += '<div class="sub-top"><span class="sub-id mono">' + s.id + "</span>" +
+         '<span class="pill ' + pillClass + '">' + STAGES[s.stage] + "</span></div>";
+    h += '<div class="sub-spec mono">' + s.d.hubPattern + " → " + s.d.wheelPattern +
+         " &middot; " + s.d.thickness.toFixed(2) + '" &middot; ' + s.d.qty + " pc &middot; " +
+         THREADS[s.d.studThread].label + "</div>";
+    h += '<div class="sub-note">' + s.note + " &middot; " + fmtWhen(s.at) + "</div>";
+    h += '<div class="track" aria-label="Stage ' + (s.stage + 1) + ' of 8">';
+    for (var i = 0; i < 8; i++){
+      h += '<span class="tick' + (i <= s.stage ? " on" : "") + '"></span>';
+    }
+    h += "</div></div>";
+
+    h += '<div class="sub-side">';
+    if (s.quote) h += '<div class="sub-price mono">$' + s.quote.toFixed(2) + "</div>";
+    if (left === Infinity){
+      h += '<div class="win">Not submitted yet</div>' +
+           '<button type="button" class="btn-sm primary" data-edit="' + s.id + '">Continue design</button>';
+    } else if (open){
+      h += '<div class="win' + (urgent ? " urgent" : "") + '" data-clock="' + s.id + '">' +
+           fmtLeft(left) + "</div>" +
+           '<button type="button" class="btn-sm primary" data-edit="' + s.id + '">Edit design</button>';
+    } else {
+      h += '<div class="win closed">Edit window closed</div>' +
+           '<button type="button" class="btn-sm" data-change="' + s.id + '">Request a change</button>';
+    }
+    h += "</div></article>";
+  });
+  el("subs").innerHTML = h;
+}
+
+function tickClocks(){
+  var nodes = document.querySelectorAll("[data-clock]");
+  for (var i = 0; i < nodes.length; i++){
+    var id = nodes[i].getAttribute("data-clock");
+    for (var j = 0; j < SUBMISSIONS.length; j++){
+      if (SUBMISSIONS[j].id === id){
+        var left = editLeft(SUBMISSIONS[j]);
+        if (left <= 0){ renderDesigns(); return; }
+        nodes[i].textContent = fmtLeft(left);
+        if (left < 1) nodes[i].className = "win urgent";
+      }
+    }
+  }
+}
+
+function renderStages(){
+  var S = [
+    ["01","Draft","Drawing created from the data you gave us."],
+    ["02","Submitted","Sent to the office for review."],
+    ["03","Under review","Safety, design, production cost and time."],
+    ["04","Quoted","Invoice created and emailed to you."],
+    ["05","Paid","Payment creates your order number."],
+    ["06","Production","Production order generated for the floor."],
+    ["07","Quality control","Checked at the QC station."],
+    ["08","Shipped","Tracking number and photos of your parts."]
+  ];
+  el("stages").innerHTML = S.map(function(s, i){
+    return '<div class="stage' + (i === 0 ? " live" : "") + '"><div class="n">' + s[0] + '</div>' +
+      "<h3>" + s[1] + "</h3><p>" + s[2] + "</p></div>";
+  }).join("");
+}
+
+function renderRail(){
+  el("rail").innerHTML = STEPS.map(function(s, i){
+    return '<button type="button" data-step="' + i + '" aria-current="' + (i === step) + '">' +
+      '<span class="rn">' + s.n + "</span><span class=\"rl\">" + s.label + "</span></button>";
+  }).join("");
+}
+
+/* skipFields=true updates the drawing, checks and price without rebuilding the
+   inputs — so typing in a number field does not blow away focus or the caret. */
+function render(skipFields){
+  var issues = validate(design);
+  var p = priceOf(design, issues);
+  renderRail();
+  el("steptitle").textContent = STEPS[step].title;
+  el("stepblurb").textContent = STEPS[step].blurb;
+
+  if (editing){
+    var es = subById(editing), left = editLeft(es);
+    el("editbar").innerHTML = '<div class="editbar"><div><b>Editing ' + es.id + "</b>" +
+      "<span>" + (left === Infinity ? "Unsent draft — no time limit"
+                                    : fmtLeft(left) + " to change this without re-approval") +
+      "</span></div><button type='button' class='btn-sm' id='leave-edit'>Start fresh instead</button></div>";
+  } else {
+    el("editbar").innerHTML = "";
+  }
+
+  var keys = Object.keys(shownErrors);
+  el("alertzone").innerHTML = keys.length
+    ? '<div class="alert" role="alert"><span class="ic">!</span><div>' +
+      "<b>" + (keys.length === 1 ? "One thing to fix" : keys.length + " things to fix") + "</b>" +
+      "<ul>" + keys.map(function(k){ return "<li>" + shownErrors[k] + "</li>"; }).join("") +
+      "</ul></div></div>"
+    : "";
+
+  if (!skipFields) renderFields();
+  paintErrors();
+  renderChecks(issues);
+  el("face").innerHTML = faceSvg(design);
+  renderTitleBlock(design, issues);
+  renderPrice(p);
+
+  var review = step === 3;
+  el("reviewzone").hidden = !review;
+  el("legaltext").textContent = LEGAL;
+  el("back").hidden = step === 0;
+  var blocked = issues.some(function(i){return i.level === "block"});
+  var nx = el("next"), why = el("why");
+  nx.textContent = review ? (p.mode === "quote" ? "Submit for quote" : "Submit design") : "Continue";
+  /* The button stays live so pressing it explains what is missing. A hard block is
+     the one case where it genuinely cannot proceed. */
+  nx.disabled = blocked;
+  why.textContent = blocked
+    ? "This combination cannot be built. Change the specs to continue."
+    : (review && !el("accept").checked ? "Accept the terms above to submit." : "");
+  el("rev").textContent = "REV A · " + (blocked ? "BLOCKED" : "DRAFT");
+  stamp();
+}
+
+var t0 = null;
+function stamp(){
+  if (!t0) t0 = new Date();
+  el("saved").textContent = "Draft saved " + t0.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+}
+
+/* ---------------- events ---------------- */
+/* Live update while typing a measurement — redraw everything except the inputs. */
+document.addEventListener("input", function(e){
+  var t = e.target;
+  if (!t.getAttribute || t.type !== "number") return;
+  var k = t.getAttribute("data-key");
+  if (!k) return;
+  design[k] = parseFloat(t.value) || 0;
+  if (k === "hubPattern" || k === "hubBore" || k === "vehicleThread") design.vehicle = null;
+  if (shownErrors[k]) revalidate(k);
+  render(true);
+});
+
+/* Re-check one field rather than assuming any edit fixed it. Replacing the fields
+   markup fires a change event on the discarded input, so a blind delete here would
+   wipe an error the moment it was shown. */
+function revalidate(k){
+  var e = stepErrors(step);
+  if (e[k]) shownErrors[k] = e[k]; else delete shownErrors[k];
+}
+
+/* admin edits: rule params, severity, pricing */
+document.addEventListener("input", function(e){
+  var t = e.target;
+  if (!t.getAttribute) return;
+  var rp = t.getAttribute("data-rp");
+  if (rp){
+    var parts = rp.split("."), rr = RULES[+parts[0]];
+    rr.p[parts[1]] = parseFloat(t.value) || 0;
+    dirty++; renderPriceCheck(); render(true);
+    el("verstate").textContent = dirty + (dirty === 1 ? " unsaved change" : " unsaved changes");
+    el("verstate").className = "dirty";
+    el("publish").disabled = false;
+    el("publish").textContent = "Publish v" + VERSION.major + "." + (VERSION.minor + 1);
+    el("discard").hidden = false;
+    return;
+  }
+  var pb = t.getAttribute("data-pb"), pt = t.getAttribute("data-pt"), pc = t.getAttribute("data-pc");
+  if (pb || pt || pc){
+    if (pb) PRICING.base[pb] = parseFloat(t.value) || 0;
+    if (pt) PRICING.thick[pt] = parseFloat(t.value) || 0;
+    if (pc) PRICING.conversion = parseFloat(t.value) || 0;
+    dirty++; renderPriceCheck(); render(true);
+    el("verstate").textContent = dirty + (dirty === 1 ? " unsaved change" : " unsaved changes");
+    el("verstate").className = "dirty";
+    el("publish").disabled = false;
+    el("publish").textContent = "Publish v" + VERSION.major + "." + (VERSION.minor + 1);
+    el("discard").hidden = false;
+  }
+});
+
+document.addEventListener("change", function(e){
+  var lv = e.target.getAttribute && e.target.getAttribute("data-level");
+  if (lv){ RULES[+lv].level = e.target.value; touch(); return; }
+  var k = e.target.getAttribute && e.target.getAttribute("data-key");
+  if (k){
+    design[k] = e.target.type === "number" ? parseFloat(e.target.value) || 0 : e.target.value;
+    /* Changing the make or model invalidates the year pick; hand-editing any of the
+       three hub values means it is no longer "filled from" a vehicle. */
+    if (k === "pickMake" || k === "pickModel") design.vehicle = null;
+    if (k === "hubPattern" || k === "hubBore" || k === "vehicleThread") design.vehicle = null;
+    if (shownErrors[k]) revalidate(k);
+    /* Never rebuild the fields on a value change — a blur mid-click would move
+       the button out from under the pointer. */
+    render(e.target.type === "number");
+  }
+  if (e.target.id === "accept"){
+    if (shownErrors.accept && el("accept").checked) delete shownErrors.accept;
+    render();
+  }
+});
+document.addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest("button") : null;
+  if (!b) return;
+  if (b.id === "starttour"){ showTour(0); return; }
+  if (b.id === "tournext"){ showTour(tourAt + 1); return; }
+  if (b.id === "tourback"){ showTour(tourAt - 1); return; }
+  if (b.id === "tourskip"){ endTour(); return; }
+  if (b.hasAttribute("data-view")){ endTour(); setView(b.getAttribute("data-view")); }
+  else if (b.hasAttribute("data-toggle")){
+    var r = RULES[+b.getAttribute("data-toggle")];
+    r.on = !r.on; touch();
+  }
+  else if (b.id === "publish"){
+    VERSION.minor++;
+    AUDIT.unshift({at:Date.now(), who:"You (demo)",
+      what:"Published rule set v" + VERSION.major + "." + VERSION.minor + " — " +
+           dirty + (dirty === 1 ? " change" : " changes")});
+    dirty = 0;
+    el("rulestamp").textContent = "Rule set v" + VERSION.major + "." + VERSION.minor;
+    renderAdmin();
+  }
+  else if (b.id === "discard"){
+    dirty = 0; renderAdmin();
+  }
+  else if (b.hasAttribute("data-edit")){
+    var s = subById(b.getAttribute("data-edit"));
+    for (var key in s.d) design[key] = s.d[key];
+    design.vehicle = null; design.mode = "manual";
+    editing = s.id; step = 0; shownErrors = {};
+    setView("design");
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  else if (b.hasAttribute("data-change")){
+    var sc = subById(b.getAttribute("data-change"));
+    b.outerHTML = '<div class="win closed">Change requested. Our team will email you.</div>';
+    sc.note = "Change requested — awaiting re-approval";
+  }
+  else if (b.id === "leave-edit"){ editing = null; render(); }
+  else if (b.hasAttribute("data-mode")){ design.mode = b.getAttribute("data-mode"); render(); }
+  else if (b.hasAttribute("data-veh")){
+    var v = VEHICLES[+b.getAttribute("data-veh")];
+    design.vehicle = +b.getAttribute("data-veh");
+    design.pickMake = v.mk; design.pickModel = v.md;
+    design.hubPattern = v.p; design.hubBore = v.b; design.vehicleThread = v.t;
+    render();
+  }
+  else if (b.hasAttribute("data-step")){
+    step = +b.getAttribute("data-step"); shownErrors = {}; render();
+  }
+  else if (b.hasAttribute("data-thick")){ design.thickness = parseFloat(b.getAttribute("data-thick")); render(); }
+  else if (b.hasAttribute("data-qty")){ design.qty = +b.getAttribute("data-qty"); render(); }
+  else if (b.id === "back"){ step = Math.max(0, step - 1); render(); window.scrollTo({top:0, behavior:"smooth"}); }
+  else if (b.id === "next"){
+    var errs = stepErrors(step);
+    var bad = Object.keys(errs);
+    if (bad.length){
+      shownErrors = errs;
+      render();
+      var first = el(bad[0]);
+      if (first){
+        first.scrollIntoView({block:"center", behavior:"smooth"});
+        first.focus({preventScroll:true});
+      }
+      return;
+    }
+    shownErrors = {};
+    if (step < 3){ step++; render(); window.scrollTo({top:0, behavior:"smooth"}); }
+    else {
+      var d = "WA-" + String(Math.floor(Math.random() * 9000) + 1000);
+      b.textContent = "Submitted · draft " + d;
+      b.disabled = true;
+      el("rev").textContent = "REV A · SUBMITTED";
+      var live = document.querySelectorAll(".stage");
+      if (live[0]) live[0].classList.remove("live");
+      if (live[1]) live[1].classList.add("live");
+    }
+  }
+});
+
+/* =====================================================================
+   SPOTLIGHT TOUR
+   Artifacts cannot use position:fixed (it collapses the frame), so the
+   mask and tooltip are positioned absolutely in DOCUMENT coordinates:
+   getBoundingClientRect() + scrollY. The dimming is one box-shadow
+   spreading out from the highlighted rect.
+   ===================================================================== */
+var TOUR = [
+  {view:"design", sel:".tabs", title:"Four sections",
+   body:"Design something new, check what you have already sent, and — for our team — the rules and prices behind it all."},
+  {view:"design", step:0, sel:"#fields .modes", title:"Three ways to start",
+   body:"Tap a popular truck, search by make and model, or type your specs in directly. All three fill the same fields."},
+  {view:"design", step:0, sel:"#fields", title:"Always editable",
+   body:"A vehicle lookup fills these in, but it never locks them. Check them against your own hub — trim and drivetrain change the answer."},
+  {view:"design", step:0, sel:".canvas", title:"Drawn to scale",
+   body:"Not a stock photo. Bolt circles, hole sizes and the centre bore are computed from your numbers and redraw as you type."},
+  {view:"design", step:0, sel:"#checks", title:"Checks as you go",
+   body:"Every change runs against our rule set. Green clears. Amber needs a person to look. Red cannot be built at all."},
+  {view:"design", step:0, sel:".price", title:"Price or quote",
+   body:"Standard builds price on the spot. Anything flagged goes to our team to quote by hand."},
+  {view:"list", sel:"#subs .sub:nth-child(2)", title:"Your designs",
+   body:"Everything you have started or sent. Each thumbnail is rebuilt from your saved numbers, so it can never go stale."},
+  {view:"list", sel:"#subs .sub:nth-child(3) .sub-side", title:"Twelve hours to change your mind",
+   body:"The clock runs from when you submit. Inside it, edit the design yourself. After it, our team has to re-approve."},
+  {view:"admin", sel:"#rulelist .rule", title:"Rules are editable",
+   body:"Switch a rule off, change its threshold, or move it between Block and Flag. It affects every customer the moment you publish."},
+  {view:"admin", sel:"#pricecheck", title:"The safety net",
+   body:"Live check that the pricing formula still reproduces our published prices. If one of these turns red, stop and undo."},
+  {view:"admin", sel:".verbar", title:"Versioned and logged",
+   body:"Edits stack up until you publish. Publishing bumps the version and writes who changed what to a log nobody can edit."}
+];
+var tourAt = -1;
+
+function tourEls(){
+  var m = el("tourmask");
+  if (!m){
+    m = document.createElement("div");
+    m.id = "tourmask"; m.hidden = true;
+    m.innerHTML = '<div class="spot" id="spot"></div>' +
+      '<div class="tip" id="tip" role="dialog" aria-label="Tour step">' +
+        '<div class="tip-n mono" id="tipn"></div>' +
+        '<b id="tipt"></b><p id="tipb"></p>' +
+        '<div class="tip-a">' +
+          '<button type="button" class="btn-sm" id="tourskip">Skip</button>' +
+          '<button type="button" class="btn-sm" id="tourback">Back</button>' +
+          '<button type="button" class="btn-sm primary" id="tournext">Next</button>' +
+        "</div></div>";
+    document.body.appendChild(m);
+  }
+  return m;
+}
+
+function showTour(i){
+  if (i < 0 || i >= TOUR.length) return endTour();
+  var t = TOUR[i];
+  tourAt = i;
+  if (t.view && view !== t.view) setView(t.view);
+  if (t.step !== undefined && step !== t.step){ step = t.step; render(); }
+  var m = tourEls(); m.hidden = false;
+  var target = document.querySelector(t.sel);
+  if (!target) return showTour(i + 1);
+
+  /* Fill the tooltip first so offsetHeight is real when we place it. */
+  el("tipn").textContent = (i + 1) + " of " + TOUR.length;
+  el("tipt").textContent = t.title;
+  el("tipb").textContent = t.body;
+  el("tourback").disabled = i === 0;
+  el("tournext").textContent = i === TOUR.length - 1 ? "Done" : "Next";
+
+  /* Instant scroll, not smooth: a smooth scroll is still moving when we measure,
+     which put the tooltip thousands of pixels off on a phone. The spotlight has a
+     CSS transition, so it still glides between steps. */
+  requestAnimationFrame(function(){
+    /* Scroll explicitly rather than via scrollIntoView, which did not reliably move
+       the page after a view switch. Centre the target, or pin it near the top when
+       it is taller than the screen. */
+    var vh = window.innerHeight;
+    var r0 = target.getBoundingClientRect();
+    if (r0.top < 8 || r0.bottom > vh - 8){
+      var centre = r0.top + window.scrollY - Math.max(12, (vh - r0.height) / 2);
+      window.scrollTo(0, Math.max(0, centre));
+    }
+    requestAnimationFrame(function(){ placeTour(target); });
+  });
+}
+
+function placeTour(target){
+  var spot = el("spot"), tip = el("tip");
+  var r = target.getBoundingClientRect();          /* viewport coords */
+  var sx = window.scrollX, sy = window.scrollY;
+  var vw = window.innerWidth;
+  var vh = window.innerHeight;
+  var pad = 6, gap = 14;
+
+  /* Spotlight, clamped so a wide target cannot push the document sideways. */
+  var sLeft = Math.max(2, r.left + sx - pad);
+  var sWide = Math.min(r.width + pad * 2, vw - 4);
+  spot.style.top = (r.top + sy - pad) + "px";
+  spot.style.left = sLeft + "px";
+  spot.style.width = sWide + "px";
+  spot.style.height = (r.height + pad * 2) + "px";
+
+  /* Tooltip: below the target, else above, else pinned inside the visible band —
+     which is what happens when the target is taller than the screen. */
+  var tw = tip.offsetWidth, th = tip.offsetHeight, y;
+  if (r.bottom + gap + th <= vh - 8)      y = r.bottom + gap;
+  else if (r.top - gap - th >= 8)         y = r.top - gap - th;
+  else                                    y = Math.max(8, vh - th - 12);
+  tip.style.top = (y + sy) + "px";
+
+  var x = r.left + sx + r.width / 2 - tw / 2;
+  tip.style.left = Math.max(10, Math.min(x, sx + vw - tw - 10)) + "px";
+}
+
+function endTour(){
+  var m = el("tourmask");
+  if (m) m.hidden = true;
+  tourAt = -1;
+}
+
+function subById(id){
+  for (var i = 0; i < SUBMISSIONS.length; i++) if (SUBMISSIONS[i].id === id) return SUBMISSIONS[i];
+  return null;
+}
+
+function setView(v){
+  view = v;
+  el("view-design").hidden = v !== "design";
+  el("view-list").hidden = v !== "list";
+  el("view-admin").hidden = v !== "admin";
+  el("view-help").hidden = v !== "help";
+  var tabs = document.querySelectorAll("[data-view]");
+  for (var i = 0; i < tabs.length; i++){
+    tabs[i].setAttribute("aria-pressed", tabs[i].getAttribute("data-view") === v);
+  }
+  if (v === "list") renderDesigns();
+  else if (v === "admin") renderAdmin();
+  else render();
+}
+
+renderStages();
+renderDesigns();
+render();
+setInterval(function(){ if (view === "list") tickClocks(); }, 1000);
+</script>
+
+</body>
+</html>
