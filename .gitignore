@@ -7,3 +7,5 @@ package-lock.json
 # Local only
 CLAUDE.md
 *.zip
+guide/
+*.docx

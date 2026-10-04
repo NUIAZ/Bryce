@@ -53,6 +53,10 @@
   --go:#2f6b4b;
   --go-soft:#e4f0ea;
   --grid:#e1e6eb;
+  --cam-top:#e8edf2;
+  --cam-bot:#c3ced9;
+  --cam-ink:#132435;
+  --cam-panel:rgba(255,255,255,.8);
   --shadow:0 1px 2px rgba(19,36,53,.07),0 4px 14px rgba(19,36,53,.06);
   --f-disp:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --f-body:"Barlow",system-ui,-apple-system,sans-serif;
@@ -79,6 +83,10 @@
     --go:#6aab86;
     --go-soft:#152a20;
     --grid:#1b2b3c;
+    --cam-top:#1f3247;
+    --cam-bot:#09121b;
+    --cam-ink:#e6ecf2;
+    --cam-panel:rgba(9,18,27,.72);
     --shadow:0 1px 2px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35);
   }
 }
@@ -89,6 +97,7 @@
   --line:#26384c; --line-2:#354a61; --steel:#93a3b3; --steel-2:#6a7d90;
   --cyan:#4fa8c4; --cyan-soft:#102934; --flag:#e8505f; --flag-soft:#3a1519;
   --go:#6aab86; --go-soft:#152a20; --grid:#1b2b3c;
+  --cam-top:#1f3247; --cam-bot:#09121b; --cam-ink:#e6ecf2; --cam-panel:rgba(9,18,27,.72);
   --shadow:0 1px 2px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
@@ -410,11 +419,83 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
 /* ---------- drawing ---------- */
 .draw{position:sticky;top:calc(env(safe-area-inset-top,0px) + 68px)}
 @media (max-width:900px){.draw{position:static;order:-1}}
+.draw.is3d{position:static}
 .draw-hd{display:flex;align-items:baseline;gap:10px;padding:12px 16px 10px;border-bottom:1px solid var(--line)}
 .draw-hd h2{font-size:17px}
 .draw-hd .rev{margin-left:auto;font-family:var(--f-mono);font-size:11px;color:var(--steel-2)}
 .canvas{background:var(--paper);border-bottom:1px solid var(--line);padding:6px}
 .canvas svg{display:block;width:100%;height:auto;max-width:100%}
+.viewtog{display:inline-flex;margin-left:8px;border:1px solid var(--line-2);border-radius:6px;overflow:hidden;flex:none}
+.viewtog button{font-family:var(--f-mono);font-size:11px;padding:3px 9px;background:var(--card);
+  color:var(--steel);border:0;cursor:pointer}
+.viewtog button+button{border-left:1px solid var(--line-2)}
+.viewtog button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.viewtog button:disabled{opacity:.45;cursor:not-allowed}
+.viewtog button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* ---------- 3D CAM viewport ---------- */
+.cam{border-bottom:1px solid var(--line)}
+.cam-vp{position:relative;aspect-ratio:1/1;max-height:70vh;width:100%;overflow:hidden;
+  background:linear-gradient(180deg,var(--cam-top),var(--cam-bot))}
+.cam-vp canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.cam-vp canvas:active{cursor:grabbing}
+.cam-vp .tag{position:absolute;font-family:var(--f-mono);font-size:10.5px;line-height:1.35;
+  color:var(--cam-ink);background:var(--cam-panel);border-radius:4px;padding:3px 7px;pointer-events:none}
+.cam-wcs{top:38px;left:8px}
+.cam-dro{bottom:8px;left:8px;right:8px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  column-gap:8px;font-variant-numeric:tabular-nums}
+.cam-dro b{font-weight:600;margin-right:4px}
+.cam-dro .x b{color:#d9534f}.cam-dro .y b{color:#3f9b52}.cam-dro .z b{color:#3b7ddd}
+.cam-dro .op{grid-column:1/-1;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cam-views{position:absolute;top:8px;right:8px;display:flex;gap:4px}
+.cam-views button{font-family:var(--f-mono);font-size:10.5px;padding:3px 7px;border-radius:4px;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--cam-panel);color:var(--cam-ink)}
+.cam-views button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.cam-views #camexpand{font-size:13px;line-height:1;padding:2px 7px}
+.cam-vp canvas{cursor:zoom-in}
+.cam-modal{position:absolute;left:0;right:0;z-index:80;display:flex;align-items:center;justify-content:center;
+  padding:16px;background:rgba(9,18,27,.62)}
+.cam-modal-in{display:flex;flex-direction:column;width:100%;max-width:1100px;height:100%;max-height:900px;
+  background:var(--card);border:1px solid var(--line-2);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+.cam-modal-hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)}
+.cam-modal-hd b{font-family:var(--f-disp);font-size:17px;font-weight:600}
+.cam-modal-hd span{font-family:var(--f-mono);font-size:11px;color:var(--steel)}
+.cam-modal-hd .btn-sm{margin-left:auto}
+.cam-modal-hd .hint-touch{display:none}
+@media (hover:none){.cam-modal-hd .hint-mouse{display:none}.cam-modal-hd .hint-touch{display:inline}}
+.cam-modal-bd{flex:1;min-height:0;display:flex;flex-direction:column}
+.cam-modal .cam-vp{flex:1;min-height:0;aspect-ratio:auto;max-height:none}
+.cam-modal .cam-vp canvas{cursor:move}
+.cam-modal #camexpand{display:none}
+.stk .mv{transition:transform .6s cubic-bezier(.3,.7,.2,1);transform:translateX(var(--dx))}
+.stk.together .mv{transform:none}
+@media (prefers-reduced-motion:reduce){.stk .mv{transition:none}}
+.stk-cut{display:flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11px;color:var(--steel);cursor:pointer}
+.stk-cut input{margin:0;accent-color:var(--accent)}
+.stk-bar{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;padding:6px 4px 2px;
+  font-size:11.5px;line-height:1.4;color:var(--steel)}
+.cam-lbl{position:absolute;font-family:var(--f-mono);font-size:10px;font-weight:600;pointer-events:none;
+  transform:translate(-50%,-50%);color:var(--cam-ink)}
+.cam-bp{display:flex;align-items:center;gap:10px;padding:9px 16px;border-top:1px solid var(--line)}
+.cam-bp input{flex:1;min-width:0;accent-color:var(--accent)}
+.cam-bp .t{font-family:var(--f-mono);font-size:11px;color:var(--steel);white-space:nowrap}
+.cam-ops{list-style:none;margin:0;padding:4px 0 8px;border-top:1px solid var(--line);
+  font-family:var(--f-mono);font-size:11.5px}
+.cam-ops .grp{padding:7px 16px 3px;font-family:var(--f-disp);font-size:11px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--steel-2)}
+.cam-ops label{display:grid;grid-template-columns:auto 10px minmax(0,1fr) auto;gap:8px;align-items:center;
+  padding:3px 16px;cursor:pointer}
+.cam-ops label:hover{background:var(--paper)}
+.cam-ops label.now{background:var(--accent-soft)}
+.cam-ops input{margin:0;accent-color:var(--accent)}
+.cam-ops i{width:10px;height:3px;border-radius:2px}
+.cam-ops .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cam-ops .tl{color:var(--steel-2)}
+.cam-note{margin:0;padding:8px 16px 10px;font-size:11.5px;line-height:1.45;color:var(--steel);border-top:1px solid var(--line)}
+.cam-tog{display:flex;flex-wrap:wrap;gap:4px 14px;padding:8px 16px;border-top:1px solid var(--line);
+  font-family:var(--f-mono);font-size:11px;color:var(--steel)}
+.cam-tog label{display:flex;align-items:center;gap:5px;cursor:pointer}
+.cam-tog input{margin:0;accent-color:var(--accent)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 16px;border-bottom:1px solid var(--line);
   font-family:var(--f-mono);font-size:11.5px;color:var(--steel)}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:baseline}
@@ -533,6 +614,7 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
   <nav class="toc" aria-label="Help contents">
     <a href="#h-start">Getting started</a>
     <a href="#h-inputs">The eight measurements</a>
+    <a href="#h-views">2D, stack and 3D views</a>
     <a href="#h-checks">Flags and blocks</a>
     <a href="#h-price">Pricing</a>
     <a href="#h-stages">After you submit</a>
@@ -573,6 +655,46 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
       <dt>Quantity</dt>
       <dd>Two per axle. Most orders are 2 or 4.</dd>
     </dl>
+
+    <h3 id="h-views">2D, stack and 3D views</h3>
+    <p>The drawing panel has three views of the same part, switched with the buttons at its
+       top right. It opens in <b>3D CAM</b>; a device that cannot run 3D opens in 2D. All three are rebuilt from your eight numbers every time you change one
+       &mdash; there is no stored picture to go stale.</p>
+    <dl class="defs">
+      <dt>2D</dt>
+      <dd>The face of the adapter, to scale. Blue rings are the holes your vehicle studs pass
+          through; red dots are the new studs your wheel mounts to. The side profile shows the
+          thickness.</dd>
+      <dt>Stack</dt>
+      <dd>The whole setup in 3D: vehicle hub, then your adapter, then the wheel, with the lug
+          nuts where they sit. It is cut in half so you can see the studs, nuts and the
+          centring lip inside &mdash; untick <b>Cutaway</b> to see it whole. Press <b>Bolt it
+          together</b> to slide the parts into place. <b>SIDE</b>, <b>HUB SIDE</b> and
+          <b>WHEEL SIDE</b> jump to those angles. Only the adapter is drawn from your numbers;
+          the hub and wheel are generic. <b>2D section</b> switches to a flat, to-scale cut-through
+          drawing that shows how far the wheel moves out.</dd>
+      <dt>3D CAM</dt>
+      <dd>The finished part as a solid, the way a machinist sees it in CAM software: the bar
+          stock it is cut from, the machining operations in order, and the path each tool
+          takes. Drag to turn it, scroll or pinch to zoom, or use <b>ISO</b>, <b>TOP</b>,
+          <b>FRONT</b> and <b>G55</b> (the hub side, as the part sits for its second setup).
+          The 3D view needs a reasonably recent phone or computer; if yours cannot run it, the
+          button is greyed out and the 2D drawing is exact.</dd>
+      <dt>Full-size 3D</dt>
+      <dd>Click the 3D view, or the &#x2922; button, to open it large. With a mouse, just move
+          it across the view to spin the part a full 360&deg;. On a phone, drag. Close with the
+          button, <b>Esc</b>, or a tap outside.</dd>
+      <dt>Backplot</dt>
+      <dd>Press <b>Play</b>, or drag the slider, to watch the tool run through the program.
+          The readout gives the tool position in X, Y and Z, the move, the tool and the
+          operation. Untick an operation in the list to hide it.</dd>
+    </dl>
+    <p>The toolpaths, tools, feeds and cycle time are an illustration generated from your
+       numbers, not the program we run. Our machinists program the real job in Mastercam or
+       SolidWorks after review.</p>
+    <p>The wheel studs are automatically turned to whatever angle leaves the most metal
+       between them and the vehicle holes. If the two still look close, that is exactly what
+       our review checks.</p>
 
     <h3 id="h-checks">Flags and blocks</h3>
     <p>Every change you make runs against our rule set, written by the people who machine
@@ -637,6 +759,18 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
       <dt>Spacer vs adapter</dt>
       <dd>A spacer keeps the same bolt pattern and only pushes the wheel out. An adapter
           changes the pattern as well.</dd>
+      <dt>Clocking</dt>
+      <dd>The angle the wheel stud pattern is turned relative to the vehicle pattern. Chosen to
+          keep the two sets of holes as far apart as possible.</dd>
+      <dt>Section view</dt>
+      <dd>A drawing of the part as if sliced through its centre, so you can see inside it.
+          Cut material is shown hatched.</dd>
+      <dt>Toolpath</dt>
+      <dd>The route a cutting tool follows. Solid lines are cutting moves; dashed lines are
+          rapid moves through the air between cuts.</dd>
+      <dt>G54 / G55</dt>
+      <dd>Work offsets &mdash; where the machine measures zero from. G54 is the first setup,
+          wheel side up; G55 is the second, flipped over with the hub side up.</dd>
       <dt>6061-T6 billet</dt>
       <dd>The aluminium we cut these from. Solid extruded stock, not cast.</dd>
     </dl>
@@ -736,8 +870,15 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
       <div class="draw-hd">
         <h2>Drawing</h2>
         <span class="rev mono" id="rev">REV A · DRAFT</span>
+        <div class="viewtog" role="group" aria-label="Drawing view">
+          <button type="button" id="v2d" aria-pressed="false">2D</button>
+          <button type="button" id="vstack" aria-pressed="false">STACK</button>
+          <button type="button" id="v3d" aria-pressed="false">3D CAM</button>
+        </div>
       </div>
-      <div class="canvas"><div id="face"></div></div>
+      <div class="canvas" id="canvas2d"><div id="face"></div></div>
+      <div class="canvas" id="stack" hidden></div>
+      <div class="cam" id="cam" hidden></div>
       <div class="legend">
         <span><i style="background:var(--cyan)"></i>Vehicle studs pass through</span>
         <span><i style="background:var(--accent)"></i>Pressed wheel studs</span>
@@ -1086,6 +1227,169 @@ function priceOf(d, issues){
   return {mode:"price", pair:pair, total:pair * (d.qty / 2)};
 }
 
+/* Wheel-stud clocking. The wheel pattern can be machined at any rotation
+   relative to the hub pattern; pick the one that leaves the most metal
+   between a vehicle through-hole and a pressed-stud hole. A fixed half-pitch
+   offset only works when both patterns have the same lug count — 6 → 5 put a
+   stud straight on top of a vehicle hole. Ties go to half pitch, so same-count
+   conversions draw exactly as before. Pure; used by faceSvg and camGeom.
+   Returns {off: degrees clockwise from 12 o'clock, clear: mm of wall (<0 = holes overlap)}. */
+function clockOf(d){
+  var src = PATTERNS[d.hubPattern], dst = PATTERNS[d.wheelPattern];
+  var key = d.hubPattern + "|" + d.wheelPattern + "|" + d.vehicleThread + "|" + d.studThread;
+  if (clockOf.memo[key]) return clockOf.memo[key];
+  var hr = (THREADS[d.vehicleThread].dia + 2.4) / 2, sr = THREADS[d.studThread].dia / 2;
+  var rs = src.bcd * 25.4 / 2, rd = dst.bcd * 25.4 / 2, half = 360 / dst.lugs / 2;
+  function clear(off){
+    var m = Infinity, i, j, a, b;
+    for (i = 0; i < src.lugs; i++) for (j = 0; j < dst.lugs; j++){
+      a = (i * 360 / src.lugs) * Math.PI / 180;
+      b = (off + j * 360 / dst.lugs) * Math.PI / 180;
+      m = Math.min(m, Math.sqrt(rs * rs + rd * rd - 2 * rs * rd * Math.cos(a - b)) - hr - sr);
+    }
+    return m;
+  }
+  var best = {off:half, clear:clear(half)};
+  for (var q = 0; q < half * 8; q++){
+    var c = clear(q / 4);
+    if (c > best.clear + 0.01) best = {off:q / 4, clear:c};
+  }
+  return (clockOf.memo[key] = best);
+}
+clockOf.memo = {};
+
+/* =====================================================================
+   STACK-UP DIAGRAM — vehicle hub, adapter, wheel, to scale, as an aligned
+   section: the vehicle stud is rotated into the plane above the centreline,
+   the wheel stud below it (standard drafting practice for bolt circles).
+   Derived from the design every redraw, like faceSvg. Hub flange, wheel
+   pad and nut sizes are generic and only there to show how it bolts up.
+   ===================================================================== */
+var stackExploded = true;
+
+function stackSvg(d){
+  var g = camGeom(d), T = g.T;
+  var vr = THREADS[d.vehicleThread].dia / 25.4 / 2;          /* vehicle stud radius */
+  var Fr = g.src.r + 0.8;                                      /* hub flange radius   */
+  var Wt = 0.8, Wr = Math.max(Fr, g.dst.r + 0.9, g.R + 0.4);   /* wheel pad           */
+  var nutH = 0.6, nutR = 0.4, gap = 0.7;
+  var xmin = -2.0 - gap, xmax = T + Wt + nutH + 0.25 + gap * 2;
+  var W = 340, H = 352, top = 30, bot = 52;
+  var S = Math.min((W - 24) / (xmax - xmin), (H - top - bot) / (2 * Wr + 0.3));
+  var ox = (W - (xmax - xmin) * S) / 2 - xmin * S, cy = top + (H - top - bot) / 2;
+  var gpx = (gap * S).toFixed(1), s = [];
+
+  function X(x){ return (ox + x * S).toFixed(1); }
+  /* rect from x0..x1 (in) and radius r0..r1 (in), in the top half, bottom half or both */
+  function band(x0, x1, r0, r1, half, attr){
+    var out = "", w = ((x1 - x0) * S).toFixed(1), h = ((r1 - r0) * S).toFixed(1);
+    if (half !== "bot") out += '<rect x="' + X(x0) + '" y="' + (cy - r1 * S).toFixed(1) +
+      '" width="' + w + '" height="' + h + '" ' + attr + "/>";
+    if (half !== "top") out += '<rect x="' + X(x0) + '" y="' + (cy + r0 * S).toFixed(1) +
+      '" width="' + w + '" height="' + h + '" ' + attr + "/>";
+    return out;
+  }
+  function label(x, y, txt, anchor){
+    return '<text x="' + X(x) + '" y="' + y + '" text-anchor="' + (anchor || "middle") +
+      '" fill="var(--steel)" font-family="IBM Plex Mono, monospace" font-size="9.5" letter-spacing=".04em">' + txt + "</text>";
+  }
+  var HUB = 'fill="var(--line)" stroke="var(--ink)" stroke-width=".9"';
+  var VEH = 'fill="var(--cyan-soft)" stroke="var(--cyan)" stroke-width="1.1"';
+  var BODY = 'fill="url(#hatch2)" stroke="var(--ink)" stroke-width="1.2"';
+  var VOID = 'fill="var(--paper)" stroke="var(--ink)" stroke-width=".8"';
+  var RED = 'fill="var(--accent)" stroke="var(--ink)" stroke-width=".6"';
+  var WHL = 'fill="var(--line-2)" fill-opacity=".55" stroke="var(--ink)" stroke-width=".9"';
+  var NUT = 'fill="var(--steel-2)" stroke="var(--ink)" stroke-width=".7"';
+
+  s.push('<svg class="stk' + (stackExploded ? "" : " together") + '" viewBox="0 0 ' + W + " " + H +
+    '" role="img" aria-label="Section through vehicle hub, adapter and wheel, drawn to scale">');
+  s.push('<defs><pattern id="hatch2" width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">' +
+    '<rect width="5" height="5" fill="var(--card)"/><line x1="0" y1="0" x2="0" y2="5" stroke="var(--line-2)" stroke-width="1.2"/></pattern></defs>');
+
+  /* ---- vehicle hub: bearing housing, flange, pilot, studs ---- */
+  s.push('<g class="mv" style="--dx:-' + gpx + 'px">');
+  s.push(band(-2.0, -0.6, 0, g.hubR * 1.15, "both", HUB));
+  s.push(band(-0.6, 0, 0, Fr, "both", HUB));
+  s.push(band(0, g.pocketDepth * 0.85, 0, g.hubR - 0.015, "both", HUB));
+  s.push(band(-0.78, -0.6, g.src.r - vr * 1.7, g.src.r + vr * 1.7, "top", VEH));        /* stud head */
+  s.push(band(-0.6, g.src.flange + nutH + 0.12, g.src.r - vr, g.src.r + vr, "top", VEH)); /* stud     */
+  s.push(label(-1.0, 14, "VEHICLE HUB"));
+  s.push("</g>");
+
+  /* ---- adapter: hatched section with every cut, then its pressed studs ---- */
+  s.push("<g>");
+  s.push(band(0, T, g.thruR, g.R, "both", BODY));
+  s.push(band(T - 0.01, T + g.lipH, g.thruR, g.lipR, "both", BODY));
+  s.push(band(0, g.pocketDepth, g.thruR - 0.001, g.hubR, "both", VOID));                 /* hub pocket */
+  s.push(band(-0.01, T + 0.01, g.src.r - g.src.holeR, g.src.r + g.src.holeR, "top", VOID));
+  s.push(band(g.src.flange, T + 0.01, g.src.r - g.src.nutR, g.src.r + g.src.nutR, "top", VOID));
+  s.push(band(-0.01, T + 0.01, g.dst.r - g.dst.studR, g.dst.r + g.dst.studR, "bot", VOID));
+  s.push(band(-0.01, g.dst.headDepth, g.dst.r - g.dst.headR, g.dst.r + g.dst.headR, "bot", VOID));
+  s.push(band(0.005, g.dst.headDepth, g.dst.r - g.dst.headR * 0.96, g.dst.r + g.dst.headR * 0.96, "bot", RED));
+  s.push(band(g.dst.headDepth, T + g.dst.len, g.dst.r - g.dst.studR, g.dst.r + g.dst.studR, "bot", RED));
+  s.push(band(g.src.flange, g.src.flange + nutH, g.src.r - nutR, g.src.r + nutR, "top", VEH)); /* lug nut */
+  s.push("</g>");
+
+  /* ---- wheel: mounting pad cut off with a break line, then its lug nuts ---- */
+  s.push('<g class="mv" style="--dx:' + gpx + 'px">');
+  s.push(band(T, T + Wt, g.lipR, Wr, "top", WHL));
+  s.push(band(T, T + Wt, g.lipR, g.dst.r - g.dst.studR - 0.03, "bot", WHL));
+  s.push(band(T, T + Wt, g.dst.r + g.dst.studR + 0.03, Wr, "bot", WHL));
+  [-1, 1].forEach(function(sg){                                       /* break lines */
+    var y = cy - sg * Wr * S, zz = [];
+    for (var k = 0; k <= 4; k++) zz.push(X(T + Wt * k / 4) + "," + (y - sg * (k % 2 ? 4 : 0)).toFixed(1));
+    s.push('<polyline points="' + zz.join(" ") + '" fill="none" stroke="var(--ink)" stroke-width=".9"/>');
+  });
+  s.push(label(T + Wt / 2, 14, "WHEEL"));
+  s.push("</g>");
+  s.push('<g class="mv" style="--dx:' + (gap * 2 * S).toFixed(1) + 'px">');
+  s.push(band(T + Wt, T + Wt + nutH, g.dst.r - nutR, g.dst.r + nutR, "bot", NUT));
+  s.push("</g>");
+
+  /* centreline */
+  s.push('<line x1="8" y1="' + cy + '" x2="' + (W - 8) + '" y2="' + cy + '" stroke="var(--steel-2)" ' +
+    'stroke-width=".8" stroke-dasharray="9 3 2 3"/>');
+
+  /* how far the wheel moves out — the number the customer is buying */
+  var dy = H - 30;
+  s.push('<g stroke="var(--steel)" stroke-width=".9">' +
+    '<line x1="' + X(0) + '" y1="' + dy + '" x2="' + X(T) + '" y2="' + dy + '"/>' +
+    '<line x1="' + X(0) + '" y1="' + (dy - 5) + '" x2="' + X(0) + '" y2="' + (dy + 5) + '"/>' +
+    '<line x1="' + X(T) + '" y1="' + (dy - 5) + '" x2="' + X(T) + '" y2="' + (dy + 5) + '"/></g>');
+  s.push('<text x="' + X(T / 2) + '" y="' + (dy + 16) + '" text-anchor="middle" fill="var(--ink)" ' +
+    'font-family="IBM Plex Mono, monospace" font-size="11">ADAPTER ' + T.toFixed(2) + '" · wheel sits ' +
+    T.toFixed(2) + '" further out</text>');
+  s.push(label(4, cy - 6, "VEHICLE STUD", "start"));
+  s.push(label(4, cy + 13, "WHEEL STUD", "start"));
+  s.push("</svg>");
+  return s.join("");
+}
+
+function renderStack(){
+  el("stack").innerHTML = stackSvg(design) +
+    '<div class="stk-bar"><button type="button" class="btn-sm" id="stkbtn">' +
+    (stackExploded ? "Bolt it together" : "Pull it apart") + "</button>" +
+    (camSupported() ? '<button type="button" class="btn-sm" id="stk3d">View in 3D</button>' : "") +
+    "<span>Section view, to scale. Vehicle stud above the centreline, wheel stud below.</span></div>";
+}
+
+/* 2D drawing · stack-up · 3D CAM — one of three in the drawing panel. */
+var drawView = "2d", stack3d = true;
+function setDraw(v){
+  if (v === "3d" || (v === "stack" && stack3d)){
+    cam3d.mode = v === "3d" ? "cam" : "stack";
+    camSet(true);
+    if (!cam3d.on && v === "3d") v = "2d";
+  } else camSet(false);
+  drawView = v;
+  el("canvas2d").hidden = v !== "2d";
+  el("stack").hidden = !(v === "stack" && !cam3d.on);
+  el("v2d").setAttribute("aria-pressed", v === "2d");
+  el("vstack").setAttribute("aria-pressed", v === "stack");
+  el("v3d").setAttribute("aria-pressed", v === "3d");
+  if (v === "stack" && !cam3d.on) renderStack();
+}
+
 /* ---------------- drawing ---------------- */
 /* compact=true draws the face only, for list thumbnails. */
 function faceSvg(d, compact){
@@ -1107,7 +1411,7 @@ function faceSvg(d, compact){
         '" r="2.4" fill="none" stroke="var(--cyan)" stroke-width="1.3"/>');
     }
     for (j = 0; j < dst.lugs; j++){
-      ang = (-90 + 360 / dst.lugs / 2 + j * 360 / dst.lugs) * Math.PI / 180;
+      ang = (-90 + clockOf(d).off + j * 360 / dst.lugs) * Math.PI / 180;
       s2.push('<circle cx="' + (c + dst.bcd / 2 * cs * Math.cos(ang)).toFixed(1) +
         '" cy="' + (c + dst.bcd / 2 * cs * Math.sin(ang)).toFixed(1) +
         '" r="2.6" fill="var(--accent)"/>');
@@ -1163,7 +1467,7 @@ function faceSvg(d, compact){
            '" fill="var(--paper)" stroke="var(--cyan)" stroke-width="1.5"/>');
   }
   /* wheel-side pressed studs, clocked off the through holes */
-  var off = 360 / dst.lugs / 2;
+  var off = clockOf(d).off;
   for (i = 0; i < dst.lugs; i++){
     a = (-90 + off + i * 360 / dst.lugs) * Math.PI / 180;
     x = cx + dst.bcd / 2 * S * Math.cos(a);
@@ -1198,6 +1502,977 @@ function faceSvg(d, compact){
 
   s.push('</svg>');
   return s.join("");
+}
+
+/* =====================================================================
+   3D CAM VIEW v0.1 — ILLUSTRATIVE. NOT A POST-PROCESSED PROGRAM.
+   Same rule as the 2D drawing: the solid and every toolpath are derived
+   from the eight design numbers on each redraw. Nothing is stored.
+
+   The solid is ray-marched as CSG (cylinder minus holes, plus studs) in a
+   WebGL2 fragment shader, so every hole is exact with no mesh library and
+   no dependency. Toolpaths are GL lines depth-tested against it. Without
+   WebGL2 the 3D button disables itself and the 2D SVG stays — the
+   low-end-device fallback the brief asks for.
+
+   Units: inches. Work offsets as a machinist would set them:
+     G54  Setup 1 — wheel side up. X0 Y0 bore centre, Z0 on the wheel face.
+     G55  Setup 2 — flipped about Y, hub side up. Z0 on the hub face.
+   The DRO reads in the active setup's own coordinates.
+   ===================================================================== */
+var CAM_ASSUME = {            /* v0.1 — UNVERIFIED. Every value needs a machinist. */
+  lipH: 0.375,                /* wheel-side centring lip height */
+  pocketDepth: 0.40,          /* hub-side recess the vehicle hub sits in */
+  lipWall: 0.15,              /* wall between through bore and lip OD */
+  nutPocketD: 1.10,           /* counterbore for the vehicle lug nut + socket */
+  flangeMax: 0.50,            /* material left under a lug-nut pocket */
+  studLen: 1.50,              /* pressed stud stick-out past the wheel face */
+  headOver: 8,                /* mm: stud head dia over thread dia */
+  headDepth: 0.20,            /* stud head counterbore, hub side */
+  stockOver: 0.06,            /* stock oversize, radial and on each face */
+  clear: 0.50,                /* clearance plane above stock */
+  feed: {face:40, mill:60, drill:12, rapid:400},   /* in/min */
+  toolChange: 0.15            /* min */
+};
+
+/* Pure: design → solid dimensions in inches. Mirrors faceSvg's geometry. */
+function camGeom(d){
+  var A = CAM_ASSUME, src = PATTERNS[d.hubPattern], dst = PATTERNS[d.wheelPattern];
+  var mm = 1 / 25.4, T = d.thickness;
+  var hubR = d.hubBore * mm / 2, lipR = d.wheelBore * mm / 2;
+  return {
+    T:T, R:(Math.max(src.bcd, dst.bcd) + 2.0) / 2, so:A.stockOver,
+    lipR:lipR, lipH:A.lipH, hubR:hubR,
+    thruR:Math.max(0.5, Math.min(hubR, lipR - A.lipWall)),
+    pocketDepth:Math.min(A.pocketDepth, T * 0.4),
+    /* a0 matches faceSvg: first hole at 12 o'clock, wheel studs clocked by clockOf() */
+    src:{n:src.lugs, r:src.bcd / 2, a0:Math.PI / 2,
+         holeR:(THREADS[d.vehicleThread].dia + 2.4) * mm / 2,
+         nutR:A.nutPocketD / 2, flange:Math.min(A.flangeMax, T * 0.4)},
+    dst:{n:dst.lugs, r:dst.bcd / 2, a0:Math.PI / 2 - clockOf(d).off * Math.PI / 180,
+         studR:THREADS[d.studThread].dia * mm / 2,
+         headR:(THREADS[d.studThread].dia + A.headOver) * mm / 2,
+         headDepth:A.headDepth, len:A.studLen}
+  };
+}
+
+/* Pure: geometry → operations. Each point is [x, y, z, rapid] in the op's
+   own setup coordinates, so the DRO can read them straight off. */
+function camPaths(g){
+  var A = CAM_ASSUME, ops = [], T = g.T, so = g.so, Rs = g.R + so;
+  var T1 = {id:"T1", name:"3.000 face mill", d:3.0},
+      T2 = {id:"T2", name:"1/2 flat end mill", d:0.5},
+      T3 = {id:"T3", name:"1/2 spot drill", d:0.5},
+      T4 = {id:"T4", name:"drill " + (g.src.holeR * 2).toFixed(3), d:g.src.holeR * 2},
+      T5 = {id:"T5", name:"drill " + (g.dst.studR * 2).toFixed(3), d:g.dst.studR * 2};
+  var tr = T2.d / 2, o, i, k, L, n, r, z, y;
+  var zc = g.lipH + so + A.clear;            /* setup 1 clearance */
+
+  function op(setup, name, tool, feed, color){
+    o = {setup:setup, name:name, tool:tool, feed:feed, color:color, pts:[]};
+    ops.push(o);
+  }
+  function mv(x, y, z, rapid){ o.pts.push([x, y, z, rapid ? 1 : 0]); }
+  function circ(x, y, r, z){
+    for (var k = 0; k <= 48; k++){
+      var a = k / 48 * 2 * Math.PI;
+      mv(x + r * Math.cos(a), y + r * Math.sin(a), z);
+    }
+  }
+  function helix(x, y, r, z0, z1, pitch){
+    var turns = Math.max(1, Math.ceil((z0 - z1) / pitch)), m = turns * 36;
+    for (var k = 0; k <= m; k++){
+      var a = k / 36 * 2 * Math.PI;
+      mv(x + r * Math.cos(a), y + r * Math.sin(a), z0 + (z1 - z0) * k / m);
+    }
+    circ(x, y, r, z1);
+  }
+  function go(x, y, z){ mv(x, y, zc, 1); mv(x, y, z + 0.1, 1); }
+  function up(){ var p = o.pts[o.pts.length - 1]; mv(p[0], p[1], zc, 1); }
+  function ring(c){
+    var out = [];
+    for (var i = 0; i < c.n; i++){
+      var a = c.a0 - i * 2 * Math.PI / c.n;
+      out.push([c.r * Math.cos(a), c.r * Math.sin(a)]);
+    }
+    return out;
+  }
+  function face(zf){
+    var xr = Rs + T1.d / 2 + 0.2, rows = Math.max(1, Math.ceil(2 * Rs / (T1.d * 0.7))), dir = 1;
+    for (var k = 0; k < rows; k++){
+      var yy = -Rs + (k + 0.5) * 2 * Rs / rows;
+      if (k === 0) go(-xr, yy, zf);
+      mv(-xr * dir, yy, zf); mv(xr * dir, yy, zf);
+      dir = -dir;
+    }
+    up();
+  }
+  function peck(holes, depth, q){
+    holes.forEach(function(h){
+      go(h[0], h[1], 0);
+      for (var zz = 0; zz > depth + 1e-6;){
+        var nz = Math.max(depth, zz - q);
+        if (zz < 0) mv(h[0], h[1], zz + 0.02, 1);
+        mv(h[0], h[1], nz);
+        mv(h[0], h[1], 0.1, 1);
+        zz = nz;
+      }
+    });
+    up();
+  }
+  var S = ring(g.src), D = ring(g.dst);
+
+  /* ---- Setup 1 · G54 · wheel side up ---- */
+  op(1, "Face wheel side", T1, A.feed.face, "#4f8fe0");
+  face(g.lipH);
+
+  op(1, "Rough wheel face to Z0, finish lip", T2, A.feed.mill, "#22a39a");
+  n = Math.ceil(g.lipH / 0.2);
+  for (L = 1; L <= n; L++){
+    z = g.lipH - g.lipH * L / n;
+    go(Rs + tr + 0.1, 0, z);
+    for (r = Rs + tr - 0.05; r > g.lipR + tr + 0.05; r -= T2.d * 0.4) circ(0, 0, r, z);
+    circ(0, 0, g.lipR + tr, z);
+    up();
+  }
+
+  op(1, "Contour OD", T2, A.feed.mill, "#8a6fd6");
+  r = g.R + tr;
+  go(r + 0.3, 0, 0);
+  n = Math.ceil((T + 0.03) / 0.25);
+  for (L = 1; L <= n; L++){
+    z = -(T + 0.03) * L / n;
+    mv(r + 0.3, 0, z); mv(r, 0, z); circ(0, 0, r, z); mv(r + 0.3, 0, z);
+  }
+  up();
+
+  op(1, "Spot drill all holes", T3, A.feed.drill, "#c9a227");
+  S.concat(D).forEach(function(h){ go(h[0], h[1], 0); mv(h[0], h[1], -0.08); mv(h[0], h[1], 0.1, 1); });
+  up();
+
+  op(1, "Peck drill vehicle stud holes", T4, A.feed.drill, "#2c9fc4");
+  peck(S, -T - 0.15, 0.25);
+
+  op(1, "Peck drill stud press holes", T5, A.feed.drill, "#e0703a");
+  peck(D, -T - 0.15, 0.25);
+
+  if (g.src.nutR - tr > 0.02){
+    op(1, "Helix lug-nut pockets", T2, A.feed.mill, "#3fa34d");
+    S.forEach(function(h){
+      go(h[0] + g.src.nutR - tr, h[1], 0);
+      helix(h[0], h[1], g.src.nutR - tr, 0, -T + g.src.flange, 0.08);
+      mv(h[0], h[1], -T + g.src.flange);
+      up();
+    });
+  }
+
+  op(1, "Helix through bore", T2, A.feed.mill, "#d1495b");
+  go(g.thruR - tr, 0, g.lipH);
+  helix(0, 0, g.thruR - tr, g.lipH, -T - 0.03, 0.1);
+  up();
+
+  /* ---- Setup 2 · G55 · flipped about Y, hub side up ---- */
+  zc = so + A.clear;
+  op(2, "Face hub side", T1, A.feed.face, "#4f8fe0");
+  face(0);
+
+  if (g.hubR > g.thruR + 0.01){
+    op(2, "Pocket hub recess", T2, A.feed.mill, "#22a39a");
+    n = Math.ceil(g.pocketDepth / 0.2);
+    for (L = 1; L <= n; L++){
+      z = -g.pocketDepth * L / n;
+      r = Math.max(0.05, g.thruR - tr * 0.5);
+      go(r, 0, z);
+      for (; r < g.hubR - tr - 0.05; r += T2.d * 0.4) circ(0, 0, r, z);
+      circ(0, 0, g.hubR - tr, z);
+      up();
+    }
+  }
+
+  op(2, "Counterbore stud heads", T2, A.feed.mill, "#8a6fd6");
+  D.forEach(function(h){
+    var x = -h[0];                            /* G55 sees X mirrored */
+    if (g.dst.headR - tr > 0.02){
+      go(x + g.dst.headR - tr, h[1], 0);
+      helix(x, h[1], g.dst.headR - tr, 0, -g.dst.headDepth, 0.06);
+      mv(x, h[1], -g.dst.headDepth);
+    } else { go(x, h[1], 0); mv(x, h[1], -g.dst.headDepth); }
+    up();
+  });
+
+  return ops;
+}
+
+/* Setup coordinates → part coordinates (G54 frame) for drawing. */
+function camToPart(p, setup, T){
+  return setup === 1 ? [p[0], p[1], p[2]] : [-p[0], p[1], -p[2] - T];
+}
+
+/* ---- tiny column-major matrix kit ---- */
+function v3sub(a, b){ return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+function v3dot(a, b){ return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+function v3cross(a, b){ return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+function v3norm(a){ var l = Math.sqrt(v3dot(a, a)) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+function m4persp(fovy, asp, n, f){
+  var t = 1 / Math.tan(fovy / 2), nf = 1 / (n - f);
+  return [t / asp,0,0,0, 0,t,0,0, 0,0,(f + n) * nf,-1, 0,0,2 * f * n * nf,0];
+}
+function m4look(e, c, u){
+  var z = v3norm(v3sub(e, c)), x = v3norm(v3cross(u, z)), y = v3cross(z, x);
+  return [x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0,
+          -v3dot(x, e),-v3dot(y, e),-v3dot(z, e),1];
+}
+function m4mul(a, b){
+  var o = [], c, r, k, s;
+  for (c = 0; c < 4; c++) for (r = 0; r < 4; r++){
+    for (s = 0, k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k];
+    o[c * 4 + r] = s;
+  }
+  return o;
+}
+function m4inv(m){
+  var a00=m[0],a01=m[1],a02=m[2],a03=m[3],a10=m[4],a11=m[5],a12=m[6],a13=m[7],
+      a20=m[8],a21=m[9],a22=m[10],a23=m[11],a30=m[12],a31=m[13],a32=m[14],a33=m[15];
+  var b00=a00*a11-a01*a10,b01=a00*a12-a02*a10,b02=a00*a13-a03*a10,b03=a01*a12-a02*a11,
+      b04=a01*a13-a03*a11,b05=a02*a13-a03*a12,b06=a20*a31-a21*a30,b07=a20*a32-a22*a30,
+      b08=a20*a33-a23*a30,b09=a21*a32-a22*a31,b10=a21*a33-a23*a31,b11=a22*a33-a23*a32;
+  var det = b00*b11-b01*b10+b02*b09+b03*b08-b04*b07+b05*b06;
+  det = det ? 1 / det : 0;
+  return [(a11*b11-a12*b10+a13*b09)*det,(a02*b10-a01*b11-a03*b09)*det,(a31*b05-a32*b04+a33*b03)*det,(a22*b04-a21*b05-a23*b03)*det,
+          (a12*b08-a10*b11-a13*b07)*det,(a00*b11-a02*b08+a03*b07)*det,(a32*b02-a30*b05-a33*b01)*det,(a20*b05-a22*b02+a23*b01)*det,
+          (a10*b10-a11*b08+a13*b06)*det,(a01*b08-a00*b10-a03*b06)*det,(a30*b04-a31*b02+a33*b00)*det,(a21*b02-a20*b04-a23*b00)*det,
+          (a11*b07-a10*b09-a12*b06)*det,(a00*b09-a01*b07+a02*b06)*det,(a31*b01-a30*b03-a32*b00)*det,(a20*b03-a21*b01+a22*b00)*det];
+}
+function hexRgb(h){
+  h = (h || "#888").trim().replace("#", "");
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  var v = parseInt(h, 16);
+  return [(v >> 16 & 255) / 255, (v >> 8 & 255) / 255, (v & 255) / 255];
+}
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n); }
+
+var CAM_VS_SOLID = "#version 300 es\nin vec2 aP; out vec2 vN;\n" +
+  "void main(){ vN = aP; gl_Position = vec4(aP, 0.0, 1.0); }";
+
+var CAM_FS_SOLID = [
+  "#version 300 es",
+  "precision highp float;",
+  "in vec2 vN; out vec4 o;",
+  "uniform mat4 uInv, uVP;",
+  "uniform vec4 uA;   // R, T, lipR, lipH",
+  "uniform vec4 uB;   // thruR, hubR, pocketDepth, partOn",
+  "uniform vec4 uS;   // n, bcdR, holeR, nutR",
+  "uniform vec4 uD;   // n, bcdR, studR, headR",
+  "uniform vec4 uE;   // flange, headDepth, studLen, dst a0",
+  "uniform vec4 uTl;  // tool tip xyz, radius",
+  "uniform vec4 uTm;  // axis sign, on, flute length, holder radius",
+  "uniform vec4 uBd;  // bounding sphere (world)",
+  "uniform vec4 uM;   // stack mode, cutaway, explode 0..1, rim radius",
+  "uniform vec4 uH;   // hub flange radius, vehicle stud radius, -, wheel pad radius",
+  "uniform vec4 uW;   // wheel pad thickness, nut half-flats, nut height, spokes",
+  "uniform vec3 uCAl, uCSrc, uCDst, uCTool, uCHub, uCWhl, uCNut;",
+  "float cyl(vec3 p, float r, float z0, float z1){",
+  "  vec2 d = vec2(length(p.xy) - r, max(z0 - p.z, p.z - z1));",
+  "  return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));",
+  "}",
+  "float hexz(vec3 p, float r, float z0, float z1){",
+  "  vec2 q = abs(p.xy);",
+  "  vec2 d = vec2(max(dot(q, vec2(0.5, 0.8660254)), q.x) - r, max(z0 - p.z, p.z - z1));",
+  "  return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));",
+  "}",
+  "float box2(vec2 p, vec2 b){ vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }",
+  "vec2 polar(vec2 p, float n, float a0){",
+  "  float s = 6.2831853 / n;",
+  "  float a = mod(atan(p.y, p.x) - a0 + 0.5 * s, s) - 0.5 * s;",
+  "  return length(p) * vec2(cos(a), sin(a));",
+  "}",
+  "void add(inout vec2 r, float d, float m){ if (d < r.x) r = vec2(d, m); }",
+  "vec2 scene(vec3 p){",
+  "  float T = uA.y;",
+  "  vec2 res = vec2(1e3, 0.0);",
+  "  if (uB.w > 0.5){",
+  "    float d = min(cyl(p, uA.x, -T, 0.0), cyl(p, uA.z, -0.02, uA.w));",
+  "    d = max(d, -cyl(p, uB.x, -T - 1.0, uA.w + 1.0));",
+  "    d = max(d, -cyl(p, uB.y, -T - 1.0, -T + uB.z));",
+  "    vec3 q = vec3(polar(p.xy, uS.x, 1.5707963) - vec2(uS.y, 0.0), p.z);",
+  "    float hs = min(cyl(q, uS.z, -T - 1.0, uA.w + 1.0), cyl(q, uS.w, -T + uE.x, uA.w + 1.0));",
+  "    d = max(d, -hs);",
+  "    vec3 w = vec3(polar(p.xy, uD.x, uE.w) - vec2(uD.y, 0.0), p.z);",
+  "    d = max(d, -min(cyl(w, uD.z, -T - 1.0, 1.0), cyl(w, uD.w, -T - 1.0, -T + uE.y)));",
+  "    res = vec2(d, hs < 0.004 ? 1.0 : 0.0);",
+  "    float st = min(min(cyl(w, uD.z * 0.97, -T + 0.004, uE.z - 0.05), cyl(w, uD.z * 0.78, 0.0, uE.z)),",
+  "                   cyl(w, uD.w * 0.96, -T + 0.004, -T + uE.y - 0.004));",
+  "    add(res, st, 2.0);",
+  "  }",
+  "  if (uTm.y > 0.5){",
+  "    vec3 t = p - uTl.xyz; t.z *= uTm.x;",
+  "    add(res, min(cyl(t, uTl.w, 0.0, uTm.z), cyl(t, uTm.w, uTm.z, uTm.z + 1.4)), 3.0);",
+  "  }",
+  "  if (uM.x > 0.5){",
+  "    float e = uM.z;",
+  "    /* vehicle hub, spindle and studs: slide inboard when pulled apart */",
+  "    vec3 h = p; h.z += 1.6 * e;",
+  "    if (cyl(h, uH.x + 0.2, -T - 3.5, -T + uE.x + uW.z + 0.4) < res.x){",
+  "      add(res, min(min(cyl(h, uH.x, -T - 0.6, -T), cyl(h, uB.y * 1.15, -T - 2.0, -T - 0.6)),",
+  "                   min(cyl(h, uB.y * 0.6, -T - 3.3, -T - 2.0), cyl(h, uB.y - 0.015, -T - 0.01, -T + uB.z * 0.85))), 4.0);",
+  "      vec3 q = vec3(polar(h.xy, uS.x, 1.5707963) - vec2(uS.y, 0.0), h.z);",
+  "      add(res, min(cyl(q, uH.y, -T - 0.6, -T + uE.x + uW.z + 0.12), cyl(q, uH.y * 1.7, -T - 0.78, -T - 0.6)), 5.0);",
+  "    }",
+  "    /* vehicle lug nuts, seated in the adapter's pockets */",
+  "    vec3 vq = vec3(polar(p.xy, uS.x, 1.5707963) - vec2(uS.y, 0.0), p.z);",
+  "    add(res, hexz(vq, uW.y, -T + uE.x, -T + uE.x + uW.z), 5.0);",
+  "    /* wheel: pad, spokes, barrel; slides outboard */",
+  "    vec3 w = p; w.z -= 2.4 * e;",
+  "    float rr = uM.w;",
+  "    if (cyl(w, rr + 0.5, -4.7, 4.7) < res.x){",
+  "      float pad = max(cyl(w, uH.w, 0.0, uW.x), -cyl(w, uA.z, -1.0, 2.0));",
+  "      vec3 ws = vec3(polar(w.xy, uD.x, uE.w) - vec2(uD.y, 0.0), w.z);",
+  "      pad = max(pad, -cyl(ws, uD.z + 0.03, -1.0, 2.0));",
+  "      vec2 sp = polar(w.xy, uW.w, uE.w + 3.14159265 / uW.w);",
+  "      float spoke = max(box2(sp - vec2((uH.w + rr) * 0.5, 0.0), vec2((rr - uH.w) * 0.5 + 0.15, 0.55)),",
+  "                        abs(w.z - uW.x * 0.5 - 0.3) - 0.5);",
+  "      float barrel = max(abs(length(w.xy) - rr) - 0.12, abs(w.z) - 4.5);",
+  "      float beads = max(abs(length(w.xy) - rr - 0.2) - 0.22, abs(abs(w.z) - 4.35) - 0.15);",
+  "      add(res, min(min(pad, spoke), min(barrel, beads)), 6.0);",
+  "    }",
+  "    vec3 wn = w; wn.z -= 1.2 * e;",
+  "    vec3 wq = vec3(polar(wn.xy, uD.x, uE.w) - vec2(uD.y, 0.0), wn.z);",
+  "    add(res, hexz(wq, uW.y, uW.x, uW.x + 0.65), 7.0);",
+  "    /* cutaway: half-section through the axle, removing the half toward world -Y */",
+  "    if (uM.y > 0.5){",
+  "      float cq = -p.x;",
+  "      if (cq > res.x) res = vec2(cq, res.y + 10.0);",
+  "    }",
+  "  }",
+  "  return res;",
+  "}",
+  "vec3 nrm(vec3 p){",
+  "  const vec2 k = vec2(1.0, -1.0); const float h = 0.0008;",
+  "  return normalize(k.xyy * scene(p + k.xyy * h).x + k.yyx * scene(p + k.yyx * h).x +",
+  "                   k.yxy * scene(p + k.yxy * h).x + k.xxx * scene(p + k.xxx * h).x);",
+  "}",
+  "void main(){",
+  "  vec4 a = uInv * vec4(vN, -1.0, 1.0); a /= a.w;",
+  "  vec4 b = uInv * vec4(vN, 1.0, 1.0); b /= b.w;",
+  "  vec3 ro = a.xyz, rd = normalize(b.xyz - a.xyz);",
+  "  vec3 oc = ro - uBd.xyz; float bb = dot(oc, rd);",
+  "  float hh = bb * bb - dot(oc, oc) + uBd.w * uBd.w;",
+  "  if (hh < 0.0) discard;",
+  "  hh = sqrt(hh);",
+  "  float t = max(-bb - hh, 0.0), tmax = -bb + hh;",
+  "  /* the assembly lies along world X (axle horizontal); the part frame has Z on the axis */",
+  "  bool stk = uM.x > 0.5;",
+  "  vec3 rp = stk ? ro.yzx : ro, dp = stk ? rd.yzx : rd;",
+  "  vec2 m = vec2(1.0, 0.0); bool hit = false;",
+  "  for (int i = 0; i < 220; i++){",
+  "    m = scene(rp + dp * t);",
+  "    if (m.x < 0.0002 + 0.00006 * t){ hit = true; break; }",
+  "    t += m.x * 0.85;",
+  "    if (t > tmax) break;",
+  "  }",
+  "  if (!hit) discard;",
+  "  vec3 p = rp + dp * t, n = nrm(p);",
+  "  vec3 nw = stk ? n.zxy : n, pw = stk ? p.zxy : p;",
+  "  bool cut = m.y > 9.5; float id = cut ? m.y - 10.0 : m.y;",
+  "  vec3 base = id < 0.5 ? uCAl : id < 1.5 ? mix(uCAl, uCSrc, 0.6) : id < 2.5 ? uCDst : id < 3.5 ? uCTool :",
+  "              id < 4.5 ? uCHub : id < 5.5 ? uCSrc : id < 6.5 ? uCWhl : uCNut;",
+  "  vec3 L1 = normalize(-rd + vec3(0.0, 0.0, 0.5));",
+  "  vec3 L2 = normalize(vec3(-0.5, 0.4, 0.8));",
+  "  float dif = max(dot(nw, L1), 0.0) * 0.65 + max(dot(nw, L2), 0.0) * 0.35;",
+  "  float ao = 0.55 + 0.45 * clamp(scene(p + n * 0.08).x / 0.08, 0.0, 1.0);",
+  "  float spec = pow(max(dot(reflect(rd, nw), L1), 0.0), 36.0) * 0.35;",
+  "  vec3 col = base * (0.34 + 0.16 * (0.5 + 0.5 * nw.z) + 0.66 * dif) * ao + spec;",
+  "  if (cut) col = base * (0.62 + 0.3 * step(0.5, fract((p.z + p.x - p.y) * 4.0)));   // hatched section face",
+  "  o = vec4(col, 1.0);",
+  "  vec4 c = uVP * vec4(pw, 1.0);",
+  "  gl_FragDepth = c.z / c.w * 0.5 + 0.5;",
+  "}"
+].join("\n");
+
+var CAM_VS_LINE = [
+  "#version 300 es",
+  "in vec3 aP; in vec4 aC; in vec2 aD;",
+  "uniform mat4 uVP;",
+  "out vec4 vC; out vec2 vD;",
+  "void main(){ gl_Position = uVP * vec4(aP, 1.0); gl_Position.z -= 0.0008 * gl_Position.w; vC = aC; vD = aD; }"
+].join("\n");
+
+var CAM_FS_LINE = [
+  "#version 300 es",
+  "precision highp float;",
+  "in vec4 vC; in vec2 vD; out vec4 o;",
+  "uniform float uProg, uHide;",
+  "void main(){",
+  "  if (vD.x > 0.0 && mod(vD.x, 0.14) > 0.07) discard;   // rapids dashed",
+  "  float a = vC.a * uHide;",
+  "  if (vD.y > uProg) a *= 0.14;                         // not yet cut in backplot",
+  "  o = vec4(vC.rgb * a, a);",
+  "}"
+].join("\n");
+
+var cam3d = {on:false, gl:null, ops:[], g:null, tl:[], total:0, t:0, playing:false,
+  yaw:-0.9, pitch:0.6, dist:0, view:"iso", dragging:false, raf:0, last:0, curOp:-1,
+  showPart:true, showStock:true, showPaths:true, off:{},
+  mode:"cam", modeShown:null, ex:1, exT:1, cut:true};
+
+/* Stack mode: generic hub and wheel around the real adapter. Only the adapter is
+   to scale from the design; these are just there to show how it bolts up. */
+var STACK_3D = {rimR:8.5, padT:0.8, nutFlat:0.4, nutH:0.6};
+
+function camSupported(){
+  if (cam3d.ok !== undefined) return cam3d.ok;
+  var ok = false;
+  try {
+    var c = document.createElement("canvas");
+    ok = !!(window.WebGL2RenderingContext &&
+            c.getContext("webgl2", {failIfMajorPerformanceCaveat:true}));
+    if (navigator.deviceMemory && navigator.deviceMemory < 2) ok = false;
+  } catch (e){ ok = false; }
+  return (cam3d.ok = ok);
+}
+
+function camProgram(gl, vs, fs){
+  function sh(type, src){
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  var p = gl.createProgram();
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, vs));
+  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  p.u = {};
+  var n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+  for (var i = 0; i < n; i++){
+    var nm = gl.getActiveUniform(p, i).name;
+    p.u[nm] = gl.getUniformLocation(p, nm);
+  }
+  return p;
+}
+
+function camInit(){
+  var box = el("cam");
+  box.innerHTML =
+    '<div class="cam-vp" id="camvp">' +
+      '<canvas id="camcv" role="img" aria-label="3D model of the adapter with machining toolpaths. Drag to orbit, scroll or pinch to zoom."></canvas>' +
+      '<div class="tag cam-wcs" id="camwcs"></div>' +
+      '<div class="cam-views" id="camviews" role="group" aria-label="Camera"></div>' +
+      '<div class="tag cam-dro" id="camdro"></div>' +
+      '<span class="cam-lbl" id="cl-x" style="color:#d9534f">X</span>' +
+      '<span class="cam-lbl" id="cl-y" style="color:#3f9b52">Y</span>' +
+      '<span class="cam-lbl" id="cl-z" style="color:#3b7ddd">Z</span>' +
+    "</div>" +
+    '<div class="cam-bp" id="cambp">' +
+      '<button type="button" class="btn-sm" id="camplay">Play</button>' +
+      '<input type="range" id="camseek" min="0" max="1000" value="1000" aria-label="Backplot position">' +
+      '<span class="t" id="camtime"></span>' +
+    "</div>" +
+    '<div class="cam-bp" id="camstk" hidden>' +
+      '<button type="button" class="btn-sm" id="stkbtn3"></button>' +
+      '<label class="stk-cut"><input type="checkbox" id="stkcut" checked>Cutaway</label>' +
+      '<button type="button" class="btn-sm" id="stk2d">2D section</button>' +
+    "</div>" +
+    '<div class="cam-tog">' +
+      '<label><input type="checkbox" data-camshow="showPart" checked>Part</label>' +
+      '<label><input type="checkbox" data-camshow="showStock" checked>Stock</label>' +
+      '<label><input type="checkbox" data-camshow="showPaths" checked>Toolpaths</label>' +
+    "</div>" +
+    '<ul class="cam-ops" id="camops" aria-label="Toolpath operations"></ul>' +
+    '<p class="cam-note" id="camnote">Toolpaths are illustrative: generated from your eight numbers with assumed tools, ' +
+      "feeds, lip height, lug-nut pockets and stud length. Our machinists program the real job in " +
+      "Mastercam or SolidWorks after review.</p>";
+
+  var cv = el("camcv"), c = cam3d;
+  var gl = cv.getContext("webgl2", {antialias:true, premultipliedAlpha:true, alpha:true});
+  if (!gl) throw new Error("WebGL2 unavailable");
+  c.cv = cv; c.gl = gl;
+  c.ps = camProgram(gl, CAM_VS_SOLID, CAM_FS_SOLID);
+  c.pl = camProgram(gl, CAM_VS_LINE, CAM_FS_LINE);
+
+  c.vaoS = gl.createVertexArray();
+  gl.bindVertexArray(c.vaoS);
+  var tri = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, tri);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  var la = gl.getAttribLocation(c.ps, "aP");
+  gl.enableVertexAttribArray(la);
+  gl.vertexAttribPointer(la, 2, gl.FLOAT, false, 0, 0);
+
+  c.vaoL = gl.createVertexArray();
+  gl.bindVertexArray(c.vaoL);
+  c.lbuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, c.lbuf);
+  [["aP", 3, 0], ["aC", 4, 12], ["aD", 2, 28]].forEach(function(a){
+    var loc = gl.getAttribLocation(c.pl, a[0]);
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, a[1], gl.FLOAT, false, 36, a[2]);
+  });
+  gl.bindVertexArray(null);
+
+  /* orbit · pinch · wheel */
+  var ptrs = {};
+  cv.addEventListener("pointerdown", function(e){
+    cv.setPointerCapture(e.pointerId);
+    ptrs[e.pointerId] = {x:e.clientX, y:e.clientY, x0:e.clientX, y0:e.clientY};
+    c.dragging = true; c.moved = false;
+  });
+  cv.addEventListener("pointermove", function(e){
+    var p = ptrs[e.pointerId];
+    if (!p){
+      /* In the modal a mouse just hovering spins the part: one canvas width of
+         travel is a full 360°, top to bottom tips it over. Delta-based, so
+         entering the canvas never makes the view jump. */
+      if (c.modal && e.pointerType === "mouse" && c.hover){
+        c.yaw -= (e.clientX - c.hover.x) / cv.clientWidth * 2 * Math.PI;
+        c.pitch = Math.max(-1.555, Math.min(1.555,
+          c.pitch + (e.clientY - c.hover.y) / cv.clientHeight * Math.PI * 0.9));
+        c.view = null; camMarkViews(); camKick();
+      }
+      c.hover = {x:e.clientX, y:e.clientY};
+      return;
+    }
+    if (Math.abs(e.clientX - p.x0) + Math.abs(e.clientY - p.y0) > 5){
+      if (!c.moved){ c.view = null; camMarkViews(); }
+      c.moved = true;
+    }
+    if (!c.moved) return;
+    var ids = Object.keys(ptrs);
+    if (ids.length === 1){
+      c.yaw -= (e.clientX - p.x) * 0.008;
+      c.pitch = Math.max(-1.555, Math.min(1.555, c.pitch + (e.clientY - p.y) * 0.008));
+    } else if (ids.length === 2){
+      var q = ptrs[ids[0] === String(e.pointerId) ? ids[1] : ids[0]];
+      var d0 = Math.sqrt(Math.pow(p.x - q.x, 2) + Math.pow(p.y - q.y, 2));
+      var d1 = Math.sqrt(Math.pow(e.clientX - q.x, 2) + Math.pow(e.clientY - q.y, 2));
+      if (d0 > 0 && d1 > 0) camZoom(d0 / d1);
+    }
+    p.x = e.clientX; p.y = e.clientY;
+    camKick();
+  });
+  function endp(e){
+    delete ptrs[e.pointerId];
+    if (!Object.keys(ptrs).length){
+      c.dragging = false; camKick();
+      /* a click (not a drag) on the inline view opens the big one */
+      if (e.type === "pointerup" && !c.moved && !c.modal) camModal(true);
+    }
+  }
+  cv.addEventListener("pointerleave", function(){ c.hover = null; });
+  cv.addEventListener("pointerup", endp);
+  cv.addEventListener("pointercancel", endp);
+  cv.addEventListener("wheel", function(e){
+    e.preventDefault();
+    camZoom(Math.exp(e.deltaY * 0.0012));
+    camKick();
+  }, {passive:false});
+  cv.addEventListener("dblclick", function(){ camView("iso"); });
+  cv.addEventListener("webglcontextlost", function(e){ e.preventDefault(); c.gl = null; c.ok = false; setDraw("2d"); });
+  window.addEventListener("resize", camKick);
+  if (window.matchMedia){
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var fn = function(){ if (c.on){ camBuild(); camKick(); } };
+    if (mq.addEventListener) mq.addEventListener("change", fn); else if (mq.addListener) mq.addListener(fn);
+  }
+}
+
+function camFit(){
+  var g = cam3d.g;
+  if (!g) return 15;
+  return cam3d.mode === "stack" ? STACK_3D.rimR * 4.6 : g.R * 3.6 + g.T;
+}
+function camZoom(f){
+  var base = camFit();
+  cam3d.dist = Math.max(base * 0.3, Math.min(base * 3, cam3d.dist * f));
+}
+
+function camView(v){
+  var c = cam3d;
+  c.view = v;
+  if (v === "iso"){ c.yaw = -0.9; c.pitch = 0.6; }
+  else if (v === "top"){ c.yaw = -Math.PI / 2; c.pitch = 1.555; }
+  else if (v === "front"){ c.yaw = -Math.PI / 2; c.pitch = 0.0; }
+  else if (v === "bottom"){ c.yaw = Math.PI / 2; c.pitch = -1.555; }   /* reads as G55: X mirrored */
+  /* stack: axle along world X, hub inboard (−X), wheel outboard (+X) */
+  else if (v === "s-iso"){ c.yaw = -1.2; c.pitch = 0.32; }
+  else if (v === "s-side"){ c.yaw = -Math.PI / 2; c.pitch = 0.0; }
+  else if (v === "s-hub"){ c.yaw = Math.PI - 0.35; c.pitch = 0.18; }
+  else if (v === "s-wheel"){ c.yaw = 0.35; c.pitch = 0.18; }
+  c.dist = camFit();
+  camMarkViews(); camKick();
+}
+
+/* Swap the controls around the one viewport for CAM or stack mode. */
+function camApplyMode(){
+  var c = cam3d, stk = c.mode === "stack";
+  var views = stk ? [["s-iso", "ISO"], ["s-side", "SIDE"], ["s-hub", "HUB SIDE"], ["s-wheel", "WHEEL SIDE"]]
+                  : [["iso", "ISO"], ["top", "TOP"], ["front", "FRONT"], ["bottom", "G55"]];
+  el("camviews").innerHTML = views.map(function(v){
+    return '<button type="button" data-camview="' + v[0] + '">' + v[1] + "</button>";
+  }).join("") + '<button type="button" id="camexpand" aria-label="Open 3D view full size">&#x2922;</button>';
+  el("cambp").hidden = stk;
+  el("camstk").hidden = !stk;
+  el("camops").hidden = stk;
+  document.querySelector(".cam-tog").hidden = stk;
+  el("camdro").hidden = stk;
+  ["cl-x", "cl-y", "cl-z"].forEach(function(id){ el(id).style.visibility = stk ? "hidden" : ""; });
+  el("camnote").textContent = stk
+    ? "Only the adapter is drawn from your numbers. The hub, wheel and nuts are generic, " +
+      "there to show how it all bolts up. Drag to turn it; untick Cutaway to see it whole."
+    : "Toolpaths are illustrative: generated from your eight numbers with assumed tools, " +
+      "feeds, lip height, lug-nut pockets and stud length. Our machinists program the real job in " +
+      "Mastercam or SolidWorks after review.";
+  c.exT = stackExploded ? 1 : 0;
+  if (!stk || c.modeShown !== "stack") c.ex = c.exT;
+  el("stkbtn3").textContent = stackExploded ? "Bolt it together" : "Pull it apart";
+  el("stkcut").checked = c.cut;
+  if (stk) c.playing = false;
+}
+
+function camMarkViews(){
+  var b = document.querySelectorAll("[data-camview]");
+  for (var i = 0; i < b.length; i++) b[i].setAttribute("aria-pressed", b[i].getAttribute("data-camview") === cam3d.view);
+}
+
+/* Recompute geometry, toolpaths and the backplot timeline from the design. */
+function camUpdate(d){
+  var c = cam3d, atEnd = c.t >= c.total;
+  c.g = camGeom(d);
+  c.ops = camPaths(c.g);
+  if (!c.dist) c.dist = c.g.R * 3.6 + c.g.T;
+  camBuild();
+  if (atEnd) c.t = c.total; else c.t = Math.min(c.t, c.total);
+  camRenderOps();
+  camKick();
+}
+
+function camBuild(){
+  var c = cam3d, g = c.g, gl = c.gl, A = CAM_ASSUME;
+  if (!g || !gl) return;
+  var v = [], tl = [], t = 0, prevTool = null;
+  function seg(a, b, col, dash, s0, s1){
+    v.push(a[0], a[1], a[2], col[0], col[1], col[2], col[3], dash ? 0.001 : 0, s0,
+           b[0], b[1], b[2], col[0], col[1], col[2], col[3], dash ? dash : 0, s1);
+  }
+  c.cols = {al:hexRgb("#b3bdc7"), src:hexRgb(cssVar("--cyan")), dst:hexRgb(cssVar("--accent")),
+            tool:hexRgb("#d4a937"), hub:hexRgb("#6e7780"), whl:hexRgb("#8d969f"), nut:hexRgb("#c9ced3")};
+  if (c.mode === "stack"){
+    /* a shop floor under the wheel, in world coords (axle along X) */
+    var ink0 = hexRgb(cssVar("--steel")), fz = -STACK_3D.rimR - 0.36, k0;
+    for (k0 = -12; k0 <= 12; k0++){
+      var gc0 = ink0.concat([k0 % 2 === 0 ? 0.3 : 0.12]);
+      seg([k0, -12, fz], [k0, 12, fz], gc0, 0, -1, -1);
+      seg([-12, k0, fz], [12, k0, fz], gc0, 0, -1, -1);
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, c.lbuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(v), gl.DYNAMIC_DRAW);
+    c.nLines = v.length / 9;
+    v = [];
+  }
+  /* timeline: machining minutes, so rapids fly and drilling crawls */
+  c.ops.forEach(function(o, oi){
+    if (c.off[o.name]) return;
+    if (prevTool && prevTool !== o.tool.id) t += A.toolChange;
+    prevTool = o.tool.id;
+    o.t0 = t;
+    for (var i = 1; i < o.pts.length; i++){
+      var la = o.pts[i - 1], lb = o.pts[i];
+      var len = Math.sqrt(Math.pow(lb[0] - la[0], 2) + Math.pow(lb[1] - la[1], 2) + Math.pow(lb[2] - la[2], 2));
+      var dt = len / (lb[3] ? A.feed.rapid : o.feed);
+      tl.push({op:oi, la:la, lb:lb, a:camToPart(la, o.setup, g.T), b:camToPart(lb, o.setup, g.T),
+               t0:t, t1:t + dt, rapid:lb[3], len:len});
+      t += dt;
+    }
+    o.t1 = t;
+  });
+  c.tl = tl; c.total = t;
+  if (c.mode === "stack") return;
+
+  if (c.showPaths){
+    var rap = [0.88, 0.7, 0.2, 0.9];
+    tl.forEach(function(s){
+      var col = s.rapid ? rap : hexRgb(c.ops[s.op].color).concat([1]);
+      seg(s.a, s.b, col, s.rapid ? s.len + 0.001 : 0, s.t0 / t, s.t1 / t);
+    });
+  }
+
+  /* grid under the part, 0.5" minor / 1" major */
+  var ink = hexRgb(cssVar("--steel")), zg = -g.T - g.so - 0.01, E = Math.ceil(g.R + g.so + 1), k;
+  for (k = -E * 2; k <= E * 2; k++){
+    var gc = ink.concat([k % 2 === 0 ? 0.32 : 0.13]);
+    seg([k / 2, -E, zg], [k / 2, E, zg], gc, 0, -1, -1);
+    seg([-E, k / 2, zg], [E, k / 2, zg], gc, 0, -1, -1);
+  }
+  /* stock envelope */
+  if (c.showStock){
+    var Rs = g.R + g.so, zt = g.lipH + g.so, zb = -g.T - g.so, sc = ink.concat([0.6]), a0, a1;
+    for (k = 0; k < 72; k++){
+      a0 = k / 72 * 2 * Math.PI; a1 = (k + 1) / 72 * 2 * Math.PI;
+      seg([Rs * Math.cos(a0), Rs * Math.sin(a0), zt], [Rs * Math.cos(a1), Rs * Math.sin(a1), zt], sc, 0, -1, -1);
+      seg([Rs * Math.cos(a0), Rs * Math.sin(a0), zb], [Rs * Math.cos(a1), Rs * Math.sin(a1), zb], sc, 0, -1, -1);
+      if (k % 9 === 0) seg([Rs * Math.cos(a0), Rs * Math.sin(a0), zt], [Rs * Math.cos(a0), Rs * Math.sin(a0), zb], sc, 0, -1, -1);
+    }
+  }
+  /* work offsets: G54 at the wheel face, G55 flipped at the hub face */
+  var X = [0.85, 0.33, 0.31, 1], Y = [0.25, 0.61, 0.32, 1], Z = [0.23, 0.49, 0.87, 1], L = 1.2;
+  seg([0, 0, 0], [L, 0, 0], X, 0, -1, -1);
+  seg([0, 0, 0], [0, L, 0], Y, 0, -1, -1);
+  seg([0, 0, 0], [0, 0, L], Z, 0, -1, -1);
+  seg([0, 0, -g.T], [-L * 0.7, 0, -g.T], X, 0, -1, -1);
+  seg([0, 0, -g.T], [0, L * 0.7, -g.T], Y, 0, -1, -1);
+  seg([0, 0, -g.T], [0, 0, -g.T - L * 0.7], Z, 0, -1, -1);
+
+  if (c.mode === "stack") return;
+  gl.bindBuffer(gl.ARRAY_BUFFER, c.lbuf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(v), gl.DYNAMIC_DRAW);
+  c.nLines = v.length / 9;
+}
+
+function camRenderOps(){
+  var c = cam3d, h = "", lastSetup = 0;
+  c.ops.forEach(function(o, i){
+    if (o.setup !== lastSetup){
+      lastSetup = o.setup;
+      h += '<li class="grp">' + (o.setup === 1 ? "Setup 1 · G54 · wheel side up"
+                                                : "Setup 2 · G55 · flipped, hub side up") + "</li>";
+    }
+    h += '<li><label id="camop' + i + '"><input type="checkbox" data-camop="' + i + '"' +
+      (c.off[o.name] ? "" : " checked") + '><i style="background:' + o.color + '"></i>' +
+      '<span class="nm">' + (i + 1) + " · " + o.name + "</span>" +
+      '<span class="tl">' + o.tool.id + " Ø" + o.tool.d.toFixed(3) + "</span></label></li>";
+  });
+  el("camops").innerHTML = h;
+  c.curOp = -2;
+}
+
+function fmtMin(m){
+  var s = Math.round(m * 60);
+  return Math.floor(s / 60) + ":" + ("0" + s % 60).slice(-2);
+}
+
+/* Tool position at machining time t → {seg, part xyz, setup xyz}. */
+function camAt(t){
+  var tl = cam3d.tl, lo = 0, hi = tl.length - 1;
+  if (!tl.length) return null;
+  while (lo < hi){ var mid = (lo + hi) >> 1; if (tl[mid].t1 < t) lo = mid + 1; else hi = mid; }
+  var s = tl[lo], f = s.t1 > s.t0 ? Math.max(0, Math.min(1, (t - s.t0) / (s.t1 - s.t0))) : 1;
+  function lerp(a, b){ return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]; }
+  return {s:s, p:lerp(s.a, s.b), l:lerp(s.la, s.lb)};
+}
+
+function camKick(){
+  if (cam3d.raf || !cam3d.on) return;
+  cam3d.raf = requestAnimationFrame(camFrame);
+}
+
+function camFrame(now){
+  var c = cam3d;
+  c.raf = 0;
+  if (!c.on || !c.gl) return;
+  if (c.ex !== c.exT){
+    var de = c.lastE ? Math.min(100, now - c.lastE) : 16, stp = de / 700;
+    c.ex = c.ex < c.exT ? Math.min(c.exT, c.ex + stp) : Math.max(c.exT, c.ex - stp);
+    c.lastE = now; c.anim = true; camKick();
+  } else { c.lastE = 0; c.anim = false; }
+  if (c.playing){
+    var dt = c.last ? Math.min(100, now - c.last) : 16;
+    c.t = Math.min(c.total, c.t + dt * c.total / 25000);    /* whole program in ~25 s */
+    if (c.t >= c.total){ c.playing = false; el("camplay").textContent = "Play"; }
+    el("camseek").value = String(Math.round(c.t / (c.total || 1) * 1000));
+    c.last = now;
+  } else c.last = 0;
+  camDraw();
+  if (c.playing) camKick();
+}
+
+function camDraw(){
+  var c = cam3d, gl = c.gl, g = c.g, cv = c.cv;
+  if (!gl || !g) return;
+  var dpr = Math.min(window.devicePixelRatio || 1, 1.5) * (c.dragging || c.playing || c.anim ? 0.65 : 1);
+  var stk = c.mode === "stack", SK = STACK_3D;
+  var cw = cv.clientWidth, ch = cv.clientHeight;
+  var w = Math.max(1, Math.round(cw * dpr)), h = Math.max(1, Math.round(ch * dpr));
+  if (cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
+  /* settle back to full resolution once interaction stops */
+  if (dpr < 1 && !c.dragging && !c.playing && !c.anim) camKick();
+
+  /* stack: part z runs along world x; frame the assembled stack */
+  var tgt = stk ? [(-g.T - 3.3 + 4.5) / 2, 0, 0] : [0, 0, (g.lipH - g.T) / 2];
+  var dist = c.dist * Math.max(1, h / w);            /* keep the part in frame when tall and narrow */
+  var eye = [tgt[0] + dist * Math.cos(c.pitch) * Math.cos(c.yaw),
+             tgt[1] + dist * Math.cos(c.pitch) * Math.sin(c.yaw),
+             tgt[2] + dist * Math.sin(c.pitch)];
+  var P = m4persp(0.6, w / h, 0.2, 200), V = m4look(eye, tgt, [0, 0, 1]), VP = m4mul(P, V);
+
+  var done = c.t >= c.total - 1e-9, at = camAt(c.t), A = CAM_ASSUME;
+  var op = at && !done && !stk ? c.ops[at.s.op] : null;
+
+  gl.viewport(0, 0, w, h);
+  gl.clearColor(0, 0, 0, 0); gl.clearDepth(1);
+  gl.depthMask(true);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  /* solid */
+  var u = c.ps.u, zTop = g.lipH + g.so + A.clear + 3.2, zBot = -g.T - g.so - A.clear - 3.2;
+  gl.useProgram(c.ps);
+  gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.disable(gl.BLEND);
+  gl.uniformMatrix4fv(u.uInv, false, new Float32Array(m4inv(VP)));
+  gl.uniformMatrix4fv(u.uVP, false, new Float32Array(VP));
+  gl.uniform4f(u.uA, g.R, g.T, g.lipR, g.lipH);
+  gl.uniform4f(u.uB, g.thruR, g.hubR, g.pocketDepth, c.showPart ? 1 : 0);
+  gl.uniform4f(u.uS, g.src.n, g.src.r, g.src.holeR, g.src.nutR);
+  gl.uniform4f(u.uD, g.dst.n, g.dst.r, g.dst.studR, g.dst.headR);
+  gl.uniform4f(u.uE, g.src.flange, g.dst.headDepth, g.dst.len, g.dst.a0);
+  if (op){
+    var tr = op.tool.d / 2;
+    gl.uniform4f(u.uTl, at.p[0], at.p[1], at.p[2], tr);
+    gl.uniform4f(u.uTm, op.setup === 1 ? 1 : -1, 1, op.tool.d > 2 ? 0.6 : 1.4, Math.max(0.55, tr * 1.1));
+  } else gl.uniform4f(u.uTm, 1, 0, 1, 0.5);
+  if (stk){
+    var zLo = -g.T - 3.5 - 1.6, zHi = 4.7 + 2.4 + 1.2;
+    gl.uniform4f(u.uBd, (zLo + zHi) / 2, 0, 0,
+      Math.sqrt(Math.pow(SK.rimR + 0.6, 2) + Math.pow((zHi - zLo) / 2, 2)));
+  } else gl.uniform4f(u.uBd, 0, 0, (zTop + zBot) / 2,
+    Math.sqrt(Math.pow(g.R + g.so + 2, 2) + Math.pow((zTop - zBot) / 2, 2)));
+  var ee = c.ex * c.ex * (3 - 2 * c.ex);
+  gl.uniform4f(u.uM, stk ? 1 : 0, stk && c.cut ? 1 : 0, ee, SK.rimR);
+  gl.uniform4f(u.uH, g.src.r + 0.8, THREADS[design.vehicleThread].dia / 25.4 / 2, 0,
+    Math.max(g.src.r + 0.8, g.dst.r + 0.9, g.R + 0.4));
+  gl.uniform4f(u.uW, SK.padT, SK.nutFlat, SK.nutH, g.dst.n);
+  gl.uniform3fv(u.uCAl, c.cols.al); gl.uniform3fv(u.uCSrc, c.cols.src);
+  gl.uniform3fv(u.uCDst, c.cols.dst); gl.uniform3fv(u.uCTool, c.cols.tool);
+  gl.uniform3fv(u.uCHub, c.cols.hub); gl.uniform3fv(u.uCWhl, c.cols.whl); gl.uniform3fv(u.uCNut, c.cols.nut);
+  gl.bindVertexArray(c.vaoS);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  /* lines: hidden pass faint, visible pass full */
+  gl.useProgram(c.pl);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  gl.depthMask(false);
+  gl.uniformMatrix4fv(c.pl.u.uVP, false, new Float32Array(VP));
+  gl.uniform1f(c.pl.u.uProg, done ? 2 : c.t / (c.total || 1));
+  gl.bindVertexArray(c.vaoL);
+  gl.depthFunc(gl.GREATER); gl.uniform1f(c.pl.u.uHide, 0.12);
+  gl.drawArrays(gl.LINES, 0, c.nLines);
+  gl.depthFunc(gl.LEQUAL); gl.uniform1f(c.pl.u.uHide, 1);
+  gl.drawArrays(gl.LINES, 0, c.nLines);
+  gl.bindVertexArray(null);
+
+  /* HTML overlays: axis labels, WCS tag, DRO */
+  function place(id, p){
+    var q = VP, x = q[0] * p[0] + q[4] * p[1] + q[8] * p[2] + q[12],
+        y = q[1] * p[0] + q[5] * p[1] + q[9] * p[2] + q[13],
+        ww = q[3] * p[0] + q[7] * p[1] + q[11] * p[2] + q[15], n = el(id);
+    n.hidden = ww <= 0;
+    n.style.left = ((x / ww + 1) / 2 * cw).toFixed(1) + "px";
+    n.style.top = ((1 - y / ww) / 2 * ch).toFixed(1) + "px";
+  }
+  place("cl-x", [1.4, 0, 0]); place("cl-y", [0, 1.4, 0]); place("cl-z", [0, 0, 1.4]);
+
+  var setup = op ? op.setup : 1;
+  el("camwcs").textContent = stk ? "HUB · ADAPTER · WHEEL" + (c.cut ? " · CUTAWAY" : "")
+    : (setup === 1 ? "G54 · SETUP 1 · Z0 WHEEL FACE" : "G55 · SETUP 2 · Z0 HUB FACE");
+  var l = at ? at.l : [0, 0, 0];
+  el("camdro").innerHTML =
+    '<span class="x"><b>X</b>' + l[0].toFixed(4) + "</span>" +
+    '<span class="y"><b>Y</b>' + l[1].toFixed(4) + "</span>" +
+    '<span class="z"><b>Z</b>' + l[2].toFixed(4) + "</span>" +
+    '<span class="op">' + (op
+      ? (at.s.rapid ? "G0" : "G1 F" + op.feed) + " · " + op.tool.id + " " + op.tool.name + " · " + (at.s.op + 1) + " " + op.name
+      : c.ops.length + " ops · est. cycle " + fmtMin(c.total) + " per part · v0.1 assumptions") + "</span>";
+  el("camtime").textContent = fmtMin(c.t) + " / " + fmtMin(c.total);
+
+  var cur = op ? at.s.op : -1;
+  if (cur !== c.curOp){
+    var prev = el("camop" + c.curOp), now = el("camop" + cur);
+    if (prev) prev.className = "";
+    if (now) now.className = "now";
+    c.curOp = cur;
+  }
+}
+
+/* Full-size view. The live viewport and backplot bar are MOVED into the
+   dialog and back, so there is one GL context and nothing to keep in sync.
+   No position:fixed (it collapses artifact frames) — like the tour, the
+   dialog is absolute in document coordinates, sized to the viewport, with
+   page scroll locked while it is open. */
+function camModal(open){
+  var c = cam3d, m = el("cammodal");
+  if (!m){
+    m = document.createElement("div");
+    m.id = "cammodal"; m.className = "cam-modal"; m.hidden = true;
+    m.innerHTML = '<div class="cam-modal-in" role="dialog" aria-modal="true" aria-labelledby="cammodalt">' +
+      '<div class="cam-modal-hd"><b id="cammodalt">3D CAM view</b>' +
+      '<span class="hint-mouse">Move the mouse to spin 360° · scroll to zoom · double-click to reset</span>' +
+      '<span class="hint-touch">Drag to spin · pinch to zoom</span>' +
+      '<button type="button" class="btn-sm" id="camclose">Close</button></div>' +
+      '<div class="cam-modal-bd" id="cammodalbd"></div></div>';
+    document.body.appendChild(m);
+    m.addEventListener("click", function(e){ if (e.target === m) camModal(false); });
+  }
+  var vp = el("camvp"), bp = el("cambp");
+  if (open && !c.modal){
+    c.modal = true; c.hover = null;
+    el("cammodalt").textContent = c.mode === "stack" ? "3D stack view" : "3D CAM view";
+    el("cammodalbd").appendChild(vp);
+    el("cammodalbd").appendChild(bp);
+    el("cammodalbd").appendChild(el("camstk"));
+    document.documentElement.style.overflow = "hidden";
+    m.hidden = false;
+    camPlaceModal();
+    el("camclose").focus();
+  } else if (!open && c.modal){
+    c.modal = false;
+    var box = el("cam");
+    box.insertBefore(el("camstk"), box.firstChild);
+    box.insertBefore(bp, el("camstk"));
+    box.insertBefore(vp, bp);
+    document.documentElement.style.overflow = "";
+    m.hidden = true;
+    el("camexpand").focus();
+  }
+  camKick();
+}
+function camPlaceModal(){
+  var m = el("cammodal");
+  if (!m || m.hidden) return;
+  m.style.top = window.scrollY + "px";
+  m.style.height = window.innerHeight + "px";
+  camKick();
+}
+window.addEventListener("resize", camPlaceModal);
+document.addEventListener("keydown", function(e){
+  if (cam3d.modal && (e.key === "Escape" || e.key === "Esc")) camModal(false);
+});
+
+function camSet(on){
+  var c = cam3d;
+  if (on && !camSupported()) on = false;
+  if (on && !c.gl){
+    try { camInit(); }
+    catch (e){
+      c.ok = false; on = false;
+      if (window.console) console.warn("3D view unavailable:", e);
+    }
+  }
+  c.on = on;
+  if (!on){ c.playing = false; if (c.modal) camModal(false); }
+  el("cam").hidden = !on;
+  document.querySelector(".draw").classList.toggle("is3d", on);
+  if (c.ok === false){
+    el("v3d").disabled = true;
+    el("v3d").title = "3D needs WebGL2 on a capable device. The 2D drawing is exact.";
+  }
+  if (on){
+    var pb = el("camplay"); if (pb) pb.textContent = "Play";
+    var fresh = c.modeShown !== c.mode;
+    camApplyMode();
+    c.modeShown = c.mode;
+    camUpdate(design);
+    if (fresh) camView(c.mode === "stack" ? "s-iso" : "iso");
+    camMarkViews();
+  }
 }
 
 /* ---------------- render ---------------- */
@@ -1591,6 +2866,8 @@ function render(skipFields){
   paintErrors();
   renderChecks(issues);
   el("face").innerHTML = faceSvg(design);
+  if (cam3d.on) camUpdate(design);
+  if (drawView === "stack" && !cam3d.on) renderStack();
   renderTitleBlock(design, issues);
   renderPrice(p);
 
@@ -1638,6 +2915,14 @@ function revalidate(k){
   if (e[k]) shownErrors[k] = e[k]; else delete shownErrors[k];
 }
 
+/* backplot scrubber */
+document.addEventListener("input", function(e){
+  if (e.target.id !== "camseek") return;
+  cam3d.t = +e.target.value / 1000 * cam3d.total;
+  cam3d.playing = false; el("camplay").textContent = "Play";
+  camKick();
+});
+
 /* admin edits: rule params, severity, pricing */
 document.addEventListener("input", function(e){
   var t = e.target;
@@ -1669,6 +2954,11 @@ document.addEventListener("input", function(e){
 });
 
 document.addEventListener("change", function(e){
+  var co = e.target.getAttribute && e.target.getAttribute("data-camop");
+  if (co){ cam3d.off[cam3d.ops[+co].name] = !e.target.checked; camBuild(); camKick(); return; }
+  if (e.target.id === "stkcut"){ cam3d.cut = e.target.checked; camKick(); return; }
+  var cs = e.target.getAttribute && e.target.getAttribute("data-camshow");
+  if (cs){ cam3d[cs] = e.target.checked; camBuild(); camKick(); return; }
   var lv = e.target.getAttribute && e.target.getAttribute("data-level");
   if (lv){ RULES[+lv].level = e.target.value; touch(); return; }
   var k = e.target.getAttribute && e.target.getAttribute("data-key");
@@ -1691,7 +2981,32 @@ document.addEventListener("change", function(e){
 document.addEventListener("click", function(e){
   var b = e.target.closest ? e.target.closest("button") : null;
   if (!b) return;
-  if (b.id === "starttour"){ showTour(0); return; }
+  if (b.id === "starttour"){ if (cam3d.modal) camModal(false); showTour(0); return; }
+  if (b.id === "v2d" || b.id === "vstack" || b.id === "v3d"){
+    setDraw(b.id === "v3d" ? "3d" : b.id === "vstack" ? "stack" : "2d"); return;
+  }
+  if (b.id === "stkbtn3"){
+    stackExploded = !stackExploded;
+    cam3d.exT = stackExploded ? 1 : 0;
+    b.textContent = stackExploded ? "Bolt it together" : "Pull it apart";
+    camKick(); return;
+  }
+  if (b.id === "stk2d" || b.id === "stk3d"){ stack3d = b.id === "stk3d"; setDraw("stack"); return; }
+  if (b.id === "stkbtn"){
+    stackExploded = !stackExploded;
+    document.querySelector(".stk").classList.toggle("together", !stackExploded);
+    b.textContent = stackExploded ? "Bolt it together" : "Pull it apart";
+    return;
+  }
+  if (b.hasAttribute("data-camview")){ camView(b.getAttribute("data-camview")); return; }
+  if (b.id === "camexpand"){ camModal(true); return; }
+  if (b.id === "camclose"){ camModal(false); return; }
+  if (b.id === "camplay"){
+    if (!cam3d.playing && cam3d.t >= cam3d.total) cam3d.t = 0;
+    cam3d.playing = !cam3d.playing;
+    b.textContent = cam3d.playing ? "Pause" : "Play";
+    camKick(); return;
+  }
   if (b.id === "tournext"){ showTour(tourAt + 1); return; }
   if (b.id === "tourback"){ showTour(tourAt - 1); return; }
   if (b.id === "tourskip"){ endTour(); return; }
@@ -1781,8 +3096,16 @@ var TOUR = [
    body:"Tap a popular truck, search by make and model, or type your specs in directly. All three fill the same fields."},
   {view:"design", step:0, sel:"#fields", title:"Always editable",
    body:"A vehicle lookup fills these in, but it never locks them. Check them against your own hub — trim and drivetrain change the answer."},
-  {view:"design", step:0, sel:".canvas", title:"Drawn to scale",
+  {view:"design", step:0, draw:"2d", sel:"#canvas2d", title:"Drawn to scale",
    body:"Not a stock photo. Bolt circles, hole sizes and the centre bore are computed from your numbers and redraw as you type."},
+  {view:"design", step:0, sel:".viewtog", title:"Three ways to look at it",
+   body:"Switch between the flat drawing, a side view of the whole setup, and a 3D model with machining toolpaths."},
+  {view:"design", step:0, draw:"stack", sel:"#camvp, #stack", title:"How it bolts up",
+   body:"Vehicle hub, adapter and wheel in 3D, cut in half so you can see inside. Press Bolt it together to slide the parts into place."},
+  {view:"design", step:0, draw:"3d", sel:"#camvp", title:"The part in 3D",
+   body:"The finished adapter with the stock and the path each cutting tool takes. Drag to turn it. Click to open it full size, then just move the mouse to spin it 360°."},
+  {view:"design", step:0, draw:"3d", sel:"#cambp", title:"Watch it being cut",
+   body:"Press Play or drag the slider. The readout shows where the tool is in X, Y and Z. This is an illustration — our machinists program the real job after review."},
   {view:"design", step:0, sel:"#checks", title:"Checks as you go",
    body:"Every change runs against our rule set. Green clears. Amber needs a person to look. Red cannot be built at all."},
   {view:"design", step:0, sel:".price", title:"Price or quote",
@@ -1819,15 +3142,23 @@ function tourEls(){
   return m;
 }
 
+var tourAt0 = 0;
 function showTour(i){
   if (i < 0 || i >= TOUR.length) return endTour();
+  tourAt0 = tourAt;
   var t = TOUR[i];
   tourAt = i;
   if (t.view && view !== t.view) setView(t.view);
   if (t.step !== undefined && step !== t.step){ step = t.step; render(); }
+  if (t.draw && drawView !== t.draw) setDraw(t.draw);
   var m = tourEls(); m.hidden = false;
-  var target = document.querySelector(t.sel);
-  if (!target) return showTour(i + 1);
+  /* first match that is actually showing — "#camvp, #stack" means 3D if it is on, else 2D */
+  var cands = document.querySelectorAll(t.sel), target = null;
+  for (var ci = 0; ci < cands.length && !target; ci++) if (cands[ci].getClientRects().length) target = cands[ci];
+  /* Skip a step whose target is missing or hidden — e.g. the 3D steps on a device
+     without WebGL2. Going Back past it skips the other way. */
+  if (!target)
+    return i < tourAt0 ? showTour(i - 1) : showTour(i + 1);
 
   /* Fill the tooltip first so offsetHeight is real when we place it. */
   el("tipn").textContent = (i + 1) + " of " + TOUR.length;
@@ -1910,6 +3241,9 @@ function setView(v){
 renderStages();
 renderDesigns();
 render();
+/* Opens in 3D where the device can run it; anything that cannot gets the exact
+   2D drawing — the low-end fallback the brief requires. */
+setDraw(camSupported() ? "3d" : "2d");
 setInterval(function(){ if (view === "list") tickClocks(); }, 1000);
 </script>
 
