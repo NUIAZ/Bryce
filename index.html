@@ -22,6 +22,11 @@
     img { max-width: 100%; }
     [hidden] { display: none !important; }
   </style>
+  <script>
+    /* Saved theme choice, applied before first paint. No choice = follow the system. */
+    try { var wt = localStorage.getItem("wa-theme");
+          if (wt === "light" || wt === "dark") document.documentElement.setAttribute("data-theme", wt); } catch (e) {}
+  </script>
 </head>
 <body>
 
@@ -48,6 +53,15 @@
   --steel-2:#8895a2;
   --cyan:#1d6f86;
   --cyan-soft:#e2eef2;
+  --sel:#2f80d0;              /* selected / pressed / current: light blue, not red */
+  --sel-soft:#e4f0fc;
+  --sel-ink:#1b5c9e;
+  --sel-on-ink:#8cc4f5;       /* on the dark ink background of the current step */
+  --warn:#f2c230;             /* start over: yellow to stand out, navy text to stay readable */
+  --warn-edge:#d6a512;
+  --warn-ink:#132435;
+  --warn-glow:rgba(242,194,48,.55);
+  --neon:#12c444;             /* "which part is this measurement?" highlight */
   --flag:#bf1e2e;
   --flag-soft:#fae9ea;
   --go:#2f6b4b;
@@ -78,6 +92,15 @@
     --steel-2:#6a7d90;
     --cyan:#4fa8c4;
     --cyan-soft:#102934;
+    --sel:#5aaaf0;
+    --sel-soft:#132c45;
+    --sel-ink:#9ccdf7;
+    --sel-on-ink:#1b5c9e;
+    --warn:#e8bd3a;
+    --warn-edge:#f5d266;
+    --warn-ink:#0d1926;
+    --warn-glow:rgba(232,189,58,.5);
+    --neon:#39ff6e;
     --flag:#e8505f;
     --flag-soft:#3a1519;
     --go:#6aab86;
@@ -95,7 +118,10 @@
   --accent:#e8505f; --accent-ink:#f28791; --accent-soft:#3a1519;
   --navy:#0d1926; --ink:#e6ecf2; --paper:#0d1926; --card:#152435;
   --line:#26384c; --line-2:#354a61; --steel:#93a3b3; --steel-2:#6a7d90;
-  --cyan:#4fa8c4; --cyan-soft:#102934; --flag:#e8505f; --flag-soft:#3a1519;
+  --cyan:#4fa8c4; --cyan-soft:#102934;
+  --sel:#5aaaf0; --sel-soft:#132c45; --sel-ink:#9ccdf7; --sel-on-ink:#1b5c9e;
+  --warn:#e8bd3a; --warn-edge:#f5d266; --warn-ink:#0d1926; --warn-glow:rgba(232,189,58,.5);
+  --neon:#39ff6e; --flag:#e8505f; --flag-soft:#3a1519;
   --go:#6aab86; --go-soft:#152a20; --grid:#1b2b3c;
   --cam-top:#1f3247; --cam-bot:#09121b; --cam-ink:#e6ecf2; --cam-panel:rgba(9,18,27,.72);
   --shadow:0 1px 2px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35);
@@ -137,6 +163,12 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:600;text-wrap:balance;margin:0;le
   margin-left:auto;font-family:var(--f-mono);font-size:11px;color:rgba(255,255,255,.72);
   border:1px solid rgba(255,255,255,.26);border-radius:999px;padding:3px 10px;white-space:nowrap;
 }
+.themetog{display:inline-flex;align-items:center;gap:6px;flex:none;margin-left:8px;cursor:pointer;
+  font-family:var(--f-mono);font-size:11px;color:rgba(255,255,255,.85);background:transparent;
+  border:1px solid rgba(255,255,255,.26);border-radius:999px;padding:3px 10px 3px 8px;white-space:nowrap}
+.themetog:hover{background:rgba(255,255,255,.1)}
+.themetog:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.themetog svg{display:block}
 .wrap{max-width:1180px;margin:0 auto;padding:0 16px;padding-block:22px 64px}
 
 /* ---------- step rail ---------- */
@@ -148,11 +180,35 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:600;text-wrap:balance;margin:0;le
 }
 .rail button:hover{background:var(--paper)}
 .rail button[aria-current="true"]{background:var(--ink);color:var(--paper)}
-.rail button[aria-current="true"] .rn{color:var(--accent)}
+.rail button[aria-current="true"] .rn{color:var(--sel-on-ink)}
 .rail .rn{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;color:var(--steel-2)}
 .rail .rl{font-family:var(--f-disp);font-size:14.5px;font-weight:600;letter-spacing:.02em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rail button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.rail .rd{color:var(--go);font-weight:600}
+.rail button[aria-current="true"] .rd{color:var(--sel-on-ink)}
+.rail button[data-done]:not([aria-current="true"]) .rl{color:var(--ink)}
+/* the step Continue lands on: a yellow glow that fades out (the rail clips outer
+   shadows, so it is inset) */
+.rail button.arrive{position:relative;animation:railArrive 1.8s ease-out both}
+.rail button.arrive .rn{animation:railArriveN 1.8s ease-out both}
+@keyframes railArrive{
+  0%  {box-shadow:inset 0 0 0 3px var(--warn), inset 0 0 22px 4px var(--warn-glow)}
+  55% {box-shadow:inset 0 0 0 3px var(--warn), inset 0 0 14px 2px var(--warn-glow)}
+  100%{box-shadow:inset 0 0 0 3px transparent, inset 0 0 0 0 transparent}
+}
+@keyframes railArriveN{0%,55%{color:var(--warn)}}
+@media (prefers-reduced-motion:reduce){
+  .rail button.arrive,.rail button.arrive .rn{animation:none}
+  .rail button.arrive{box-shadow:inset 0 0 0 3px var(--warn)}
+}
+.rail .rs{font-size:11.5px;line-height:1.3;color:var(--steel);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.rail button[aria-current="true"] .rs{color:inherit;opacity:.75}
+.rail .rs-short{display:none}
+@media (max-width:620px){
+  .rail .rs-full{display:none}
+  .rail .rs-short{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;overflow:hidden}
+}
 
 /* ---------- layout ---------- */
 .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:20px;align-items:start}
@@ -182,7 +238,7 @@ select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   font-family:var(--f-mono);font-size:13.5px;padding:7px 11px;border-radius:6px;cursor:pointer;
   border:1px solid var(--line-2);background:var(--paper);color:var(--ink);
 }
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--sel-soft);color:var(--sel-ink);border-color:var(--sel)}
 .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 /* ---------- help ---------- */
@@ -304,7 +360,10 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
   .tabs{width:100%;margin:2px 0 0;flex-wrap:wrap}
   .tabs button{padding:6px 9px;font-size:13.5px}
   .tabs button b{margin-left:4px;padding:1px 5px}
-  .ruleset{margin-left:0}
+  .ruleset{margin-left:0;order:3}
+  /* keep the theme switch top right, on the logo's row */
+  .themetog{order:1;margin-left:auto}
+  .tabs{order:2}
 }
 
 /* ---------- submissions ---------- */
@@ -376,9 +435,9 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
 .pick b{font-family:var(--f-disp);font-size:15px;font-weight:600;line-height:1.15;
   letter-spacing:.01em;overflow-wrap:anywhere}
 .pick span{font-family:var(--f-mono);font-size:11.5px;color:var(--steel)}
-.pick[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.pick[aria-pressed="true"] b{color:var(--accent-ink)}
-.pick[aria-pressed="true"] span{color:var(--accent)}
+.pick[aria-pressed="true"]{border-color:var(--sel);background:var(--sel-soft)}
+.pick[aria-pressed="true"] b{color:var(--sel-ink)}
+.pick[aria-pressed="true"] span{color:var(--sel)}
 .pick:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .filled{display:flex;gap:10px;padding:10px 12px;border-radius:7px;
   background:var(--cyan-soft);border:1px solid var(--cyan);color:var(--cyan)}
@@ -418,11 +477,28 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
 
 /* ---------- drawing ---------- */
 .draw{position:sticky;top:calc(env(safe-area-inset-top,0px) + 68px)}
-@media (max-width:900px){.draw{position:static;order:-1}}
-.draw.is3d{position:static}
+@media (max-width:900px){.draw{position:relative;top:auto;order:-1}}
+.draw.is3d{position:relative;top:auto}
+/* "which part is this measurement?" — neon green on the drawing, any view */
+.hlcap{position:absolute;left:8px;top:54px;z-index:6;max-width:calc(100% - 16px);pointer-events:none;
+  font-size:12.5px;line-height:1.35;color:var(--ink);background:var(--card);border:1.5px solid var(--neon);
+  border-radius:6px;padding:4px 9px;box-shadow:0 0 10px var(--neon)}
+.hlcap b{font-weight:600}
+.draw[data-hl] .cam-wcs{visibility:hidden}
+.draw[data-hl="src"] .hl-src, .draw[data-hl="dst"] .hl-dst, .draw[data-hl="hub"] .hl-hub,
+.draw[data-hl="lip"] .hl-lip, .draw[data-hl="thick"] .hl-thick{
+  stroke:var(--neon) !important;stroke-width:2.4px;animation:hlPulse 1.1s ease-in-out infinite alternate}
+.draw[data-hl="thick"] .hl-thick-t{fill:var(--neon);font-weight:700}
+@keyframes hlPulse{from{filter:drop-shadow(0 0 1px var(--neon))}to{filter:drop-shadow(0 0 6px var(--neon))}}
+@media (prefers-reduced-motion:reduce){
+  .draw[data-hl] [class^="hl-"]{animation:none;filter:drop-shadow(0 0 3px var(--neon))}
+}
+/* the field being pointed at gets the same green, so the link reads both ways */
+#fields .f.hl-on label{color:var(--neon)}
 .draw-hd{display:flex;align-items:baseline;gap:10px;padding:12px 16px 10px;border-bottom:1px solid var(--line)}
 .draw-hd h2{font-size:17px}
-.draw-hd .rev{margin-left:auto;font-family:var(--f-mono);font-size:11px;color:var(--steel-2)}
+.draw-hd .rev{margin-left:auto;font-family:var(--f-mono);font-size:11px;color:var(--steel-2);white-space:nowrap}
+@media (max-width:420px){.draw-hd{flex-wrap:wrap;row-gap:6px}}
 .canvas{background:var(--paper);border-bottom:1px solid var(--line);padding:6px}
 .canvas svg{display:block;width:100%;height:auto;max-width:100%}
 .viewtog{display:inline-flex;margin-left:8px;border:1px solid var(--line-2);border-radius:6px;overflow:hidden;flex:none}
@@ -450,7 +526,14 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
 .cam-views{position:absolute;top:8px;right:8px;display:flex;gap:4px}
 .cam-views button{font-family:var(--f-mono);font-size:10.5px;padding:3px 7px;border-radius:4px;cursor:pointer;
   border:1px solid var(--line-2);background:var(--cam-panel);color:var(--cam-ink)}
-.cam-views button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.cam-views button[aria-pressed="true"]{border-color:var(--sel);color:var(--sel)}
+/* same yellow as Start over: a state-changing action, so it stands out from the camera buttons */
+.cam-views .sepbtn{margin-right:6px;font-weight:600;background:var(--warn);color:var(--warn-ink);
+  border-color:var(--warn-edge);box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+.cam-views .sepbtn:hover{filter:brightness(1.05)}
+#camplay{background:var(--warn);color:var(--warn-ink);border-color:var(--warn-edge);
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.12);min-width:64px}
+#camplay:hover{filter:brightness(1.05)}
 .cam-views #camexpand{font-size:13px;line-height:1;padding:2px 7px}
 .cam-vp canvas{cursor:zoom-in}
 .cam-modal{position:absolute;left:0;right:0;z-index:80;display:flex;align-items:center;justify-content:center;
@@ -461,8 +544,18 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
 .cam-modal-hd b{font-family:var(--f-disp);font-size:17px;font-weight:600}
 .cam-modal-hd span{font-family:var(--f-mono);font-size:11px;color:var(--steel)}
 .cam-modal-hd .btn-sm{margin-left:auto}
+.cam-modal-hd .btn-sm + .btn-sm{margin-left:0}
+.cam-modal-hd .spin-info{flex:1 1 280px;min-width:0;font-family:var(--f-body);font-size:12.5px;line-height:1.4;
+  color:var(--ink);padding:4px 10px;border-radius:6px;border:1px solid var(--line-2);background:var(--paper)}
+.cam-modal-hd .spin-info.on{border-color:var(--cyan);background:var(--cyan-soft)}
+.cam-modal-hd .spin-info.off{border-color:var(--line-2)}
+.cam-modal-hd .spin-info b{font-weight:600}
+.cam-modal-hd kbd{font-family:var(--f-mono);font-size:11px;padding:0 5px;border:1px solid var(--line-2);
+  border-bottom-width:2px;border-radius:4px;background:var(--card)}
+.cam-modal-hd .hint-scroll{font-family:var(--f-mono);font-size:11px;color:var(--steel)}
 .cam-modal-hd .hint-touch{display:none}
-@media (hover:none){.cam-modal-hd .hint-mouse{display:none}.cam-modal-hd .hint-touch{display:inline}}
+@media (hover:none){.cam-modal-hd .hint-mouse{display:none}.cam-modal-hd .hint-touch{display:inline}
+  .cam-modal-hd #camclose{margin-left:auto}}
 .cam-modal-bd{flex:1;min-height:0;display:flex;flex-direction:column}
 .cam-modal .cam-vp{flex:1;min-height:0;aspect-ratio:auto;max-height:none}
 .cam-modal .cam-vp canvas{cursor:move}
@@ -471,13 +564,13 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
 .stk.together .mv{transform:none}
 @media (prefers-reduced-motion:reduce){.stk .mv{transition:none}}
 .stk-cut{display:flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11px;color:var(--steel);cursor:pointer}
-.stk-cut input{margin:0;accent-color:var(--accent)}
+.stk-cut input{margin:0;accent-color:var(--sel)}
 .stk-bar{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;padding:6px 4px 2px;
   font-size:11.5px;line-height:1.4;color:var(--steel)}
 .cam-lbl{position:absolute;font-family:var(--f-mono);font-size:10px;font-weight:600;pointer-events:none;
   transform:translate(-50%,-50%);color:var(--cam-ink)}
 .cam-bp{display:flex;align-items:center;gap:10px;padding:9px 16px;border-top:1px solid var(--line)}
-.cam-bp input{flex:1;min-width:0;accent-color:var(--accent)}
+.cam-bp input{flex:1;min-width:0;accent-color:var(--sel)}
 .cam-bp .t{font-family:var(--f-mono);font-size:11px;color:var(--steel);white-space:nowrap}
 .cam-ops{list-style:none;margin:0;padding:4px 0 8px;border-top:1px solid var(--line);
   font-family:var(--f-mono);font-size:11.5px}
@@ -486,8 +579,8 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
 .cam-ops label{display:grid;grid-template-columns:auto 10px minmax(0,1fr) auto;gap:8px;align-items:center;
   padding:3px 16px;cursor:pointer}
 .cam-ops label:hover{background:var(--paper)}
-.cam-ops label.now{background:var(--accent-soft)}
-.cam-ops input{margin:0;accent-color:var(--accent)}
+.cam-ops label.now{background:var(--sel-soft)}
+.cam-ops input{margin:0;accent-color:var(--sel)}
 .cam-ops i{width:10px;height:3px;border-radius:2px}
 .cam-ops .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cam-ops .tl{color:var(--steel-2)}
@@ -495,7 +588,29 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
 .cam-tog{display:flex;flex-wrap:wrap;gap:4px 14px;padding:8px 16px;border-top:1px solid var(--line);
   font-family:var(--f-mono);font-size:11px;color:var(--steel)}
 .cam-tog label{display:flex;align-items:center;gap:5px;cursor:pointer}
-.cam-tog input{margin:0;accent-color:var(--accent)}
+.cam-tog .lbl,.cam-join .lbl{font-family:var(--f-disp);font-size:11px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--steel-2)}
+.cam-tog .lbl{width:100%}
+.cam-join{padding:8px 16px 10px;border-top:1px solid var(--line)}
+.cam-join .jseg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:5px}
+.cam-join button{text-align:left;padding:6px 9px;border:1px solid var(--line-2);border-radius:6px;cursor:pointer;
+  background:var(--card);color:var(--ink);font-family:var(--f-body);min-width:0}
+.cam-join button b{display:block;font-family:var(--f-disp);font-size:13.5px;font-weight:600;color:var(--ink)}
+.cam-join button span{display:block;font-family:var(--f-mono);font-size:10.5px;color:var(--steel);overflow-wrap:anywhere}
+.cam-join button[aria-pressed="true"]{border-color:var(--sel);background:var(--sel-soft)}
+.cam-join button[aria-pressed="true"] b{color:var(--sel-ink)}
+.cam-join button:disabled{opacity:.5;cursor:not-allowed}
+.cam-opsbox{border-top:1px solid var(--line)}
+.cam-opsbox summary{display:flex;align-items:baseline;gap:10px;padding:9px 16px;cursor:pointer;
+  font-family:var(--f-disp);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.cam-opsbox summary .sm{margin-left:auto;font-family:var(--f-mono);font-size:11px;font-weight:400;
+  letter-spacing:0;text-transform:none;color:var(--steel)}
+.cam-opsbox .cam-ops{border-top:0;padding-top:0}
+.cam-ops .grp label{grid-template-columns:auto minmax(0,1fr);padding:0}
+.pc2{font-family:var(--f-mono);font-size:10.5px;font-weight:600;color:var(--cyan);border:1px solid var(--cyan);
+  border-radius:4px;padding:1px 6px;margin-left:8px;white-space:nowrap}
+.chk.info{background:var(--cyan-soft);border-color:var(--cyan);color:var(--cyan)}
+.cam-tog input{margin:0;accent-color:var(--sel)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 16px;border-bottom:1px solid var(--line);
   font-family:var(--f-mono);font-size:11.5px;color:var(--steel)}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:baseline}
@@ -523,13 +638,28 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
 .legalnote{display:flex;gap:8px;margin-top:10px;font-size:12.5px;color:var(--accent);
   font-family:var(--f-mono);line-height:1.4}
 .accept{display:flex;gap:11px;align-items:flex-start;margin-top:14px;cursor:pointer;font-size:14.5px}
-.accept input{flex:none;width:19px;height:19px;margin:1px 0 0;accent-color:var(--accent)}
+.accept input{flex:none;width:19px;height:19px;margin:1px 0 0;accent-color:var(--sel)}
+.accept-row{display:flex;align-items:flex-start;gap:8px}
+.infobtn{flex:none;width:22px;height:22px;margin-top:14px;padding:0;border-radius:50%;cursor:pointer;
+  border:1.5px solid var(--sel);background:var(--sel-soft);color:var(--sel-ink);
+  font:italic 700 13px/1 Georgia,"Times New Roman",serif}
+.infobtn:hover{background:var(--sel);color:#fff}
+.infobtn:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;align-items:center}
 .btn{font-family:var(--f-disp);font-size:16px;font-weight:600;letter-spacing:.04em;
   text-transform:uppercase;padding:11px 20px;border-radius:7px;cursor:pointer;border:1px solid transparent}
 .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .btn-primary:disabled{opacity:.42;cursor:not-allowed}
 .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line-2)}
+.btn-warn{background:var(--warn);color:var(--warn-ink);border-color:var(--warn-edge);
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+.btn-warn:hover{filter:brightness(1.05)}
+.btn-warn .ic{display:inline-block;margin-right:6px;font-size:15px;line-height:1;vertical-align:-1px}
+.restart{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.restart-ask{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 6px 5px 12px;
+  border:1px solid var(--warn-edge);border-radius:8px;background:var(--card)}
+.restart-ask span{font-size:13.5px;color:var(--ink)}
+.restart-ask .btn{padding:7px 13px;font-size:14px}
 .btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .saved{font-family:var(--f-mono);font-size:12px;color:var(--steel-2)}
 
@@ -582,6 +712,7 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
       <button type="button" data-view="help" aria-pressed="false">Help</button>
     </nav>
     <div class="ruleset" id="rulestamp">Rule set v1.0 · draft</div>
+    <button type="button" class="themetog" id="themetog" aria-label="Switch theme"></button>
   </div>
 </div>
 
@@ -629,6 +760,8 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
     <p>There are three ways to begin. <b>Popular trucks</b> fills in the common ones in a
        single tap. <b>Find my vehicle</b> walks make, model and year range. <b>I know my
        specs</b> skips straight to entering numbers.</p>
+    <p>Changed your mind? <b>Start over</b> (the yellow button under the form) clears everything
+       back to a fresh design after asking you to confirm.</p>
     <p>Whichever you use, the measurements stay visible and editable. The lookup is a
        starting point, not a guarantee &mdash; trim, drivetrain and dually axles all change
        hub specs. Check the numbers against your actual hub before you submit.</p>
@@ -678,12 +811,16 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
           stock it is cut from, the machining operations in order, and the path each tool
           takes. Drag to turn it, scroll or pinch to zoom, or use <b>ISO</b>, <b>TOP</b>,
           <b>FRONT</b> and <b>G55</b> (the hub side, as the part sits for its second setup).
+          A two-piece adapter opens with its two halves pulled apart so you can see both;
+          <b>JOIN</b> puts them together and <b>SEPARATE</b> pulls them apart again.
           The 3D view needs a reasonably recent phone or computer; if yours cannot run it, the
           button is greyed out and the 2D drawing is exact.</dd>
       <dt>Full-size 3D</dt>
-      <dd>Click the 3D view, or the &#x2922; button, to open it large. With a mouse, just move
-          it across the view to spin the part a full 360&deg;. On a phone, drag. Close with the
-          button, <b>Esc</b>, or a tap outside.</dd>
+      <dd>Click the 3D view, or the &#x2922; button, to open it large. Click and drag to turn it,
+          the same as in the panel. Press <b>Hover spin</b> (or <kbd>Space</kbd>) and the part follows
+          your mouse with no button held &mdash; a full 360&deg; across the view; click the model or press
+          <kbd>Space</kbd> again to stop. On a phone, drag. Close with the button, <b>Esc</b>, or a tap
+          outside.</dd>
       <dt>Backplot</dt>
       <dd>Press <b>Play</b>, or drag the slider, to watch the tool run through the program.
           The readout gives the tool position in X, Y and Z, the move, the tool and the
@@ -693,8 +830,13 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
        numbers, not the program we run. Our machinists program the real job in Mastercam or
        SolidWorks after review.</p>
     <p>The wheel studs are automatically turned to whatever angle leaves the most metal
-       between them and the vehicle holes. If the two still look close, that is exactly what
-       our review checks.</p>
+       between them and your vehicle's lug-nut holes.</p>
+    <p><b>One piece or two.</b> When your truck's bolt circle and your wheel's bolt circle are far
+       enough apart, the adapter is one solid piece. When they are too close, a lug-nut hole and a
+       wheel stud would run into each other, so we build it in two halves: the hub half holds your
+       vehicle's lug nuts, the wheel half holds the new studs, and the two never meet. The designer
+       works this out for you &mdash; the title block says which, and the 3D views show the two halves
+       in slightly different shades.</p>
 
     <h3 id="h-checks">Flags and blocks</h3>
     <p>Every change you make runs against our rule set, written by the people who machine
@@ -727,6 +869,9 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
       <li><b>Shipped</b> &mdash; tracking number and photographs of your parts.</li>
     </ol>
     <p>You get an email at every change.</p>
+    <p>Before you can submit, the Review step asks you to tick two boxes: that you have checked
+       the specs against your vehicle, and that you have looked over the 3D model. The small
+       <b>i</b> beside the second box opens the model full size.</p>
 
     <h3 id="h-edit">Changing a design</h3>
     <p>You have <b>12 hours</b> from submitting to change a design yourself. Open
@@ -759,6 +904,9 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
       <dt>Spacer vs adapter</dt>
       <dd>A spacer keeps the same bolt pattern and only pushes the wheel out. An adapter
           changes the pattern as well.</dd>
+      <dt>Two-piece adapter</dt>
+      <dd>An adapter made as two halves, used when the two bolt patterns are too close to fit in one
+          piece. The hub half takes the vehicle's lug nuts; the wheel half carries the new studs.</dd>
       <dt>Clocking</dt>
       <dd>The angle the wheel stud pattern is turned relative to the vehicle pattern. Chosen to
           keep the two sets of holes as far apart as possible.</dd>
@@ -856,12 +1004,29 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
             <input type="checkbox" id="accept">
             <span>I have verified these specifications against my vehicle and I accept the terms above.</span>
           </label>
+          <div class="accept-row">
+            <label class="accept" for="reviewed3d">
+              <input type="checkbox" id="reviewed3d">
+              <span id="rev3dtxt">I have reviewed the 3D model of my adapter and it shows what I want built.</span>
+            </label>
+            <!-- outside the label, so opening the model never ticks the box for them -->
+            <button type="button" class="infobtn" id="open3d" aria-label="Open the 3D model full size"
+                    title="Open the 3D model">i</button>
+          </div>
         </div>
         <div class="actions">
           <button class="btn btn-ghost" id="back" type="button">Back</button>
           <button class="btn btn-primary" id="next" type="button">Continue</button>
           <span class="why" id="why"></span>
           <span class="saved mono" id="saved"></span>
+          <span class="restart">
+            <button class="btn btn-warn" id="startover" type="button"><span class="ic" aria-hidden="true">&#8634;</span>Start over</button>
+            <span class="restart-ask" id="startask" role="group" aria-label="Confirm start over" hidden>
+              <span>Clear this design and start fresh?</span>
+              <button class="btn btn-warn" id="startyes" type="button">Yes, start over</button>
+              <button class="btn btn-ghost" id="startno" type="button">Keep it</button>
+            </span>
+          </span>
         </div>
       </div>
     </section>
@@ -869,6 +1034,7 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
     <aside class="panel draw" aria-label="Live drawing">
       <div class="draw-hd">
         <h2>Drawing</h2>
+        <span class="pc2" id="pc2" hidden>2-PIECE</span>
         <span class="rev mono" id="rev">REV A · DRAFT</span>
         <div class="viewtog" role="group" aria-label="Drawing view">
           <button type="button" id="v2d" aria-pressed="false">2D</button>
@@ -876,12 +1042,14 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
           <button type="button" id="v3d" aria-pressed="false">3D CAM</button>
         </div>
       </div>
+      <div class="hlcap" id="hlcap" aria-live="polite" hidden></div>
       <div class="canvas" id="canvas2d"><div id="face"></div></div>
       <div class="canvas" id="stack" hidden></div>
       <div class="cam" id="cam" hidden></div>
       <div class="legend">
         <span><i style="background:var(--cyan)"></i>Vehicle studs pass through</span>
         <span><i style="background:var(--accent)"></i>Pressed wheel studs</span>
+        <span id="lgjoin" hidden><i style="background:#7b5cd6"></i>Joins the halves (concept)</span>
       </div>
       <div class="tb">
         <div class="tb-grid" id="titleblock"></div>
@@ -1011,6 +1179,7 @@ var design = {
   mode:"popular", vehicle:0,
   pickMake:"Chevrolet", pickModel:"Silverado 1500"
 };
+var DESIGN_START = JSON.parse(JSON.stringify(design));
 
 /* =====================================================================
    SUBMISSIONS — demo data spanning the whole pipeline so the list view
@@ -1101,6 +1270,9 @@ function stepErrors(s){
     Object.keys(stepErrors(1)).forEach(function(k){ up[k] = stepErrors(1)[k]; });
     Object.keys(up).forEach(function(k){ e[k] = up[k]; });
     if (!el("accept").checked) e.accept = "Tick the box to confirm you have verified the specs.";
+    if (!el("reviewed3d").checked) e.reviewed3d = camSupported()
+      ? "Tick the box to confirm you have reviewed the 3D model. The i button opens it."
+      : "Tick the box to confirm you have reviewed the drawing.";
   }
   return e;
 }
@@ -1227,25 +1399,136 @@ function priceOf(d, issues){
   return {mode:"price", pair:pair, total:pair * (d.qty / 2)};
 }
 
-/* Wheel-stud clocking. The wheel pattern can be machined at any rotation
-   relative to the hub pattern; pick the one that leaves the most metal
-   between a vehicle through-hole and a pressed-stud hole. A fixed half-pitch
-   offset only works when both patterns have the same lug count — 6 → 5 put a
-   stud straight on top of a vehicle hole. Ties go to half pitch, so same-count
-   conversions draw exactly as before. Pure; used by faceSvg and camGeom.
-   Returns {off: degrees clockwise from 12 o'clock, clear: mm of wall (<0 = holes overlap)}. */
+/* =====================================================================
+   HOLE SIZES — the shop's own list (Bryce, 2026-10-05). Inches.
+     lug  = the hole the VEHICLE lug nut sits in (pocket on the wheel side)
+     stud = the hole for the PRESSED wheel stud's head
+   Which size goes with which thread is NOT from the shop yet — HOLE_FOR is
+   an assumption to replace with their answer. Unused sizes (1.12, 1.25 lug;
+   1.25 stud) are listed so nothing is lost.
+   ===================================================================== */
+var SHOP_HOLES = {
+  lug:  [0.82, 0.90, 1.00, 1.06, 1.12, 1.25],
+  stud: [0.75, 0.80, 0.875, 1.25]
+};
+var HOLE_FOR = {              /* v0.1 ASSUMED mapping — confirm with the shop */
+  "12x1.25": {lug:0.90, stud:0.75},
+  "12x1.5":  {lug:0.90, stud:0.75},
+  "1/2-20":  {lug:0.90, stud:0.80},
+  "14x1.5":  {lug:1.06, stud:0.875},
+  "14x2.0":  {lug:1.06, stud:0.875},
+  "9/16-18": {lug:1.06, stud:0.875}
+};
+var ONE_PIECE_WALL_MM = 4;    /* ASSUMED: least wall for a one-piece build */
+
+/* =====================================================================
+   TWO-PIECE JOINING — CONCEPTS FOR SHOP REVIEW, NOT THE SHOP'S METHOD.
+   The shop has not said how its two halves fasten. Two common ways are
+   drawn so they can pick one or correct both:
+     A  Cap screws: 5/16-18 socket-head screws through the wheel half into
+        tapped holes in the hub half, two dowel pins to locate.
+     B  Stacked: the hub half carries its own pressed studs on an in-between
+        bolt circle; the wheel half bolts to those with lug nuts sunk in
+        pockets — two one-piece conversions back to back.
+   ===================================================================== */
+var JOIN_A = {n:6, clearD:0.344, tapD:0.257, cbD:0.53, cbDepth:0.33,
+              headD:0.469, headH:0.3125, tapDepth:0.6, dowelD:0.25};
+var joinOpt = "A";
+
+/* Pure: where each concept puts its fasteners, and what it costs in size. */
+function joinPlan(d){
+  var key = [d.hubPattern, d.wheelPattern, d.vehicleThread, d.studThread, d.hubBore, d.wheelBore].join("|");
+  if (joinPlan.memo[key]) return joinPlan.memo[key];
+  var src = PATTERNS[d.hubPattern], dst = PATTERNS[d.wheelPattern], h = holeSizes(d), ck = clockOf(d);
+  var A0 = CAM_ASSUME, JA = JOIN_A, mm = 1 / 25.4, W = ONE_PIECE_WALL_MM * mm;
+  var rs = src.bcd / 2, rd = dst.bcd / 2, base = (Math.max(src.bcd, dst.bcd) + 2.0) / 2;
+  var hubR = d.hubBore * mm / 2, lipR = d.wheelBore * mm / 2;
+  var halfMin = A0.flangeMax + A0.nutH + 0.15;      /* a half deep enough to bury a lug nut */
+
+  /* A: one ring of screws just outside the lug pockets and stud heads */
+  var rA = Math.max(rs + h.lugR, rd + h.headR) + W + JA.cbD / 2;
+  var A = {kind:"A", n:JA.n, r:rA, a0:Math.PI / 2 - Math.PI / JA.n,
+           R:Math.max(base, rA + JA.cbD / 2 + 0.12), needT:halfMin + 0.5};
+
+  /* B: search for an in-between pattern (same thread as the vehicle) that clears
+     the vehicle pattern in the hub half and the wheel pattern in the wheel half.
+     Inside both bolt circles first, which keeps the OD; outside if not. */
+  var ih = {holeR:h.holeR, lugR:h.lugR, studR:THREADS[d.vehicleThread].dia * mm / 2,
+            headR:HOLE_FOR[d.vehicleThread].stud / 2};
+  function wall(r, n, a0){
+    var m = Infinity, i, k, ak, ai, dist;
+    for (k = 0; k < n; k++){
+      ak = a0 - k * 2 * Math.PI / n;
+      for (i = 0; i < src.lugs; i++){
+        ai = Math.PI / 2 - i * 2 * Math.PI / src.lugs;
+        dist = Math.sqrt(r * r + rs * rs - 2 * r * rs * Math.cos(ak - ai));
+        m = Math.min(m, dist - Math.max(h.lugR + ih.studR, h.holeR + ih.headR));
+      }
+      for (i = 0; i < dst.lugs; i++){
+        ai = Math.PI / 2 - ck.off * Math.PI / 180 - i * 2 * Math.PI / dst.lugs;
+        dist = Math.sqrt(r * r + rd * rd - 2 * r * rd * Math.cos(ak - ai));
+        m = Math.min(m, dist - Math.max(ih.lugR + h.studR, ih.holeR + h.headR));
+      }
+    }
+    return m;
+  }
+  var minIn = Math.max(lipR + ih.lugR, hubR + ih.headR) + W, radii = [], r, best = null;
+  for (r = Math.min(rs, rd) - 0.15; r >= minIn; r -= 0.05) radii.push(r);
+  var firstOut = radii.length;
+  for (r = Math.max(rs, rd) + 0.15; r <= Math.max(rs, rd) + 2.5; r += 0.05) radii.push(r);
+  var counts = [src.lugs, dst.lugs].filter(function(n, i, a){ return a.indexOf(n) === i; });
+  for (var ri = 0; ri < radii.length && !best; ri++){
+    counts.forEach(function(n){
+      for (var q = 0; q < 360 / n; q += 2){
+        var a0 = Math.PI / 2 - q * Math.PI / 180, wl = wall(radii[ri], n, a0);
+        if (wl >= W && (!best || wl > best.w)) best = {n:n, r:radii[ri], a0:a0, w:wl};
+      }
+    });
+  }
+  var B = best ? {kind:"B", n:best.n, r:best.r, a0:best.a0, inside:ri - 1 < firstOut,
+                  holeR:ih.holeR, lugR:ih.lugR, studR:ih.studR, headR:ih.headR,
+                  R:Math.max(base, best.r + Math.max(ih.lugR, ih.headR) + W + 0.1), needT:2 * halfMin}
+               : null;
+  return (joinPlan.memo[key] = {A:A, B:B, baseR:base});
+}
+joinPlan.memo = {};
+
+/* Pure: hole radii in inches for a design. */
+function holeSizes(d){
+  var mm = 1 / 25.4;
+  return {
+    holeR:(THREADS[d.vehicleThread].dia + 2.4) * mm / 2,   /* vehicle stud clearance */
+    lugR:HOLE_FOR[d.vehicleThread].lug / 2,                /* vehicle lug-nut pocket  */
+    studR:THREADS[d.studThread].dia * mm / 2,              /* pressed stud shank      */
+    headR:HOLE_FOR[d.studThread].stud / 2                  /* pressed stud head       */
+  };
+}
+
+/* Wheel-stud clocking and one-piece vs two-piece.
+   The wheel pattern can be machined at any rotation relative to the hub pattern;
+   pick the one that leaves the most metal where the two would fight in a single
+   piece: a lug-nut pocket against a pressed stud's shank, and a vehicle stud hole
+   against a pressed stud's head. Ties go to half pitch, so same-count conversions
+   draw exactly as before.
+   If even the best rotation leaves less than ONE_PIECE_WALL_MM, the bolt circles
+   are too close for one piece. The shop's answer is two halves: the hub half holds
+   the lug-nut pockets, the wheel half holds the pressed studs, so the two never meet.
+   Pure; used by faceSvg, stackSvg and camGeom.
+   Returns {off: degrees clockwise from 12 o'clock, clear: mm of wall (<0 = overlap),
+            onePiece: bool}. */
 function clockOf(d){
   var src = PATTERNS[d.hubPattern], dst = PATTERNS[d.wheelPattern];
   var key = d.hubPattern + "|" + d.wheelPattern + "|" + d.vehicleThread + "|" + d.studThread;
   if (clockOf.memo[key]) return clockOf.memo[key];
-  var hr = (THREADS[d.vehicleThread].dia + 2.4) / 2, sr = THREADS[d.studThread].dia / 2;
-  var rs = src.bcd * 25.4 / 2, rd = dst.bcd * 25.4 / 2, half = 360 / dst.lugs / 2;
+  var h = holeSizes(d), k = 25.4;
+  var need = Math.max(h.lugR + h.studR, h.holeR + h.headR) * k;
+  var rs = src.bcd * k / 2, rd = dst.bcd * k / 2, half = 360 / dst.lugs / 2;
   function clear(off){
     var m = Infinity, i, j, a, b;
     for (i = 0; i < src.lugs; i++) for (j = 0; j < dst.lugs; j++){
       a = (i * 360 / src.lugs) * Math.PI / 180;
       b = (off + j * 360 / dst.lugs) * Math.PI / 180;
-      m = Math.min(m, Math.sqrt(rs * rs + rd * rd - 2 * rs * rd * Math.cos(a - b)) - hr - sr);
+      m = Math.min(m, Math.sqrt(rs * rs + rd * rd - 2 * rs * rd * Math.cos(a - b)) - need);
     }
     return m;
   }
@@ -1254,6 +1537,7 @@ function clockOf(d){
     var c = clear(q / 4);
     if (c > best.clear + 0.01) best = {off:q / 4, clear:c};
   }
+  best.onePiece = best.clear >= ONE_PIECE_WALL_MM;
   return (clockOf.memo[key] = best);
 }
 clockOf.memo = {};
@@ -1272,7 +1556,7 @@ function stackSvg(d){
   var vr = THREADS[d.vehicleThread].dia / 25.4 / 2;          /* vehicle stud radius */
   var Fr = g.src.r + 0.8;                                      /* hub flange radius   */
   var Wt = 0.8, Wr = Math.max(Fr, g.dst.r + 0.9, g.R + 0.4);   /* wheel pad           */
-  var nutH = 0.6, nutR = 0.4, gap = 0.7;
+  var nutH = 0.6, nutR = Math.min(0.4, g.src.nutR * 0.85), gap = 0.7;
   var xmin = -2.0 - gap, xmax = T + Wt + nutH + 0.25 + gap * 2;
   var W = 340, H = 352, top = 30, bot = 52;
   var S = Math.min((W - 24) / (xmax - xmin), (H - top - bot) / (2 * Wr + 0.3));
@@ -1310,25 +1594,64 @@ function stackSvg(d){
   s.push('<g class="mv" style="--dx:-' + gpx + 'px">');
   s.push(band(-2.0, -0.6, 0, g.hubR * 1.15, "both", HUB));
   s.push(band(-0.6, 0, 0, Fr, "both", HUB));
-  s.push(band(0, g.pocketDepth * 0.85, 0, g.hubR - 0.015, "both", HUB));
-  s.push(band(-0.78, -0.6, g.src.r - vr * 1.7, g.src.r + vr * 1.7, "top", VEH));        /* stud head */
-  s.push(band(-0.6, g.src.flange + nutH + 0.12, g.src.r - vr, g.src.r + vr, "top", VEH)); /* stud     */
+  s.push(band(0, g.pocketDepth * 0.85, 0, g.hubR - 0.015, "both", HUB + ' class="hl-hub"'));
+  s.push(band(-0.78, -0.6, g.src.r - vr * 1.7, g.src.r + vr * 1.7, "top", VEH + ' class="hl-src"'));        /* stud head */
+  s.push(band(-0.6, g.src.flange + nutH + 0.12, g.src.r - vr, g.src.r + vr, "top", VEH + ' class="hl-src"')); /* stud     */
   s.push(label(-1.0, 14, "VEHICLE HUB"));
   s.push("</g>");
 
-  /* ---- adapter: hatched section with every cut, then its pressed studs ---- */
+  /* ---- adapter: hatched section with every cut, then its pressed studs.
+          Two-piece: the hub half (0 … J) keeps the lug-nut pockets, the wheel half
+          (J … T) the pressed studs, and it slides off on its own when pulled apart. ---- */
+  var J = g.tA, two = !g.one;
+  function studs(x0){
+    s.push(band(x0 - 0.01, T + 0.01, g.dst.r - g.dst.studR, g.dst.r + g.dst.studR, "bot", VOID));
+    s.push(band(x0 - 0.01, x0 + g.dst.headDepth, g.dst.r - g.dst.headR, g.dst.r + g.dst.headR, "bot", VOID));
+    s.push(band(x0 + 0.005, x0 + g.dst.headDepth, g.dst.r - g.dst.headR * 0.96, g.dst.r + g.dst.headR * 0.96, "bot", RED + ' class="hl-dst"'));
+    s.push(band(x0 + g.dst.headDepth, T + g.dst.len, g.dst.r - g.dst.studR, g.dst.r + g.dst.studR, "bot", RED + ' class="hl-dst"'));
+  }
   s.push("<g>");
-  s.push(band(0, T, g.thruR, g.R, "both", BODY));
-  s.push(band(T - 0.01, T + g.lipH, g.thruR, g.lipR, "both", BODY));
-  s.push(band(0, g.pocketDepth, g.thruR - 0.001, g.hubR, "both", VOID));                 /* hub pocket */
-  s.push(band(-0.01, T + 0.01, g.src.r - g.src.holeR, g.src.r + g.src.holeR, "top", VOID));
-  s.push(band(g.src.flange, T + 0.01, g.src.r - g.src.nutR, g.src.r + g.src.nutR, "top", VOID));
-  s.push(band(-0.01, T + 0.01, g.dst.r - g.dst.studR, g.dst.r + g.dst.studR, "bot", VOID));
-  s.push(band(-0.01, g.dst.headDepth, g.dst.r - g.dst.headR, g.dst.r + g.dst.headR, "bot", VOID));
-  s.push(band(0.005, g.dst.headDepth, g.dst.r - g.dst.headR * 0.96, g.dst.r + g.dst.headR * 0.96, "bot", RED));
-  s.push(band(g.dst.headDepth, T + g.dst.len, g.dst.r - g.dst.studR, g.dst.r + g.dst.studR, "bot", RED));
-  s.push(band(g.src.flange, g.src.flange + nutH, g.src.r - nutR, g.src.r + nutR, "top", VEH)); /* lug nut */
+  s.push(band(0, J, g.thruR, g.R, "both", BODY + ' class="hl-thick"'));
+  if (!two) s.push(band(T - 0.01, T + g.lipH, g.thruR, g.lipR, "both", BODY + ' class="hl-lip"'));
+  s.push(band(0, g.pocketDepth, g.thruR - 0.001, g.hubR, "both", VOID + ' class="hl-hub"'));                 /* hub pocket */
+  s.push(band(-0.01, J + 0.01, g.src.r - g.src.holeR, g.src.r + g.src.holeR, "top", VOID));
+  s.push(band(g.src.flange, J + 0.01, g.src.r - g.src.nutR, g.src.r + g.src.nutR, "top", VOID));
+  if (!two) studs(0);
+  s.push(band(g.src.flange, g.src.flange + nutH, g.src.r - nutR, g.src.r + nutR, "top", VEH + ' class="hl-src"')); /* lug nut */
+  /* how the halves join (concept): A taps into the hub half, B presses in-between studs into it */
+  var jn = g.join, JA = JOIN_A, jh = "top";
+  var INT = 'fill="#7b5cd6" stroke="var(--ink)" stroke-width=".6"';
+  if (jn && jn.kind === "B"){
+    var jw = Math.max(jn.lugR, jn.headR);
+    /* aligned section: put it in whichever half it crowds less */
+    var olTop = jw + g.src.nutR - Math.abs(jn.r - g.src.r), olBot = jw + g.dst.headR - Math.abs(jn.r - g.dst.r);
+    jh = olBot < olTop ? "bot" : "top";
+    s.push(band(-0.01, J + 0.01, jn.r - jn.studR, jn.r + jn.studR, jh, VOID));
+    s.push(band(-0.01, g.dst.headDepth, jn.r - jn.headR, jn.r + jn.headR, jh, VOID));
+    s.push(band(0.005, g.dst.headDepth, jn.r - jn.headR * 0.96, jn.r + jn.headR * 0.96, jh, INT));
+    s.push(band(g.dst.headDepth, J + jn.flangeB + nutH + 0.12, jn.r - jn.studR, jn.r + jn.studR, jh, INT));
+  } else if (jn){
+    s.push(band(J - JA.tapDepth, J + 0.01, jn.r - JA.tapD / 2, jn.r + JA.tapD / 2, "top", VOID));
+  }
   s.push("</g>");
+  if (two){
+    s.push('<g class="mv" style="--dx:' + (gap * 0.5 * S).toFixed(1) + 'px">');
+    s.push(band(J, T, g.thruR, g.R, "both", BODY + ' class="hl-thick"'));
+    s.push(band(T - 0.01, T + g.lipH, g.thruR, g.lipR, "both", BODY + ' class="hl-lip"'));
+    studs(J);
+    if (jn && jn.kind === "A"){
+      s.push(band(J - 0.01, T + 0.01, jn.r - JA.clearD / 2, jn.r + JA.clearD / 2, "top", VOID));
+      s.push(band(T - JA.cbDepth, T + 0.01, jn.r - JA.cbD / 2, jn.r + JA.cbD / 2, "top", VOID));
+      s.push(band(T - JA.cbDepth, T - JA.cbDepth + JA.headH, jn.r - JA.headD / 2, jn.r + JA.headD / 2, "top", INT));
+      s.push(band(J - 0.55, T - JA.cbDepth, jn.r - JA.clearD * 0.44, jn.r + JA.clearD * 0.44, "top", INT));
+    } else if (jn){
+      var bnut = Math.min(0.4, jn.lugR * 0.85);
+      s.push(band(J - 0.01, T + 0.01, jn.r - jn.holeR, jn.r + jn.holeR, jh, VOID));
+      s.push(band(J + jn.flangeB, T + 0.01, jn.r - jn.lugR, jn.r + jn.lugR, jh, VOID));
+      s.push(band(J + jn.flangeB, J + jn.flangeB + nutH, jn.r - bnut, jn.r + bnut, jh, INT));
+    }
+    s.push("</g>");
+  }
 
   /* ---- wheel: mounting pad cut off with a break line, then its lug nuts ---- */
   s.push('<g class="mv" style="--dx:' + gpx + 'px">');
@@ -1352,13 +1675,13 @@ function stackSvg(d){
 
   /* how far the wheel moves out — the number the customer is buying */
   var dy = H - 30;
-  s.push('<g stroke="var(--steel)" stroke-width=".9">' +
+  s.push('<g class="hl-thick" stroke="var(--steel)" stroke-width=".9">' +
     '<line x1="' + X(0) + '" y1="' + dy + '" x2="' + X(T) + '" y2="' + dy + '"/>' +
     '<line x1="' + X(0) + '" y1="' + (dy - 5) + '" x2="' + X(0) + '" y2="' + (dy + 5) + '"/>' +
     '<line x1="' + X(T) + '" y1="' + (dy - 5) + '" x2="' + X(T) + '" y2="' + (dy + 5) + '"/></g>');
   s.push('<text x="' + X(T / 2) + '" y="' + (dy + 16) + '" text-anchor="middle" fill="var(--ink)" ' +
-    'font-family="IBM Plex Mono, monospace" font-size="11">ADAPTER ' + T.toFixed(2) + '" · wheel sits ' +
-    T.toFixed(2) + '" further out</text>');
+    'font-family="IBM Plex Mono, monospace" font-size="10.5">' + (two ? "2-PIECE " : "") + "ADAPTER " +
+    T.toFixed(2) + '" · wheel ' + T.toFixed(2) + '" further out</text>');
   s.push(label(4, cy - 6, "VEHICLE STUD", "start"));
   s.push(label(4, cy + 13, "WHEEL STUD", "start"));
   s.push("</svg>");
@@ -1366,7 +1689,9 @@ function stackSvg(d){
 }
 
 function renderStack(){
+  var g = camGeom(design);
   el("stack").innerHTML = stackSvg(design) +
+    (g.one ? "" : '<div class="cam-join">' + joinPicker(g) + "</div>") +
     '<div class="stk-bar"><button type="button" class="btn-sm" id="stkbtn">' +
     (stackExploded ? "Bolt it together" : "Pull it apart") + "</button>" +
     (camSupported() ? '<button type="button" class="btn-sm" id="stk3d">View in 3D</button>' : "") +
@@ -1394,7 +1719,7 @@ function setDraw(v){
 /* compact=true draws the face only, for list thumbnails. */
 function faceSvg(d, compact){
   var src = PATTERNS[d.hubPattern], dst = PATTERNS[d.wheelPattern];
-  var od = Math.max(src.bcd, dst.bcd) + 2.0;
+  var cgm = camGeom(d), od = 2 * cgm.R;
   if (compact){
     var c = 50, cs = 46 / od, s2 = [];
     s2.push('<svg viewBox="0 0 100 100" role="img" aria-label="' + d.hubPattern + " to " +
@@ -1448,13 +1773,16 @@ function faceSvg(d, compact){
   s.push('</g>');
 
   /* bolt circles */
-  s.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + (src.bcd / 2 * S).toFixed(1) +
+  s.push('<circle class="hl-src" cx="' + cx + '" cy="' + cy + '" r="' + (src.bcd / 2 * S).toFixed(1) +
          '" fill="none" stroke="var(--cyan)" stroke-width=".9" stroke-dasharray="4 4" opacity=".85"/>');
-  s.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + (dst.bcd / 2 * S).toFixed(1) +
+  s.push('<circle class="hl-dst" cx="' + cx + '" cy="' + cy + '" r="' + (dst.bcd / 2 * S).toFixed(1) +
          '" fill="none" stroke="var(--accent)" stroke-width=".9" stroke-dasharray="4 4" opacity=".85"/>');
 
   /* centre bore */
-  s.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + hubR.toFixed(1) +
+  /* centring lip (wheel bore), then the hub bore inside it */
+  s.push('<circle class="hl-lip" cx="' + cx + '" cy="' + cy + '" r="' + (d.wheelBore / 25.4 / 2 * S).toFixed(1) +
+         '" fill="none" stroke="var(--steel-2)" stroke-width="1"/>');
+  s.push('<circle class="hl-hub" cx="' + cx + '" cy="' + cy + '" r="' + hubR.toFixed(1) +
          '" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.2"/>');
 
   /* vehicle-side through holes */
@@ -1463,7 +1791,7 @@ function faceSvg(d, compact){
     a = (-90 + i * 360 / src.lugs) * Math.PI / 180;
     x = cx + src.bcd / 2 * S * Math.cos(a);
     y = cy + src.bcd / 2 * S * Math.sin(a);
-    s.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + srcHoleR.toFixed(1) +
+    s.push('<circle class="hl-src" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + srcHoleR.toFixed(1) +
            '" fill="var(--paper)" stroke="var(--cyan)" stroke-width="1.5"/>');
   }
   /* wheel-side pressed studs, clocked off the through holes */
@@ -1472,8 +1800,27 @@ function faceSvg(d, compact){
     a = (-90 + off + i * 360 / dst.lugs) * Math.PI / 180;
     x = cx + dst.bcd / 2 * S * Math.cos(a);
     y = cy + dst.bcd / 2 * S * Math.sin(a);
-    s.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + dstStudR.toFixed(1) +
+    s.push('<circle class="hl-dst" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + dstStudR.toFixed(1) +
            '" fill="var(--accent)" stroke="var(--ink)" stroke-width=".8"/>');
+  }
+
+  /* two-piece: how the halves join — concept for shop review, in violet */
+  if (cgm.join){
+    var jn = cgm.join, JC = "#7b5cd6";
+    for (i = 0; i < jn.n; i++){
+      a = jn.a0 - i * 2 * Math.PI / jn.n;
+      x = cx + jn.r * S * Math.cos(a); y = cy - jn.r * S * Math.sin(a);
+      var rOut = (jn.kind === "A" ? JOIN_A.cbD / 2 : jn.lugR) * S, rIn = (jn.kind === "A" ? JOIN_A.clearD / 2 : jn.holeR) * S;
+      s.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + rOut.toFixed(1) +
+             '" fill="none" stroke="' + JC + '" stroke-width=".9" stroke-dasharray="2 2"/>');
+      s.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + rIn.toFixed(1) +
+             '" fill="var(--paper)" stroke="' + JC + '" stroke-width="1.3"/>');
+    }
+    if (jn.kind === "A") for (i = 0; i < 2; i++){
+      a = jn.a0 + Math.PI / jn.n + i * Math.PI;
+      s.push('<circle cx="' + (cx + jn.r * S * Math.cos(a)).toFixed(1) + '" cy="' + (cy - jn.r * S * Math.sin(a)).toFixed(1) +
+             '" r="' + (JOIN_A.dowelD / 2 * S).toFixed(1) + '" fill="' + JC + '"/>');
+    }
   }
 
   /* OD dimension */
@@ -1489,16 +1836,22 @@ function faceSvg(d, compact){
   /* side profile */
   var px = 306, tw = Math.max(8, Math.min(24, d.thickness * S * 0.42)), ph = R * 1.5;
   var py = cy - ph / 2;
-  s.push('<rect x="' + (px - tw / 2) + '" y="' + py + '" width="' + tw + '" height="' + ph +
+  s.push('<rect class="hl-thick" x="' + (px - tw / 2) + '" y="' + py + '" width="' + tw + '" height="' + ph +
          '" fill="url(#hatch)" stroke="var(--ink)" stroke-width="1.3"/>');
   s.push('<g stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round">');
   s.push('<line x1="' + (px + tw / 2) + '" y1="' + (py + 12) + '" x2="' + (px + tw / 2 + 13) + '" y2="' + (py + 12) + '"/>');
   s.push('<line x1="' + (px + tw / 2) + '" y1="' + (py + ph - 12) + '" x2="' + (px + tw / 2 + 13) + '" y2="' + (py + ph - 12) + '"/>');
   s.push('</g>');
-  s.push('<text x="' + px + '" y="' + (py - 8) + '" text-anchor="middle" fill="var(--steel)" ' +
+  s.push('<text class="hl-thick-t" x="' + px + '" y="' + (py - 8) + '" text-anchor="middle" fill="var(--steel)" ' +
          'font-family="IBM Plex Mono, monospace" font-size="11">' + d.thickness.toFixed(2) + '"</text>');
+  var cg = camGeom(d);
+  if (!cg.one){
+    var jx = px - tw / 2 + tw * cg.tA / d.thickness;      /* hub side left, wheel side right */
+    s.push('<line x1="' + jx.toFixed(1) + '" y1="' + py + '" x2="' + jx.toFixed(1) + '" y2="' + (py + ph) +
+           '" stroke="var(--ink)" stroke-width="1.3"/>');
+  }
   s.push('<text x="' + px + '" y="' + (py + ph + 16) + '" text-anchor="middle" fill="var(--steel-2)" ' +
-         'font-family="IBM Plex Mono, monospace" font-size="9.5">SIDE</text>');
+         'font-family="IBM Plex Mono, monospace" font-size="9.5">' + (cg.one ? "SIDE" : "2-PC") + '</text>');
 
   s.push('</svg>');
   return s.join("");
@@ -1524,40 +1877,50 @@ var CAM_ASSUME = {            /* v0.1 — UNVERIFIED. Every value needs a machin
   lipH: 0.375,                /* wheel-side centring lip height */
   pocketDepth: 0.40,          /* hub-side recess the vehicle hub sits in */
   lipWall: 0.15,              /* wall between through bore and lip OD */
-  nutPocketD: 1.10,           /* counterbore for the vehicle lug nut + socket */
   flangeMax: 0.50,            /* material left under a lug-nut pocket */
+  nutH: 0.60,                 /* vehicle lug nut height, for sizing the hub half */
   studLen: 1.50,              /* pressed stud stick-out past the wheel face */
-  headOver: 8,                /* mm: stud head dia over thread dia */
-  headDepth: 0.20,            /* stud head counterbore, hub side */
+  headDepth: 0.20,            /* stud head counterbore */
+  minHalf: 0.50,              /* thinnest either half of a two-piece may be */
   stockOver: 0.06,            /* stock oversize, radial and on each face */
   clear: 0.50,                /* clearance plane above stock */
   feed: {face:40, mill:60, drill:12, rapid:400},   /* in/min */
   toolChange: 0.15            /* min */
 };
+/* Hole sizes come from SHOP_HOLES / holeSizes(), not from here. */
 
-/* Pure: design → solid dimensions in inches. Mirrors faceSvg's geometry. */
+/* Pure: design → solid dimensions in inches. Mirrors faceSvg's geometry.
+   Two-piece: the hub half (z −T … −T+tA) carries the lug-nut pockets, open at the
+   joint face; the wheel half (−T+tA … 0) carries the pressed studs, heads seated
+   at the joint face. How the halves fasten together is not modelled — the shop has
+   not said yet. */
 function camGeom(d){
   var A = CAM_ASSUME, src = PATTERNS[d.hubPattern], dst = PATTERNS[d.wheelPattern];
-  var mm = 1 / 25.4, T = d.thickness;
+  var mm = 1 / 25.4, T = d.thickness, h = holeSizes(d), ck = clockOf(d);
   var hubR = d.hubBore * mm / 2, lipR = d.wheelBore * mm / 2;
+  var flange = Math.min(A.flangeMax, T * 0.4);
+  var tA = Math.max(A.minHalf, Math.min(T - A.minHalf, flange + A.nutH + 0.15));
+  var plan = ck.onePiece ? null : joinPlan(d);
+  var jn = plan ? (joinOpt === "B" && plan.B ? plan.B : plan.A) : null;
+  if (jn && jn.kind === "B") tA = T / 2;
+  var tB = T - tA;
+  if (jn) jn.flangeB = Math.min(A.flangeMax, tB * 0.4);
   return {
-    T:T, R:(Math.max(src.bcd, dst.bcd) + 2.0) / 2, so:A.stockOver,
+    T:T, R:jn ? jn.R : (Math.max(src.bcd, dst.bcd) + 2.0) / 2, so:A.stockOver, join:jn, plan:plan,
     lipR:lipR, lipH:A.lipH, hubR:hubR,
     thruR:Math.max(0.5, Math.min(hubR, lipR - A.lipWall)),
     pocketDepth:Math.min(A.pocketDepth, T * 0.4),
+    one:ck.onePiece, tA:ck.onePiece ? T : tA,
     /* a0 matches faceSvg: first hole at 12 o'clock, wheel studs clocked by clockOf() */
-    src:{n:src.lugs, r:src.bcd / 2, a0:Math.PI / 2,
-         holeR:(THREADS[d.vehicleThread].dia + 2.4) * mm / 2,
-         nutR:A.nutPocketD / 2, flange:Math.min(A.flangeMax, T * 0.4)},
-    dst:{n:dst.lugs, r:dst.bcd / 2, a0:Math.PI / 2 - clockOf(d).off * Math.PI / 180,
-         studR:THREADS[d.studThread].dia * mm / 2,
-         headR:(THREADS[d.studThread].dia + A.headOver) * mm / 2,
-         headDepth:A.headDepth, len:A.studLen}
+    src:{n:src.lugs, r:src.bcd / 2, a0:Math.PI / 2, holeR:h.holeR, nutR:h.lugR, flange:flange},
+    dst:{n:dst.lugs, r:dst.bcd / 2, a0:Math.PI / 2 - ck.off * Math.PI / 180,
+         studR:h.studR, headR:h.headR, headDepth:A.headDepth, len:A.studLen}
   };
 }
 
-/* Pure: geometry → operations. Each point is [x, y, z, rapid] in the op's
-   own setup coordinates, so the DRO can read them straight off. */
+/* Pure: geometry → operations. Each point is [x, y, z, rapid] in the op's own
+   setup coordinates, so the DRO reads them straight off. op.xf places a setup in
+   part coordinates (camToPart); op.grp and op.wcs label it. */
 function camPaths(g){
   var A = CAM_ASSUME, ops = [], T = g.T, so = g.so, Rs = g.R + so;
   var T1 = {id:"T1", name:"3.000 face mill", d:3.0},
@@ -1565,11 +1928,11 @@ function camPaths(g){
       T3 = {id:"T3", name:"1/2 spot drill", d:0.5},
       T4 = {id:"T4", name:"drill " + (g.src.holeR * 2).toFixed(3), d:g.src.holeR * 2},
       T5 = {id:"T5", name:"drill " + (g.dst.studR * 2).toFixed(3), d:g.dst.studR * 2};
-  var tr = T2.d / 2, o, i, k, L, n, r, z, y;
-  var zc = g.lipH + so + A.clear;            /* setup 1 clearance */
+  var tr = T2.d / 2, o, L, n, r, z, zc, cur;
 
-  function op(setup, name, tool, feed, color){
-    o = {setup:setup, name:name, tool:tool, feed:feed, color:color, pts:[]};
+  function setup(grp, wcs, xf, top, half){ cur = {grp:grp, wcs:wcs, xf:xf, half:half || null}; zc = top + A.clear; }
+  function op(name, tool, feed, color){
+    o = {grp:cur.grp, wcs:cur.wcs, xf:cur.xf, half:cur.half, name:name, tool:tool, feed:feed, color:color, pts:[]};
     ops.push(o);
   }
   function mv(x, y, z, rapid){ o.pts.push([x, y, z, rapid ? 1 : 0]); }
@@ -1597,6 +1960,7 @@ function camPaths(g){
     }
     return out;
   }
+  function mirror(L){ return L.map(function(h){ return [-h[0], h[1]]; }); }   /* flipped setups see X mirrored */
   function face(zf){
     var xr = Rs + T1.d / 2 + 0.2, rows = Math.max(1, Math.ceil(2 * Rs / (T1.d * 0.7))), dir = 1;
     for (var k = 0; k < rows; k++){
@@ -1620,64 +1984,48 @@ function camPaths(g){
     });
     up();
   }
-  var S = ring(g.src), D = ring(g.dst);
-
-  /* ---- Setup 1 · G54 · wheel side up ---- */
-  op(1, "Face wheel side", T1, A.feed.face, "#4f8fe0");
-  face(g.lipH);
-
-  op(1, "Rough wheel face to Z0, finish lip", T2, A.feed.mill, "#22a39a");
-  n = Math.ceil(g.lipH / 0.2);
-  for (L = 1; L <= n; L++){
-    z = g.lipH - g.lipH * L / n;
-    go(Rs + tr + 0.1, 0, z);
-    for (r = Rs + tr - 0.05; r > g.lipR + tr + 0.05; r -= T2.d * 0.4) circ(0, 0, r, z);
-    circ(0, 0, g.lipR + tr, z);
+  function roughLip(){
+    n = Math.ceil(g.lipH / 0.2);
+    for (L = 1; L <= n; L++){
+      z = g.lipH - g.lipH * L / n;
+      go(Rs + tr + 0.1, 0, z);
+      for (r = Rs + tr - 0.05; r > g.lipR + tr + 0.05; r -= T2.d * 0.4) circ(0, 0, r, z);
+      circ(0, 0, g.lipR + tr, z);
+      up();
+    }
+  }
+  function contour(depth){
+    r = g.R + tr;
+    go(r + 0.3, 0, 0);
+    n = Math.ceil(depth / 0.25);
+    for (L = 1; L <= n; L++){
+      z = -depth * L / n;
+      mv(r + 0.3, 0, z); mv(r, 0, z); circ(0, 0, r, z); mv(r + 0.3, 0, z);
+    }
     up();
   }
-
-  op(1, "Contour OD", T2, A.feed.mill, "#8a6fd6");
-  r = g.R + tr;
-  go(r + 0.3, 0, 0);
-  n = Math.ceil((T + 0.03) / 0.25);
-  for (L = 1; L <= n; L++){
-    z = -(T + 0.03) * L / n;
-    mv(r + 0.3, 0, z); mv(r, 0, z); circ(0, 0, r, z); mv(r + 0.3, 0, z);
+  function spot(holes){
+    holes.forEach(function(h){ go(h[0], h[1], 0); mv(h[0], h[1], -0.08); mv(h[0], h[1], 0.1, 1); });
+    up();
   }
-  up();
-
-  op(1, "Spot drill all holes", T3, A.feed.drill, "#c9a227");
-  S.concat(D).forEach(function(h){ go(h[0], h[1], 0); mv(h[0], h[1], -0.08); mv(h[0], h[1], 0.1, 1); });
-  up();
-
-  op(1, "Peck drill vehicle stud holes", T4, A.feed.drill, "#2c9fc4");
-  peck(S, -T - 0.15, 0.25);
-
-  op(1, "Peck drill stud press holes", T5, A.feed.drill, "#e0703a");
-  peck(D, -T - 0.15, 0.25);
-
-  if (g.src.nutR - tr > 0.02){
-    op(1, "Helix lug-nut pockets", T2, A.feed.mill, "#3fa34d");
-    S.forEach(function(h){
-      go(h[0] + g.src.nutR - tr, h[1], 0);
-      helix(h[0], h[1], g.src.nutR - tr, 0, -T + g.src.flange, 0.08);
-      mv(h[0], h[1], -T + g.src.flange);
+  function pockets(holes, R0, floor, pitch){
+    holes.forEach(function(h){
+      if (R0 - tr > 0.02){
+        go(h[0] + R0 - tr, h[1], 0);
+        helix(h[0], h[1], R0 - tr, 0, floor, pitch);
+        mv(h[0], h[1], floor);
+      } else { go(h[0], h[1], 0); mv(h[0], h[1], floor); }
       up();
     });
   }
-
-  op(1, "Helix through bore", T2, A.feed.mill, "#d1495b");
-  go(g.thruR - tr, 0, g.lipH);
-  helix(0, 0, g.thruR - tr, g.lipH, -T - 0.03, 0.1);
-  up();
-
-  /* ---- Setup 2 · G55 · flipped about Y, hub side up ---- */
-  zc = so + A.clear;
-  op(2, "Face hub side", T1, A.feed.face, "#4f8fe0");
-  face(0);
-
-  if (g.hubR > g.thruR + 0.01){
-    op(2, "Pocket hub recess", T2, A.feed.mill, "#22a39a");
+  function bore(z0, z1){
+    go(g.thruR - tr, 0, z0);
+    helix(0, 0, g.thruR - tr, z0, z1, 0.1);
+    up();
+  }
+  function hubRecess(){
+    if (g.hubR <= g.thruR + 0.01) return;
+    op("Pocket hub recess", T2, A.feed.mill, "#22a39a");
     n = Math.ceil(g.pocketDepth / 0.2);
     for (L = 1; L <= n; L++){
       z = -g.pocketDepth * L / n;
@@ -1688,24 +2036,78 @@ function camPaths(g){
       up();
     }
   }
+  var S = ring(g.src), D = ring(g.dst), J = -T + g.tA, tB = T - g.tA, jn = g.join, JA = JOIN_A;
+  var JP = jn ? ring(jn) : [], DP = jn ? ring({n:2, r:jn.r, a0:jn.a0 + Math.PI / jn.n}) : [];
+  var T6 = {id:"T6", name:"drill " + JA.clearD.toFixed(3), d:JA.clearD},
+      T7 = {id:"T7", name:"tap drill " + JA.tapD.toFixed(3), d:JA.tapD},
+      T8 = {id:"T8", name:"5/16-18 tap", d:0.3125},
+      T9 = {id:"T9", name:"1/4 drill + ream", d:JA.dowelD},
+      T10 = jn && jn.kind === "B" ? {id:"T10", name:"drill " + (jn.studR * 2).toFixed(3), d:jn.studR * 2} : null;
 
-  op(2, "Counterbore stud heads", T2, A.feed.mill, "#8a6fd6");
-  D.forEach(function(h){
-    var x = -h[0];                            /* G55 sees X mirrored */
-    if (g.dst.headR - tr > 0.02){
-      go(x + g.dst.headR - tr, h[1], 0);
-      helix(x, h[1], g.dst.headR - tr, 0, -g.dst.headDepth, 0.06);
-      mv(x, h[1], -g.dst.headDepth);
-    } else { go(x, h[1], 0); mv(x, h[1], -g.dst.headDepth); }
-    up();
-  });
+  if (g.one){
+    setup("Setup 1 · G54 · wheel side up", "G54 · SETUP 1 · Z0 WHEEL FACE", {flip:false, z0:0}, g.lipH + so);
+    op("Face wheel side", T1, A.feed.face, "#4f8fe0");                  face(g.lipH);
+    op("Rough wheel face to Z0, finish lip", T2, A.feed.mill, "#22a39a"); roughLip();
+    op("Contour OD", T2, A.feed.mill, "#8a6fd6");                         contour(T + 0.03);
+    op("Spot drill all holes", T3, A.feed.drill, "#c9a227");              spot(S.concat(D));
+    op("Peck drill vehicle stud holes", T4, A.feed.drill, "#2c9fc4");     peck(S, -T - 0.15, 0.25);
+    op("Peck drill stud press holes", T5, A.feed.drill, "#e0703a");       peck(D, -T - 0.15, 0.25);
+    op("Helix lug-nut pockets", T2, A.feed.mill, "#3fa34d");              pockets(S, g.src.nutR, -T + g.src.flange, 0.08);
+    op("Helix through bore", T2, A.feed.mill, "#d1495b");                 bore(g.lipH, -T - 0.03);
 
+    setup("Setup 2 · G55 · flipped, hub side up", "G55 · SETUP 2 · Z0 HUB FACE", {flip:true, z0:-T}, so);
+    op("Face hub side", T1, A.feed.face, "#4f8fe0");                      face(0);
+    hubRecess();
+    op("Counterbore stud heads", T2, A.feed.mill, "#8a6fd6");             pockets(mirror(D), g.dst.headR, -g.dst.headDepth, 0.06);
+  } else {
+    /* Two-piece: each half is its own part with two setups. */
+    setup("Wheel half · Setup 1 · G54 · wheel side up", "WHEEL HALF · G54 · Z0 WHEEL FACE", {flip:false, z0:0}, g.lipH + so, "wheel");
+    op("Face wheel side", T1, A.feed.face, "#4f8fe0");                  face(g.lipH);
+    op("Rough wheel face to Z0, finish lip", T2, A.feed.mill, "#22a39a"); roughLip();
+    op("Contour OD", T2, A.feed.mill, "#8a6fd6");                         contour(tB + 0.03);
+    op("Spot drill stud holes", T3, A.feed.drill, "#c9a227");             spot(D);
+    op("Peck drill stud press holes", T5, A.feed.drill, "#e0703a");       peck(D, -tB - 0.15, 0.25);
+    op("Helix through bore", T2, A.feed.mill, "#d1495b");                 bore(g.lipH, -tB - 0.03);
+    if (jn.kind === "A"){
+      op("Drill screw clearance holes", T6, A.feed.drill, "#7b5cd6");     peck(JP, -tB - 0.15, 0.25);
+      op("Counterbore screw heads", T2, A.feed.mill, "#a48be6");          pockets(JP, JA.cbD / 2, -JA.cbDepth, 0.06);
+    } else {
+      op("Peck drill in-between stud holes", T4, A.feed.drill, "#7b5cd6"); peck(JP, -tB - 0.15, 0.25);
+      op("Helix in-between nut pockets", T2, A.feed.mill, "#a48be6");     pockets(JP, jn.lugR, -(tB - jn.flangeB), 0.08);
+    }
+
+    setup("Wheel half · Setup 2 · G55 · joint face up", "WHEEL HALF · G55 · Z0 JOINT FACE", {flip:true, z0:J}, so, "wheel");
+    op("Face joint side", T1, A.feed.face, "#4f8fe0");                    face(0);
+    op("Counterbore stud heads", T2, A.feed.mill, "#8a6fd6");             pockets(mirror(D), g.dst.headR, -g.dst.headDepth, 0.06);
+    if (jn.kind === "A"){ op("Drill + ream dowel holes", T9, A.feed.drill, "#5e44b0"); peck(mirror(DP), -0.36, 0.2); }
+
+    setup("Hub half · Setup 1 · G56 · joint face up", "HUB HALF · G56 · Z0 JOINT FACE", {flip:false, z0:J}, so, "hub");
+    op("Face joint side", T1, A.feed.face, "#4f8fe0");                    face(0);
+    op("Contour OD", T2, A.feed.mill, "#8a6fd6");                         contour(g.tA + 0.03);
+    op("Spot drill vehicle stud holes", T3, A.feed.drill, "#c9a227");     spot(S);
+    op("Peck drill vehicle stud holes", T4, A.feed.drill, "#2c9fc4");     peck(S, -g.tA - 0.15, 0.25);
+    op("Helix lug-nut pockets", T2, A.feed.mill, "#3fa34d");              pockets(S, g.src.nutR, -g.tA + g.src.flange, 0.08);
+    op("Helix through bore", T2, A.feed.mill, "#d1495b");                 bore(0, -g.tA - 0.03);
+    if (jn.kind === "A"){
+      op("Drill screw tap holes", T7, A.feed.drill, "#7b5cd6");           peck(JP, -JA.tapDepth - 0.1, 0.25);
+      op("Tap 5/16-18", T8, A.feed.drill, "#a48be6");                     peck(JP, -JA.tapDepth, JA.tapDepth);
+      op("Drill + ream dowel holes", T9, A.feed.drill, "#5e44b0");        peck(DP, -0.36, 0.2);
+    }
+
+    setup("Hub half · Setup 2 · G57 · hub side up", "HUB HALF · G57 · Z0 HUB FACE", {flip:true, z0:-T}, so, "hub");
+    op("Face hub side", T1, A.feed.face, "#4f8fe0");                      face(0);
+    hubRecess();
+    if (jn.kind === "B"){
+      op("Peck drill in-between press holes", T10, A.feed.drill, "#7b5cd6"); peck(mirror(JP), -g.tA - 0.15, 0.25);
+      op("Counterbore in-between stud heads", T2, A.feed.mill, "#a48be6");   pockets(mirror(JP), jn.headR, -g.dst.headDepth, 0.06);
+    }
+  }
   return ops;
 }
 
-/* Setup coordinates → part coordinates (G54 frame) for drawing. */
-function camToPart(p, setup, T){
-  return setup === 1 ? [p[0], p[1], p[2]] : [-p[0], p[1], -p[2] - T];
+/* Setup coordinates → part coordinates (the assembled adapter, G54 frame). */
+function camToPart(p, o){
+  return o.xf.flip ? [-p[0], p[1], o.xf.z0 - p[2]] : [p[0], p[1], p[2] + o.xf.z0];
 }
 
 /* ---- tiny column-major matrix kit ---- */
@@ -1770,7 +2172,13 @@ var CAM_FS_SOLID = [
   "uniform vec4 uM;   // stack mode, cutaway, explode 0..1, rim radius",
   "uniform vec4 uH;   // hub flange radius, vehicle stud radius, -, wheel pad radius",
   "uniform vec4 uW;   // wheel pad thickness, nut half-flats, nut height, spokes",
-  "uniform vec3 uCAl, uCSrc, uCDst, uCTool, uCHub, uCWhl, uCNut;",
+  "uniform vec4 uP;   // two-piece, hub-half thickness, wheel-half pull-apart, screw pull-out",
+  "uniform vec4 uJ;   // join kind (0 none, 1 screws, 2 stacked), count, radius, a0",
+  "uniform vec4 uK;   // A: clear r, counterbore r, cb depth, tap r · B: hole r, stud r, head r, pocket r",
+  "uniform vec4 uL;   // A: head r, head h, dowel r, dowel a0 · B: nut floor above joint, stud top z, nut half-flats, -",
+  "uniform vec4 uV;   // show hub half, show wheel half",
+  "uniform vec4 uG;   // highlighted feature: 0 none, 1 vehicle holes, 2 hub bore, 3 wheel studs, 4 lip, 5 thickness",
+  "uniform vec3 uCAl, uCSrc, uCDst, uCTool, uCHub, uCWhl, uCNut, uCInt, uCNeon;",
   "float cyl(vec3 p, float r, float z0, float z1){",
   "  vec2 d = vec2(length(p.xy) - r, max(z0 - p.z, p.z - z1));",
   "  return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));",
@@ -1791,18 +2199,59 @@ var CAM_FS_SOLID = [
   "  float T = uA.y;",
   "  vec2 res = vec2(1e3, 0.0);",
   "  if (uB.w > 0.5){",
-  "    float d = min(cyl(p, uA.x, -T, 0.0), cyl(p, uA.z, -0.02, uA.w));",
-  "    d = max(d, -cyl(p, uB.x, -T - 1.0, uA.w + 1.0));",
-  "    d = max(d, -cyl(p, uB.y, -T - 1.0, -T + uB.z));",
+  "    float J = -T + uP.y;                        // joint face between the halves",
   "    vec3 q = vec3(polar(p.xy, uS.x, 1.5707963) - vec2(uS.y, 0.0), p.z);",
   "    float hs = min(cyl(q, uS.z, -T - 1.0, uA.w + 1.0), cyl(q, uS.w, -T + uE.x, uA.w + 1.0));",
-  "    d = max(d, -hs);",
-  "    vec3 w = vec3(polar(p.xy, uD.x, uE.w) - vec2(uD.y, 0.0), p.z);",
-  "    d = max(d, -min(cyl(w, uD.z, -T - 1.0, 1.0), cyl(w, uD.w, -T - 1.0, -T + uE.y)));",
-  "    res = vec2(d, hs < 0.004 ? 1.0 : 0.0);",
-  "    float st = min(min(cyl(w, uD.z * 0.97, -T + 0.004, uE.z - 0.05), cyl(w, uD.z * 0.78, 0.0, uE.z)),",
-  "                   cyl(w, uD.w * 0.96, -T + 0.004, -T + uE.y - 0.004));",
-  "    add(res, st, 2.0);",
+  "    vec3 pb = p; pb.z -= uP.z;                  // wheel half, pulled apart in the stack",
+  "    vec3 w = vec3(polar(pb.xy, uD.x, uE.w) - vec2(uD.y, 0.0), pb.z);",
+  "    float hb = uP.x > 0.5 ? J : -T;             // where the stud heads seat",
+  "    float sh = min(cyl(w, uD.z, -T - 1.0, 1.0), cyl(w, uD.w, hb - 1.0, hb + uE.y));",
+  "    float st = min(min(cyl(w, uD.z * 0.97, hb + 0.004, uE.z - 0.05), cyl(w, uD.z * 0.78, 0.0, uE.z)),",
+  "                   cyl(w, uD.w * 0.96, hb + 0.004, hb + uE.y - 0.004));",
+  "    if (uP.x < 0.5){",
+  "      float d = min(cyl(p, uA.x, -T, 0.0), cyl(p, uA.z, -0.02, uA.w));",
+  "      d = max(d, -cyl(p, uB.x, -T - 1.0, uA.w + 1.0));",
+  "      d = max(d, -cyl(p, uB.y, -T - 1.0, -T + uB.z));",
+  "      d = max(max(d, -hs), -sh);",
+  "      res = vec2(d, hs < 0.004 ? 1.0 : 0.0);",
+  "      add(res, st, 2.0);",
+  "    } else {",
+  "      /* hub half: lug-nut pockets open at the joint face */",
+  "      float a = cyl(p, uA.x, -T, J - 0.008);",
+  "      a = max(a, -cyl(p, uB.x, -T - 1.0, J + 1.0));",
+  "      a = max(a, -cyl(p, uB.y, -T - 1.0, -T + uB.z));",
+  "      a = max(a, -hs);",
+  "      /* wheel half: pressed studs, heads seated at the joint face */",
+  "      float bw = min(cyl(pb, uA.x, J + 0.008, 0.0), cyl(pb, uA.z, -0.02, uA.w));",
+  "      bw = max(bw, -cyl(pb, uB.x, -T - 1.0, uA.w + 1.0));",
+  "      bw = max(bw, -sh);",
+  "      float fa = 1e3, fb = 1e3, fi = 1e3;          // fasteners: hub side, wheel side, in-between studs",
+  "      vec3 jq = vec3(polar(p.xy, uJ.y, uJ.w) - vec2(uJ.z, 0.0), p.z);",
+  "      vec3 jb = vec3(polar(pb.xy, uJ.y, uJ.w) - vec2(uJ.z, 0.0), pb.z);",
+  "      if (uJ.x > 0.5 && uJ.x < 1.5){",
+  "        /* A: cap screws through the wheel half into tapped holes; two dowels locate */",
+  "        vec3 dq = vec3(polar(p.xy, 2.0, uL.w) - vec2(uJ.z, 0.0), p.z);",
+  "        vec3 db = vec3(polar(pb.xy, 2.0, uL.w) - vec2(uJ.z, 0.0), pb.z);",
+  "        a = max(a, -min(cyl(jq, uK.w, J - 0.6, J + 1.0), cyl(dq, uL.z, J - 0.36, J + 1.0)));",
+  "        bw = max(bw, -min(min(cyl(jb, uK.x, -T - 1.0, 1.0), cyl(jb, uK.y, -uK.z, 1.0)), cyl(db, uL.z, J - 1.0, J + 0.36)));",
+  "        vec3 js = jb; js.z -= uP.w;",
+  "        fb = min(cyl(js, uL.x, -uK.z, -uK.z + uL.y), cyl(js, uK.x * 0.88, J - 0.55, -uK.z));",
+  "        fa = cyl(dq, uL.z * 0.94, J - 0.33, J + 0.33);",
+  "      } else if (uJ.x > 1.5){",
+  "        /* B: in-between studs pressed into the hub half, nutted in wheel-half pockets */",
+  "        a = max(a, -min(cyl(jq, uK.y, -T - 1.0, J + 1.0), cyl(jq, uK.z, -T - 1.0, -T + uE.y)));",
+  "        bw = max(bw, -min(cyl(jb, uK.x, -T - 1.0, 1.0), cyl(jb, uK.w, J + uL.x, 1.0)));",
+  "        fi = min(cyl(jq, uK.y * 0.97, -T + 0.004, uL.y), cyl(jq, uK.z * 0.96, -T + 0.004, -T + uE.y - 0.004));",
+  "        if (uM.x > 0.5) fb = hexz(jb, uL.z, J + uL.x, J + uL.x + uW.z);",
+  "      }",
+  "      if (uV.x < 0.5){ a = 1e3; fa = 1e3; fi = 1e3; }",
+  "      if (uV.y < 0.5){ bw = 1e3; fb = 1e3; st = 1e3; }",
+  "      res = vec2(a, hs < 0.004 ? 1.0 : 0.0);",
+  "      add(res, bw, 8.0);",
+  "      add(res, st, 2.0);",
+  "      add(res, min(fa, fb), 9.0);",
+  "      add(res, fi, 10.0);",
+  "    }",
   "  }",
   "  if (uTm.y > 0.5){",
   "    vec3 t = p - uTl.xyz; t.z *= uTm.x;",
@@ -1822,7 +2271,7 @@ var CAM_FS_SOLID = [
   "    vec3 vq = vec3(polar(p.xy, uS.x, 1.5707963) - vec2(uS.y, 0.0), p.z);",
   "    add(res, hexz(vq, uW.y, -T + uE.x, -T + uE.x + uW.z), 5.0);",
   "    /* wheel: pad, spokes, barrel; slides outboard */",
-  "    vec3 w = p; w.z -= 2.4 * e;",
+  "    vec3 w = p; w.z -= (2.4 + 0.8 * uP.x) * e;",
   "    float rr = uM.w;",
   "    if (cyl(w, rr + 0.5, -4.7, 4.7) < res.x){",
   "      float pad = max(cyl(w, uH.w, 0.0, uW.x), -cyl(w, uA.z, -1.0, 2.0));",
@@ -1841,7 +2290,7 @@ var CAM_FS_SOLID = [
   "    /* cutaway: half-section through the axle, removing the half toward world -Y */",
   "    if (uM.y > 0.5){",
   "      float cq = -p.x;",
-  "      if (cq > res.x) res = vec2(cq, res.y + 10.0);",
+  "      if (cq > res.x) res = vec2(cq, res.y + 20.0);",
   "    }",
   "  }",
   "  return res;",
@@ -1873,9 +2322,11 @@ var CAM_FS_SOLID = [
   "  if (!hit) discard;",
   "  vec3 p = rp + dp * t, n = nrm(p);",
   "  vec3 nw = stk ? n.zxy : n, pw = stk ? p.zxy : p;",
-  "  bool cut = m.y > 9.5; float id = cut ? m.y - 10.0 : m.y;",
+  "  bool cut = m.y > 19.5; float id = cut ? m.y - 20.0 : m.y;",
   "  vec3 base = id < 0.5 ? uCAl : id < 1.5 ? mix(uCAl, uCSrc, 0.6) : id < 2.5 ? uCDst : id < 3.5 ? uCTool :",
-  "              id < 4.5 ? uCHub : id < 5.5 ? uCSrc : id < 6.5 ? uCWhl : uCNut;",
+  "              id < 4.5 ? uCHub : id < 5.5 ? uCSrc : id < 6.5 ? uCWhl : id < 7.5 ? uCNut :",
+  "              id < 8.5 ? uCAl * vec3(1.04, 1.0, 0.9) :   // wheel half: a warmer aluminium so the halves read apart",
+  "              id < 9.5 ? mix(uCInt, uCNut, 0.25) : uCInt;  // joining hardware: purple, like the legend",
   "  vec3 L1 = normalize(-rd + vec3(0.0, 0.0, 0.5));",
   "  vec3 L2 = normalize(vec3(-0.5, 0.4, 0.8));",
   "  float dif = max(dot(nw, L1), 0.0) * 0.65 + max(dot(nw, L2), 0.0) * 0.35;",
@@ -1883,6 +2334,17 @@ var CAM_FS_SOLID = [
   "  float spec = pow(max(dot(reflect(rd, nw), L1), 0.0), 36.0) * 0.35;",
   "  vec3 col = base * (0.34 + 0.16 * (0.5 + 0.5 * nw.z) + 0.66 * dif) * ao + spec;",
   "  if (cut) col = base * (0.62 + 0.3 * step(0.5, fract((p.z + p.x - p.y) * 4.0)));   // hatched section face",
+  "  if (uG.x > 0.5){",
+  "    float T = uA.y, hl = 0.0, body = (id < 0.5 || (id > 7.5 && id < 8.5)) ? 1.0 : 0.0;",
+  "    vec3 pq = p; if (uP.x > 0.5 && id > 7.5 && id < 8.5) pq.z -= uP.z;     // wheel half, maybe lifted",
+  "    if (uG.x < 1.5) hl = ((id > 0.5 && id < 1.5) || (id > 4.5 && id < 5.5)) ? 1.0 : 0.0;",
+  "    else if (uG.x < 2.5) hl = (body > 0.5 && abs(cyl(p, uB.y, -T - 1.0, -T + uB.z)) < 0.02) ||",
+  "                             (id > 3.5 && id < 4.5 && length(p.xy) < uB.y + 0.02) ? 1.0 : 0.0;",
+  "    else if (uG.x < 3.5) hl = (id > 1.5 && id < 2.5) ? 1.0 : 0.0;",
+  "    else if (uG.x < 4.5) hl = (body > 0.5 && pq.z > -0.03 && length(pq.xy) < uA.z + 0.02) ? 1.0 : 0.0;",
+  "    else hl = (body > 0.5 && abs(length(p.xy) - uA.x) < 0.02) ? 1.0 : 0.0;",
+  "    col = mix(col, uCNeon * (0.55 + 0.55 * dif) + 0.08, hl * 0.85);",
+  "  }",
   "  o = vec4(col, 1.0);",
   "  vec4 c = uVP * vec4(pw, 1.0);",
   "  gl_FragDepth = c.z / c.w * 0.5 + 0.5;",
@@ -1891,10 +2353,11 @@ var CAM_FS_SOLID = [
 
 var CAM_VS_LINE = [
   "#version 300 es",
-  "in vec3 aP; in vec4 aC; in vec2 aD;",
-  "uniform mat4 uVP;",
+  "in vec3 aP; in vec4 aC; in vec2 aD; in float aH;",
+  "uniform mat4 uVP; uniform float uSep;",
   "out vec4 vC; out vec2 vD;",
-  "void main(){ gl_Position = uVP * vec4(aP, 1.0); gl_Position.z -= 0.0008 * gl_Position.w; vC = aC; vD = aD; }"
+  "void main(){ gl_Position = uVP * vec4(aP + vec3(0.0, 0.0, uSep * aH), 1.0);",
+  "             gl_Position.z -= 0.0008 * gl_Position.w; vC = aC; vD = aD; }"
 ].join("\n");
 
 var CAM_FS_LINE = [
@@ -1912,8 +2375,10 @@ var CAM_FS_LINE = [
 
 var cam3d = {on:false, gl:null, ops:[], g:null, tl:[], total:0, t:0, playing:false,
   yaw:-0.9, pitch:0.6, dist:0, view:"iso", dragging:false, raf:0, last:0, curOp:-1,
-  showPart:true, showStock:true, showPaths:true, off:{},
-  mode:"cam", modeShown:null, ex:1, exT:1, cut:true};
+  showPart:true, showStock:false, showPaths:false, off:{},     /* opens on the clean part */
+  mode:"cam", modeShown:null, ex:1, exT:1, cut:true, showHub:true, showWheel:true,
+  sep:1, sepT:1};          /* two-piece halves separated in the CAM view, by default */
+var CAM_SEP_IN = 1.25;     /* how far the wheel half lifts off when separated */
 
 /* Stack mode: generic hub and wheel around the real adapter. Only the adapter is
    to scale from the design; these are just there to show how it bolts up. */
@@ -1974,15 +2439,11 @@ function camInit(){
       '<label class="stk-cut"><input type="checkbox" id="stkcut" checked>Cutaway</label>' +
       '<button type="button" class="btn-sm" id="stk2d">2D section</button>' +
     "</div>" +
-    '<div class="cam-tog">' +
-      '<label><input type="checkbox" data-camshow="showPart" checked>Part</label>' +
-      '<label><input type="checkbox" data-camshow="showStock" checked>Stock</label>' +
-      '<label><input type="checkbox" data-camshow="showPaths" checked>Toolpaths</label>' +
-    "</div>" +
-    '<ul class="cam-ops" id="camops" aria-label="Toolpath operations"></ul>' +
-    '<p class="cam-note" id="camnote">Toolpaths are illustrative: generated from your eight numbers with assumed tools, ' +
-      "feeds, lip height, lug-nut pockets and stud length. Our machinists program the real job in " +
-      "Mastercam or SolidWorks after review.</p>";
+    '<div class="cam-tog" id="camshow"></div>' +
+    '<div class="cam-join" id="camjoin" hidden></div>' +
+    '<details class="cam-opsbox" id="camopsbox"><summary><span>Operations</span><span class="sm" id="camopsn"></span></summary>' +
+      '<ul class="cam-ops" id="camops" aria-label="Toolpath operations"></ul></details>' +
+    '<p class="cam-note" id="camnote"></p>';
 
   var cv = el("camcv"), c = cam3d;
   var gl = cv.getContext("webgl2", {antialias:true, premultipliedAlpha:true, alpha:true});
@@ -2004,10 +2465,11 @@ function camInit(){
   gl.bindVertexArray(c.vaoL);
   c.lbuf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, c.lbuf);
-  [["aP", 3, 0], ["aC", 4, 12], ["aD", 2, 28]].forEach(function(a){
+  /* aH = 1 for wheel-half toolpaths, which move with that half when separated */
+  [["aP", 3, 0], ["aC", 4, 12], ["aD", 2, 28], ["aH", 1, 36]].forEach(function(a){
     var loc = gl.getAttribLocation(c.pl, a[0]);
     gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, a[1], gl.FLOAT, false, 36, a[2]);
+    gl.vertexAttribPointer(loc, a[1], gl.FLOAT, false, 40, a[2]);
   });
   gl.bindVertexArray(null);
 
@@ -2024,7 +2486,7 @@ function camInit(){
       /* In the modal a mouse just hovering spins the part: one canvas width of
          travel is a full 360°, top to bottom tips it over. Delta-based, so
          entering the canvas never makes the view jump. */
-      if (c.modal && e.pointerType === "mouse" && c.hover){
+      if (c.modal && c.hoverSpin && e.pointerType === "mouse" && c.hover){
         c.yaw -= (e.clientX - c.hover.x) / cv.clientWidth * 2 * Math.PI;
         c.pitch = Math.max(-1.555, Math.min(1.555,
           c.pitch + (e.clientY - c.hover.y) / cv.clientHeight * Math.PI * 0.9));
@@ -2057,6 +2519,8 @@ function camInit(){
       c.dragging = false; camKick();
       /* a click (not a drag) on the inline view opens the big one */
       if (e.type === "pointerup" && !c.moved && !c.modal) camModal(true);
+      /* in the big view a click (not a drag) pauses or resumes the mouse spin */
+      else if (e.type === "pointerup" && !c.moved && c.modal && c.hoverSpin) camSpin(false);
     }
   }
   cv.addEventListener("pointerleave", function(){ c.hover = null; });
@@ -2094,6 +2558,7 @@ function camView(v){
   else if (v === "top"){ c.yaw = -Math.PI / 2; c.pitch = 1.555; }
   else if (v === "front"){ c.yaw = -Math.PI / 2; c.pitch = 0.0; }
   else if (v === "bottom"){ c.yaw = Math.PI / 2; c.pitch = -1.555; }   /* reads as G55: X mirrored */
+  else if (v === "under"){ c.yaw = -0.9; c.pitch = -0.72; }              /* three-quarter from the hub side */
   /* stack: axle along world X, hub inboard (−X), wheel outboard (+X) */
   else if (v === "s-iso"){ c.yaw = -1.2; c.pitch = 0.32; }
   else if (v === "s-side"){ c.yaw = -Math.PI / 2; c.pitch = 0.0; }
@@ -2103,26 +2568,35 @@ function camView(v){
   camMarkViews(); camKick();
 }
 
+/* Camera row. A two-piece in the CAM view also gets SEPARATE / JOIN for its halves. */
+function camViewButtons(views){
+  var c = cam3d, two = c.mode !== "stack" && c.g && !c.g.one;
+  views = views || [["iso", "ISO"], ["top", "TOP"], ["front", "FRONT"], ["bottom", "G55"]];
+  el("camviews").innerHTML = (two ? '<button type="button" class="sepbtn" id="camsep" title="' + (c.sepT === 1 ? "Put the two halves together" : "Pull the two halves apart") + '">' +
+      (c.sepT === 1 ? "JOIN" : "SEPARATE") + "</button>" : "") +
+    views.map(function(v){
+      return '<button type="button" data-camview="' + v[0] + '">' + v[1] + "</button>";
+    }).join("") + '<button type="button" id="camexpand" aria-label="Open 3D view full size">&#x2922;</button>';
+  camMarkViews();
+}
+
 /* Swap the controls around the one viewport for CAM or stack mode. */
 function camApplyMode(){
   var c = cam3d, stk = c.mode === "stack";
   var views = stk ? [["s-iso", "ISO"], ["s-side", "SIDE"], ["s-hub", "HUB SIDE"], ["s-wheel", "WHEEL SIDE"]]
                   : [["iso", "ISO"], ["top", "TOP"], ["front", "FRONT"], ["bottom", "G55"]];
-  el("camviews").innerHTML = views.map(function(v){
-    return '<button type="button" data-camview="' + v[0] + '">' + v[1] + "</button>";
-  }).join("") + '<button type="button" id="camexpand" aria-label="Open 3D view full size">&#x2922;</button>';
+  camViewButtons(views);
   el("cambp").hidden = stk;
   el("camstk").hidden = !stk;
-  el("camops").hidden = stk;
-  document.querySelector(".cam-tog").hidden = stk;
+  el("camopsbox").hidden = stk;
+  el("camshow").hidden = stk;
   el("camdro").hidden = stk;
   ["cl-x", "cl-y", "cl-z"].forEach(function(id){ el(id).style.visibility = stk ? "hidden" : ""; });
   el("camnote").textContent = stk
     ? "Only the adapter is drawn from your numbers. The hub, wheel and nuts are generic, " +
       "there to show how it all bolts up. Drag to turn it; untick Cutaway to see it whole."
-    : "Toolpaths are illustrative: generated from your eight numbers with assumed tools, " +
-      "feeds, lip height, lug-nut pockets and stud length. Our machinists program the real job in " +
-      "Mastercam or SolidWorks after review.";
+    : "Illustrative toolpaths from your eight numbers, with assumed tools and feeds. " +
+      "Our machinists program the real job after review.";
   c.exT = stackExploded ? 1 : 0;
   if (!stk || c.modeShown !== "stack") c.ex = c.exT;
   el("stkbtn3").textContent = stackExploded ? "Bolt it together" : "Pull it apart";
@@ -2151,12 +2625,13 @@ function camBuild(){
   var c = cam3d, g = c.g, gl = c.gl, A = CAM_ASSUME;
   if (!g || !gl) return;
   var v = [], tl = [], t = 0, prevTool = null;
-  function seg(a, b, col, dash, s0, s1){
-    v.push(a[0], a[1], a[2], col[0], col[1], col[2], col[3], dash ? 0.001 : 0, s0,
-           b[0], b[1], b[2], col[0], col[1], col[2], col[3], dash ? dash : 0, s1);
+  function seg(a, b, col, dash, s0, s1, h){
+    v.push(a[0], a[1], a[2], col[0], col[1], col[2], col[3], dash ? 0.001 : 0, s0, h || 0,
+           b[0], b[1], b[2], col[0], col[1], col[2], col[3], dash ? dash : 0, s1, h || 0);
   }
   c.cols = {al:hexRgb("#b3bdc7"), src:hexRgb(cssVar("--cyan")), dst:hexRgb(cssVar("--accent")),
-            tool:hexRgb("#d4a937"), hub:hexRgb("#6e7780"), whl:hexRgb("#8d969f"), nut:hexRgb("#c9ced3")};
+            tool:hexRgb("#d4a937"), hub:hexRgb("#6e7780"), whl:hexRgb("#8d969f"), nut:hexRgb("#c9ced3"),
+            int:hexRgb("#7b5cd6"), neon:hexRgb(cssVar("--neon"))};
   if (c.mode === "stack"){
     /* a shop floor under the wheel, in world coords (axle along X) */
     var ink0 = hexRgb(cssVar("--steel")), fz = -STACK_3D.rimR - 0.36, k0;
@@ -2167,12 +2642,13 @@ function camBuild(){
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, c.lbuf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(v), gl.DYNAMIC_DRAW);
-    c.nLines = v.length / 9;
+    c.nLines = v.length / 10;
     v = [];
   }
   /* timeline: machining minutes, so rapids fly and drilling crawls */
   c.ops.forEach(function(o, oi){
-    if (c.off[o.name]) return;
+    if (c.off[o.grp + "|" + o.name]) return;
+    if ((o.half === "hub" && !c.showHub) || (o.half === "wheel" && !c.showWheel)) return;
     if (prevTool && prevTool !== o.tool.id) t += A.toolChange;
     prevTool = o.tool.id;
     o.t0 = t;
@@ -2180,7 +2656,7 @@ function camBuild(){
       var la = o.pts[i - 1], lb = o.pts[i];
       var len = Math.sqrt(Math.pow(lb[0] - la[0], 2) + Math.pow(lb[1] - la[1], 2) + Math.pow(lb[2] - la[2], 2));
       var dt = len / (lb[3] ? A.feed.rapid : o.feed);
-      tl.push({op:oi, la:la, lb:lb, a:camToPart(la, o.setup, g.T), b:camToPart(lb, o.setup, g.T),
+      tl.push({op:oi, la:la, lb:lb, a:camToPart(la, o), b:camToPart(lb, o),
                t0:t, t1:t + dt, rapid:lb[3], len:len});
       t += dt;
     }
@@ -2193,7 +2669,7 @@ function camBuild(){
     var rap = [0.88, 0.7, 0.2, 0.9];
     tl.forEach(function(s){
       var col = s.rapid ? rap : hexRgb(c.ops[s.op].color).concat([1]);
-      seg(s.a, s.b, col, s.rapid ? s.len + 0.001 : 0, s.t0 / t, s.t1 / t);
+      seg(s.a, s.b, col, s.rapid ? s.len + 0.001 : 0, s.t0 / t, s.t1 / t, c.ops[s.op].half === "wheel" ? 1 : 0);
     });
   }
 
@@ -2226,24 +2702,59 @@ function camBuild(){
   if (c.mode === "stack") return;
   gl.bindBuffer(gl.ARRAY_BUFFER, c.lbuf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(v), gl.DYNAMIC_DRAW);
-  c.nLines = v.length / 9;
+  c.nLines = v.length / 10;
 }
 
 function camRenderOps(){
-  var c = cam3d, h = "", lastSetup = 0;
+  var c = cam3d, g = c.g, h = "", lastGrp = "", groups = {};
+  c.ops.forEach(function(o){ (groups[o.grp] = groups[o.grp] || []).push(o); });
   c.ops.forEach(function(o, i){
-    if (o.setup !== lastSetup){
-      lastSetup = o.setup;
-      h += '<li class="grp">' + (o.setup === 1 ? "Setup 1 · G54 · wheel side up"
-                                                : "Setup 2 · G55 · flipped, hub side up") + "</li>";
+    if (o.grp !== lastGrp){
+      lastGrp = o.grp;
+      var on = groups[o.grp].filter(function(x){ return !c.off[x.grp + "|" + x.name]; }).length;
+      h += '<li class="grp"><label><input type="checkbox" data-camgrp="' + o.grp + '"' +
+        (on ? " checked" : "") + (on && on < groups[o.grp].length ? ' data-mixed="1"' : "") + ">" +
+        "<span>" + o.grp + "</span></label></li>";
     }
     h += '<li><label id="camop' + i + '"><input type="checkbox" data-camop="' + i + '"' +
-      (c.off[o.name] ? "" : " checked") + '><i style="background:' + o.color + '"></i>' +
+      (c.off[o.grp + "|" + o.name] ? "" : " checked") + '><i style="background:' + o.color + '"></i>' +
       '<span class="nm">' + (i + 1) + " · " + o.name + "</span>" +
       '<span class="tl">' + o.tool.id + " Ø" + o.tool.d.toFixed(3) + "</span></label></li>";
   });
   el("camops").innerHTML = h;
+  var mixed = el("camops").querySelectorAll("[data-mixed]");
+  for (var k = 0; k < mixed.length; k++) mixed[k].indeterminate = true;
+  el("camopsn").textContent = c.ops.length + " ops · est. " + fmtMin(c.total);
+
+  /* Show: whole-view layers, plus each half of a two-piece */
+  var sh = [["showPart", "Part"], ["showStock", "Stock"], ["showPaths", "Toolpaths"]];
+  if (g && !g.one) sh.push(["showHub", "Hub half"], ["showWheel", "Wheel half"]);
+  el("camshow").innerHTML = '<span class="lbl">Show</span>' + sh.map(function(x){
+    return '<label><input type="checkbox" data-camshow="' + x[0] + '"' + (c[x[0]] ? " checked" : "") + ">" + x[1] + "</label>";
+  }).join("");
+  el("camjoin").hidden = !g || g.one;
+  if (c.mode !== "stack") camViewButtons();
+  if (g && !g.one) el("camjoin").innerHTML = joinPicker(g);
   c.curOp = -2;
+}
+
+/* Two-piece joining concepts, side by side, with what each costs. */
+function joinPicker(g){
+  var pl = g.plan, k = g.join.kind;
+  function cost(j){
+    if (!j) return "no in-between pattern fits";
+    var odv = (2 * j.R).toFixed(2) + '" OD';
+    var grow = j.R > pl.baseR + 0.005 ? " (+" + (2 * (j.R - pl.baseR)).toFixed(2) + '")' : "";
+    var th = g.T + 1e-6 < j.needT ? " · needs " + j.needT.toFixed(2) + '" thick' : "";
+    return odv + grow + th;
+  }
+  return '<span class="lbl">Join halves &middot; concept for shop review</span>' +
+    '<div class="jseg" role="group" aria-label="How the two halves join">' +
+    '<button type="button" data-join="A" aria-pressed="' + (k === "A") + '"><b>A &middot; Cap screws</b>' +
+      "<span>" + JOIN_A.n + ' &times; 5/16" + 2 dowels &middot; ' + cost(pl.A) + "</span></button>" +
+    '<button type="button" data-join="B" aria-pressed="' + (k === "B") + '"' + (pl.B ? "" : " disabled") + ">" +
+      "<b>B &middot; Stacked studs</b><span>" + (pl.B ? pl.B.n + " in-between studs &middot; " : "") + cost(pl.B) +
+      "</span></button></div>";
 }
 
 function fmtMin(m){
@@ -2270,11 +2781,16 @@ function camFrame(now){
   var c = cam3d;
   c.raf = 0;
   if (!c.on || !c.gl) return;
+  if (c.sep !== c.sepT){
+    var ds = c.lastS ? Math.min(100, now - c.lastS) : 16, ss = ds / 600;
+    c.sep = c.sep < c.sepT ? Math.min(c.sepT, c.sep + ss) : Math.max(c.sepT, c.sep - ss);
+    c.lastS = now; c.anim = true; camKick();
+  } else c.lastS = 0;
   if (c.ex !== c.exT){
     var de = c.lastE ? Math.min(100, now - c.lastE) : 16, stp = de / 700;
     c.ex = c.ex < c.exT ? Math.min(c.exT, c.ex + stp) : Math.max(c.exT, c.ex - stp);
     c.lastE = now; c.anim = true; camKick();
-  } else { c.lastE = 0; c.anim = false; }
+  } else { c.lastE = 0; if (c.sep === c.sepT) c.anim = false; }
   if (c.playing){
     var dt = c.last ? Math.min(100, now - c.last) : 16;
     c.t = Math.min(c.total, c.t + dt * c.total / 25000);    /* whole program in ~25 s */
@@ -2298,7 +2814,9 @@ function camDraw(){
   if (dpr < 1 && !c.dragging && !c.playing && !c.anim) camKick();
 
   /* stack: part z runs along world x; frame the assembled stack */
-  var tgt = stk ? [(-g.T - 3.3 + 4.5) / 2, 0, 0] : [0, 0, (g.lipH - g.T) / 2];
+  var es = c.sep * c.sep * (3 - 2 * c.sep);
+  var sepOff = !stk && !g.one ? CAM_SEP_IN * es : 0;          /* CAM view: wheel half lifted */
+  var tgt = stk ? [(-g.T - 3.3 + 4.5) / 2, 0, 0] : [0, 0, (g.lipH - g.T + sepOff) / 2];
   var dist = c.dist * Math.max(1, h / w);            /* keep the part in frame when tall and narrow */
   var eye = [tgt[0] + dist * Math.cos(c.pitch) * Math.cos(c.yaw),
              tgt[1] + dist * Math.cos(c.pitch) * Math.sin(c.yaw),
@@ -2307,6 +2825,9 @@ function camDraw(){
 
   var done = c.t >= c.total - 1e-9, at = camAt(c.t), A = CAM_ASSUME;
   var op = at && !done && !stk ? c.ops[at.s.op] : null;
+  /* The gold tool only appears while the program is playing. Parked on its own it
+     reads as part of the adapter. The readout still follows the slider. */
+  var showTool = op && c.playing;
 
   gl.viewport(0, 0, w, h);
   gl.clearColor(0, 0, 0, 0); gl.clearDepth(1);
@@ -2324,10 +2845,10 @@ function camDraw(){
   gl.uniform4f(u.uS, g.src.n, g.src.r, g.src.holeR, g.src.nutR);
   gl.uniform4f(u.uD, g.dst.n, g.dst.r, g.dst.studR, g.dst.headR);
   gl.uniform4f(u.uE, g.src.flange, g.dst.headDepth, g.dst.len, g.dst.a0);
-  if (op){
+  if (showTool){
     var tr = op.tool.d / 2;
-    gl.uniform4f(u.uTl, at.p[0], at.p[1], at.p[2], tr);
-    gl.uniform4f(u.uTm, op.setup === 1 ? 1 : -1, 1, op.tool.d > 2 ? 0.6 : 1.4, Math.max(0.55, tr * 1.1));
+    gl.uniform4f(u.uTl, at.p[0], at.p[1], at.p[2] + (op.half === "wheel" ? sepOff : 0), tr);
+    gl.uniform4f(u.uTm, op.xf.flip ? -1 : 1, 1, op.tool.d > 2 ? 0.6 : 1.4, Math.max(0.55, tr * 1.1));
   } else gl.uniform4f(u.uTm, 1, 0, 1, 0.5);
   if (stk){
     var zLo = -g.T - 3.5 - 1.6, zHi = 4.7 + 2.4 + 1.2;
@@ -2339,10 +2860,26 @@ function camDraw(){
   gl.uniform4f(u.uM, stk ? 1 : 0, stk && c.cut ? 1 : 0, ee, SK.rimR);
   gl.uniform4f(u.uH, g.src.r + 0.8, THREADS[design.vehicleThread].dia / 25.4 / 2, 0,
     Math.max(g.src.r + 0.8, g.dst.r + 0.9, g.R + 0.4));
-  gl.uniform4f(u.uW, SK.padT, SK.nutFlat, SK.nutH, g.dst.n);
+  gl.uniform4f(u.uW, SK.padT, Math.min(SK.nutFlat, g.src.nutR * 0.82), SK.nutH, g.dst.n);
+  var jn = g.join, JA = JOIN_A;
+  gl.uniform4f(u.uP, g.one ? 0 : 1, g.tA, stk && !g.one ? 0.8 * ee : sepOff,
+    jn && jn.kind === "A" ? (stk ? 0.7 * ee : 0.55 * es) : 0);   /* screws back out a little more */
+  if (!jn) gl.uniform4f(u.uJ, 0, 1, 1, 0);
+  else if (jn.kind === "A"){
+    gl.uniform4f(u.uJ, 1, jn.n, jn.r, jn.a0);
+    gl.uniform4f(u.uK, JA.clearD / 2, JA.cbD / 2, JA.cbDepth, JA.tapD / 2);
+    gl.uniform4f(u.uL, JA.headD / 2, JA.headH, JA.dowelD / 2, jn.a0 + Math.PI / jn.n);
+  } else {
+    gl.uniform4f(u.uJ, 2, jn.n, jn.r, jn.a0);
+    gl.uniform4f(u.uK, jn.holeR, jn.studR, jn.headR, jn.lugR);
+    gl.uniform4f(u.uL, jn.flangeB, -g.T + g.tA + jn.flangeB + SK.nutH + 0.12,
+      Math.min(SK.nutFlat, jn.lugR * 0.82), 0);
+  }
+  gl.uniform4f(u.uV, c.showHub || stk ? 1 : 0, c.showWheel || stk ? 1 : 0, 0, 0);
   gl.uniform3fv(u.uCAl, c.cols.al); gl.uniform3fv(u.uCSrc, c.cols.src);
   gl.uniform3fv(u.uCDst, c.cols.dst); gl.uniform3fv(u.uCTool, c.cols.tool);
-  gl.uniform3fv(u.uCHub, c.cols.hub); gl.uniform3fv(u.uCWhl, c.cols.whl); gl.uniform3fv(u.uCNut, c.cols.nut);
+  gl.uniform3fv(u.uCHub, c.cols.hub); gl.uniform3fv(u.uCWhl, c.cols.whl); gl.uniform3fv(u.uCNut, c.cols.nut); gl.uniform3fv(u.uCInt, c.cols.int);
+  gl.uniform3fv(u.uCNeon, c.cols.neon); gl.uniform4f(u.uG, c.hl || 0, 0, 0, 0);
   gl.bindVertexArray(c.vaoS);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 
@@ -2352,6 +2889,7 @@ function camDraw(){
   gl.depthMask(false);
   gl.uniformMatrix4fv(c.pl.u.uVP, false, new Float32Array(VP));
   gl.uniform1f(c.pl.u.uProg, done ? 2 : c.t / (c.total || 1));
+  gl.uniform1f(c.pl.u.uSep, sepOff);
   gl.bindVertexArray(c.vaoL);
   gl.depthFunc(gl.GREATER); gl.uniform1f(c.pl.u.uHide, 0.12);
   gl.drawArrays(gl.LINES, 0, c.nLines);
@@ -2370,9 +2908,8 @@ function camDraw(){
   }
   place("cl-x", [1.4, 0, 0]); place("cl-y", [0, 1.4, 0]); place("cl-z", [0, 0, 1.4]);
 
-  var setup = op ? op.setup : 1;
-  el("camwcs").textContent = stk ? "HUB · ADAPTER · WHEEL" + (c.cut ? " · CUTAWAY" : "")
-    : (setup === 1 ? "G54 · SETUP 1 · Z0 WHEEL FACE" : "G55 · SETUP 2 · Z0 HUB FACE");
+  el("camwcs").textContent = stk ? "HUB · ADAPTER · WHEEL" + (g.one ? "" : " · 2-PIECE") + (c.cut ? " · CUTAWAY" : "")
+    : (op || c.ops[0]).wcs;
   var l = at ? at.l : [0, 0, 0];
   el("camdro").innerHTML =
     '<span class="x"><b>X</b>' + l[0].toFixed(4) + "</span>" +
@@ -2380,7 +2917,8 @@ function camDraw(){
     '<span class="z"><b>Z</b>' + l[2].toFixed(4) + "</span>" +
     '<span class="op">' + (op
       ? (at.s.rapid ? "G0" : "G1 F" + op.feed) + " · " + op.tool.id + " " + op.tool.name + " · " + (at.s.op + 1) + " " + op.name
-      : c.ops.length + " ops · est. cycle " + fmtMin(c.total) + " per part · v0.1 assumptions") + "</span>";
+      : (g.one ? "1-piece · " : "2-piece · ") + c.ops.length + " ops · est. cycle " + fmtMin(c.total) +
+        " per adapter · v0.1 assumptions") + "</span>";
   el("camtime").textContent = fmtMin(c.t) + " / " + fmtMin(c.total);
 
   var cur = op ? at.s.op : -1;
@@ -2404,8 +2942,9 @@ function camModal(open){
     m.id = "cammodal"; m.className = "cam-modal"; m.hidden = true;
     m.innerHTML = '<div class="cam-modal-in" role="dialog" aria-modal="true" aria-labelledby="cammodalt">' +
       '<div class="cam-modal-hd"><b id="cammodalt">3D CAM view</b>' +
-      '<span class="hint-mouse">Move the mouse to spin 360° · scroll to zoom · double-click to reset</span>' +
+      '<span class="hint-mouse spin-info" id="camspininfo" role="status"></span>' +
       '<span class="hint-touch">Drag to spin · pinch to zoom</span>' +
+      '<button type="button" class="btn-sm hint-mouse" id="camspin"></button>' +
       '<button type="button" class="btn-sm" id="camclose">Close</button></div>' +
       '<div class="cam-modal-bd" id="cammodalbd"></div></div>';
     document.body.appendChild(m);
@@ -2414,6 +2953,7 @@ function camModal(open){
   var vp = el("camvp"), bp = el("cambp");
   if (open && !c.modal){
     c.modal = true; c.hover = null;
+    camSpin(false);
     el("cammodalt").textContent = c.mode === "stack" ? "3D stack view" : "3D CAM view";
     el("cammodalbd").appendChild(vp);
     el("cammodalbd").appendChild(bp);
@@ -2430,10 +2970,32 @@ function camModal(open){
     box.insertBefore(vp, bp);
     document.documentElement.style.overflow = "";
     m.hidden = true;
-    el("camexpand").focus();
+    /* opened from Review's i button: return the panel to the view it was on */
+    if (c.modalReturn){ var rv = c.modalReturn; c.modalReturn = null; setDraw(rv); }
+    var opener = c.modalOpener || el("camexpand"); c.modalOpener = null;
+    if (opener) opener.focus({preventScroll:true});
   }
   camKick();
 }
+/* The big view turns by click-and-drag, same as the panel. Hover spin (the part
+   follows the mouse with no button held) is opt-in, because while it is on you
+   cannot move the mouse without turning the part — so the header always says
+   which mode it is in and how to get out. */
+function camSpin(on){
+  var c = cam3d;
+  c.hoverSpin = on; c.hover = null;
+  var info = el("camspininfo"), btn = el("camspin");
+  if (!info) return;
+  info.innerHTML = on
+    ? "<b>Hover spin is on</b> &mdash; the part follows your mouse. <b>Click the model</b> or press " +
+      "<kbd>Space</kbd> to stop it."
+    : "<b>Click and drag</b> to turn it. <span>Scroll to zoom · double-click to reset · " +
+      "<kbd>Space</kbd> for hover spin.</span>";
+  info.className = "hint-mouse spin-info" + (on ? " on" : "");
+  btn.textContent = on ? "Stop hover spin" : "Hover spin";
+  btn.setAttribute("aria-pressed", on);
+}
+
 function camPlaceModal(){
   var m = el("cammodal");
   if (!m || m.hidden) return;
@@ -2444,6 +3006,11 @@ function camPlaceModal(){
 window.addEventListener("resize", camPlaceModal);
 document.addEventListener("keydown", function(e){
   if (cam3d.modal && (e.key === "Escape" || e.key === "Esc")) camModal(false);
+  /* Space pauses / resumes the mouse spin — unless a button has focus, where Space presses it */
+  else if (cam3d.modal && (e.key === " " || e.key === "Spacebar") &&
+           !(document.activeElement && document.activeElement.tagName === "BUTTON")){
+    e.preventDefault(); camSpin(!cam3d.hoverSpin);
+  }
 });
 
 function camSet(on){
@@ -2600,7 +3167,15 @@ function renderFields(){
 }
 
 function renderChecks(issues){
-  var glyph = {block:"&#10005;", flag:"&#9888;", ok:"&#10003;"};
+  var glyph = {block:"&#10005;", flag:"&#9888;", ok:"&#10003;", info:"i"};
+  var ck = clockOf(design);
+  el("pc2").hidden = ck.onePiece;
+  /* Not a rule and not a flag: tells the customer how this one gets built. */
+  if (!ck.onePiece) issues = [{level:"info", id:"2-PC", title:"Built as a two-piece adapter",
+    body:"Your " + design.hubPattern + " and " + design.wheelPattern + " bolt circles sit too close for one " +
+         "solid piece \u2014 a lug-nut hole would run into a wheel stud. So we make it in two halves: the " +
+         "hub half holds your lug nuts, the wheel half carries the new studs. The 3D views show the two " +
+         "halves in different shades."}].concat(issues);
   el("checks").innerHTML = issues.map(function(i){
     return '<div class="chk ' + i.level + '"><span class="ic">' + glyph[i.level] + '</span>' +
       '<span class="body"><b>' + i.title + ' <code>' + i.id + '</code></b>' +
@@ -2617,7 +3192,7 @@ function renderTitleBlock(d, issues){
     ["Hub bore", d.hubBore.toFixed(1) + " mm"],
     ["Wheel bore", d.wheelBore.toFixed(1) + " mm"],
     ["Studs", THREADS[d.studThread].label],
-    ["Material", "6061-T6 billet"],
+    ["Material", "6061-T6 · " + (clockOf(d).onePiece ? "1-piece" : "2-piece")],
     ["Quantity", d.qty + " pc"],
     ["Status", blocked ? "NOT BUILDABLE" : "DRAFT"]
   ];
@@ -2828,10 +3403,36 @@ function renderStages(){
   }).join("");
 }
 
+/* What the Vehicle step is set to: the picked vehicle, or — once a hub value is
+   edited by hand and it is no longer true that it came from a vehicle — the specs. */
+function vehicleSummary(){
+  if (design.vehicle !== null && design.vehicle !== undefined && VEHICLES[design.vehicle]){
+    var v = VEHICLES[design.vehicle];
+    return {full:v.mk + " " + v.md + " · " + v.yr, short:v.md};
+  }
+  return design.hubPattern ? {full:design.hubPattern + " hub · own specs", short:design.hubPattern + " hub"} : null;
+}
+
+/* Steps passed with Continue get a tick; the step Continue lands on glows yellow
+   for a moment. The rail is rebuilt on every keystroke, so the glow is given a
+   negative animation-delay equal to its age — typing mid-glow neither restarts
+   nor cuts it short. */
+var stepsPassed = {}, railGlow = null;   /* railGlow = {i: step index, at: ms} */
+var RAIL_GLOW_MS = 1800;
+
 function renderRail(){
+  var age = railGlow ? Date.now() - railGlow.at : Infinity;
   el("rail").innerHTML = STEPS.map(function(s, i){
-    return '<button type="button" data-step="' + i + '" aria-current="' + (i === step) + '">' +
-      '<span class="rn">' + s.n + "</span><span class=\"rl\">" + s.label + "</span></button>";
+    var sub = i === 0 ? vehicleSummary() : null;
+    var glow = railGlow && railGlow.i === i && i === step && age < RAIL_GLOW_MS;
+    return '<button type="button" data-step="' + i + '" aria-current="' + (i === step) + '"' +
+      (stepsPassed[i] ? ' data-done="1"' : "") +
+      (glow ? ' class="arrive" style="animation-delay:-' + age + 'ms"' : "") +
+      (sub ? ' title="' + sub.full + '"' : "") + ">" +
+      '<span class="rn">' + s.n + (stepsPassed[i] ? '<span class="rd" aria-label="done"> &#10003;</span>' : "") +
+      "</span><span class=\"rl\">" + s.label + "</span>" +
+      (sub ? '<span class="rs"><span class="rs-full">' + sub.full + '</span><span class="rs-short">' +
+             sub.short + "</span></span>" : "") + "</button>";
   }).join("");
 }
 
@@ -2862,9 +3463,14 @@ function render(skipFields){
       "</ul></div></div>"
     : "";
 
-  if (!skipFields) renderFields();
+  if (!skipFields){ renderFields(); if (window.paintHL) paintHL(); }
   paintErrors();
   renderChecks(issues);
+  el("lgjoin").hidden = clockOf(design).onePiece;
+  if (!camSupported()){
+    el("rev3dtxt").textContent = "I have reviewed the drawing of my adapter and it shows what I want built.";
+    el("open3d").setAttribute("aria-label", "Show the drawing"); el("open3d").title = "Show the drawing";
+  }
   el("face").innerHTML = faceSvg(design);
   if (cam3d.on) camUpdate(design);
   if (drawView === "stack" && !cam3d.on) renderStack();
@@ -2883,7 +3489,9 @@ function render(skipFields){
   nx.disabled = blocked;
   why.textContent = blocked
     ? "This combination cannot be built. Change the specs to continue."
-    : (review && !el("accept").checked ? "Accept the terms above to submit." : "");
+    : (review && !el("accept").checked ? "Accept the terms above to submit."
+      : review && !el("reviewed3d").checked ? "Confirm you have reviewed the " + (camSupported() ? "3D model" : "drawing") + " to submit."
+      : "");
   el("rev").textContent = "REV A · " + (blocked ? "BLOCKED" : "DRAFT");
   stamp();
 }
@@ -2955,10 +3563,15 @@ document.addEventListener("input", function(e){
 
 document.addEventListener("change", function(e){
   var co = e.target.getAttribute && e.target.getAttribute("data-camop");
-  if (co){ cam3d.off[cam3d.ops[+co].name] = !e.target.checked; camBuild(); camKick(); return; }
+  if (co){ var oo = cam3d.ops[+co]; cam3d.off[oo.grp + "|" + oo.name] = !e.target.checked; camBuild(); camKick(); return; }
   if (e.target.id === "stkcut"){ cam3d.cut = e.target.checked; camKick(); return; }
   var cs = e.target.getAttribute && e.target.getAttribute("data-camshow");
   if (cs){ cam3d[cs] = e.target.checked; camBuild(); camKick(); return; }
+  var cg = e.target.getAttribute && e.target.getAttribute("data-camgrp");
+  if (cg){
+    cam3d.ops.forEach(function(o){ if (o.grp === cg) cam3d.off[o.grp + "|" + o.name] = !e.target.checked; });
+    camBuild(); camRenderOps(); camKick(); return;
+  }
   var lv = e.target.getAttribute && e.target.getAttribute("data-level");
   if (lv){ RULES[+lv].level = e.target.value; touch(); return; }
   var k = e.target.getAttribute && e.target.getAttribute("data-key");
@@ -2973,8 +3586,8 @@ document.addEventListener("change", function(e){
        the button out from under the pointer. */
     render(e.target.type === "number");
   }
-  if (e.target.id === "accept"){
-    if (shownErrors.accept && el("accept").checked) delete shownErrors.accept;
+  if (e.target.id === "accept" || e.target.id === "reviewed3d"){
+    if (shownErrors[e.target.id] && e.target.checked) delete shownErrors[e.target.id];
     render();
   }
 });
@@ -2991,6 +3604,7 @@ document.addEventListener("click", function(e){
     b.textContent = stackExploded ? "Bolt it together" : "Pull it apart";
     camKick(); return;
   }
+  if (b.hasAttribute("data-join")){ joinOpt = b.getAttribute("data-join"); render(true); return; }
   if (b.id === "stk2d" || b.id === "stk3d"){ stack3d = b.id === "stk3d"; setDraw("stack"); return; }
   if (b.id === "stkbtn"){
     stackExploded = !stackExploded;
@@ -3001,8 +3615,32 @@ document.addEventListener("click", function(e){
   if (b.hasAttribute("data-camview")){ camView(b.getAttribute("data-camview")); return; }
   if (b.id === "camexpand"){ camModal(true); return; }
   if (b.id === "camclose"){ camModal(false); return; }
+  if (b.id === "camsep"){
+    cam3d.sepT = cam3d.sepT === 1 ? 0 : 1;
+    camViewButtons(); el("camsep").focus(); camKick(); return;
+  }
+  if (b.id === "open3d"){
+    if (camSupported()){
+      var back = drawView;
+      if (drawView !== "3d") setDraw("3d");
+      cam3d.modalReturn = back !== "3d" ? back : null;
+      cam3d.modalOpener = b;
+      camModal(true);
+    } else {
+      setDraw("2d");
+      document.querySelector(".draw").scrollIntoView({block:"start"});
+    }
+    return;
+  }
+  /* Start over asks first, inline — confirm() is inert in artifact frames */
+  if (b.id === "startover"){ b.hidden = true; el("startask").hidden = false; el("startno").focus(); return; }
+  if (b.id === "startno"){ el("startask").hidden = true; el("startover").hidden = false; el("startover").focus(); return; }
+  if (b.id === "startyes"){ startOver(); return; }
+  if (b.id === "camspin"){ camSpin(!cam3d.hoverSpin); return; }
   if (b.id === "camplay"){
     if (!cam3d.playing && cam3d.t >= cam3d.total) cam3d.t = 0;
+    /* a backplot with no paths drawn is just a tool waving in the air */
+    if (!cam3d.playing && !cam3d.showPaths){ cam3d.showPaths = true; camBuild(); camRenderOps(); }
     cam3d.playing = !cam3d.playing;
     b.textContent = cam3d.playing ? "Pause" : "Play";
     camKick(); return;
@@ -3069,7 +3707,12 @@ document.addEventListener("click", function(e){
       return;
     }
     shownErrors = {};
-    if (step < 3){ step++; render(); window.scrollTo({top:0, behavior:"smooth"}); }
+    if (step < 3){
+      stepsPassed[step] = true;
+      step++;
+      railGlow = {i:step, at:Date.now()};
+      render(); window.scrollTo({top:0, behavior:"smooth"});
+    }
     else {
       var d = "WA-" + String(Math.floor(Math.random() * 9000) + 1000);
       b.textContent = "Submitted · draft " + d;
@@ -3103,7 +3746,7 @@ var TOUR = [
   {view:"design", step:0, draw:"stack", sel:"#camvp, #stack", title:"How it bolts up",
    body:"Vehicle hub, adapter and wheel in 3D, cut in half so you can see inside. Press Bolt it together to slide the parts into place."},
   {view:"design", step:0, draw:"3d", sel:"#camvp", title:"The part in 3D",
-   body:"The finished adapter with the stock and the path each cutting tool takes. Drag to turn it. Click to open it full size, then just move the mouse to spin it 360°."},
+   body:"The finished adapter with the stock and the path each cutting tool takes. Drag to turn it. Click to open it full size; turn on Hover spin there and it follows your mouse."},
   {view:"design", step:0, draw:"3d", sel:"#cambp", title:"Watch it being cut",
    body:"Press Play or drag the slider. The readout shows where the tool is in X, Y and Z. This is an illustration — our machinists program the real job after review."},
   {view:"design", step:0, sel:"#checks", title:"Checks as you go",
@@ -3237,6 +3880,124 @@ function setView(v){
   else if (v === "admin") renderAdmin();
   else render();
 }
+
+/* ---------------- measurement highlight ----------------
+   Point at or focus a measurement and the part of the drawing it refers to glows
+   neon green, in whichever view is showing, with a one-line caption. */
+var HL_MAP = {
+  hubPattern:   ["src",   1, "Hub bolt pattern", "the holes your vehicle's studs pass through"],
+  vehicleThread:["src",   1, "Vehicle stud thread", "your vehicle's studs, the holes they pass through and their lug nuts"],
+  hubBore:      ["hub",   2, "Hub bore", "the recess your hub's centre sits in"],
+  wheelPattern: ["dst",   3, "Wheel bolt pattern", "the new studs your wheel bolts onto"],
+  studThread:   ["dst",   3, "Pressed stud thread", "the new studs your wheel bolts onto"],
+  wheelBore:    ["lip",   4, "Wheel centre bore", "the raised lip your wheel centres on"],
+  thickness:    ["thick", 5, "Thickness", "the adapter's depth — how far your wheel moves out"]
+};
+var hlFocus = null, hlHover = null;
+/* Some parts face away from the default camera; while their field is active the
+   3D view turns to look, then goes back to where it was. */
+var HL_PEEK = {hubBore:{cam:"under", stack:"s-hub"}, thickness:{stack:"s-side"}};
+
+function fieldKey(f){
+  if (!f) return null;
+  var n = f.querySelector("[data-key]");
+  if (n) return n.getAttribute("data-key");
+  return f.querySelector("[data-thick]") ? "thickness" : null;
+}
+function paintHL(){
+  var key = hlHover || hlFocus, m = HL_MAP[key], d = document.querySelector(".draw"), cap = el("hlcap");
+  if (m){
+    d.setAttribute("data-hl", m[0]);
+    cap.innerHTML = "<b>" + m[2] + "</b> &mdash; " + m[3];
+    cap.hidden = false;
+    /* sit just inside the visible view, below the 3D camera buttons */
+    var vw = cam3d.on ? el("camvp") : drawView === "stack" ? el("stack") : el("canvas2d");
+    cap.style.top = (vw.offsetTop + (cam3d.on ? 38 : 8)) + "px";
+  } else {
+    d.removeAttribute("data-hl");
+    cap.hidden = true;
+  }
+  var fs = document.querySelectorAll("#fields .f");
+  for (var i = 0; i < fs.length; i++) fs[i].classList.toggle("hl-on", !!m && fieldKey(fs[i]) === key);
+  if (cam3d.hl !== (m ? m[1] : 0)){ cam3d.hl = m ? m[1] : 0; camKick(); }
+  var c = cam3d, pk = HL_PEEK[key], want = pk && c.on ? pk[c.mode === "stack" ? "stack" : "cam"] : null;
+  if (want && !c.peek){
+    c.peek = {yaw:c.yaw, pitch:c.pitch, dist:c.dist, view:c.view, mode:c.mode};
+    camView(want);
+  } else if (want && c.view !== want) camView(want);
+  else if (!want && c.peek){
+    if (c.peek.mode === c.mode){ c.yaw = c.peek.yaw; c.pitch = c.peek.pitch; c.dist = c.peek.dist; c.view = c.peek.view; camMarkViews(); camKick(); }
+    c.peek = null;
+  }
+}
+document.addEventListener("focusin", function(e){
+  var f = e.target.closest ? e.target.closest("#fields .f") : null;
+  hlFocus = fieldKey(f); paintHL();
+});
+document.addEventListener("focusout", function(){
+  /* wait for focus to land, so moving between controls of one field does not flicker */
+  setTimeout(function(){
+    var a = document.activeElement, f = a && a.closest ? a.closest("#fields .f") : null;
+    hlFocus = fieldKey(f); paintHL();
+  }, 0);
+});
+document.addEventListener("mouseover", function(e){
+  var f = e.target.closest ? e.target.closest("#fields .f") : null, k = fieldKey(f);
+  if (k !== hlHover){ hlHover = k; paintHL(); }
+});
+
+/* ---------------- start over ---------------- */
+/* Back to the design the page opened on, step 1, nothing half-entered. Keeps the
+   view choice (2D / stack / 3D) and theme — those are the viewer's, not the design's. */
+function startOver(){
+  var k;
+  for (k in design) delete design[k];
+  for (k in DESIGN_START) design[k] = DESIGN_START[k];
+  step = 0; shownErrors = {}; editing = null;
+  stepsPassed = {}; railGlow = null;
+  joinOpt = "A"; stackExploded = true;
+  var c = cam3d;
+  c.playing = false; c.ex = c.exT = 1; c.sep = c.sepT = 1; c.off = {}; c.t = 1e9;
+  c.showPart = true; c.showStock = false; c.showPaths = false; c.showHub = true; c.showWheel = true;
+  if (el("camplay")) el("camplay").textContent = "Play";
+  el("accept").checked = false;
+  el("reviewed3d").checked = false;
+  t0 = null;
+  el("startask").hidden = true; el("startover").hidden = false;
+  renderStages();
+  render();
+  if (c.on) camView(c.mode === "stack" ? "s-iso" : "iso");
+  window.scrollTo(0, 0);
+}
+
+/* ---------------- theme switch ---------------- */
+function themeNow(){
+  var t = document.documentElement.getAttribute("data-theme");
+  if (t === "light" || t === "dark") return t;
+  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+function paintThemeBtn(){
+  var dark = themeNow() === "dark", b = el("themetog");
+  /* the button names the theme it switches TO */
+  b.innerHTML = dark
+    ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+      '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>Light'
+    : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>Dark';
+  b.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+}
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem("wa-theme", t); } catch (e) {}
+  paintThemeBtn();
+  if (cam3d.on && cam3d.gl){ camBuild(); camKick(); }   /* the 3D view reads its colours from the tokens */
+}
+el("themetog").addEventListener("click", function(){ setTheme(themeNow() === "dark" ? "light" : "dark"); });
+if (window.matchMedia){
+  var tmq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (tmq.addEventListener) tmq.addEventListener("change", paintThemeBtn); else if (tmq.addListener) tmq.addListener(paintThemeBtn);
+}
+paintThemeBtn();
 
 renderStages();
 renderDesigns();
