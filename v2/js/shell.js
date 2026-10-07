@@ -81,18 +81,78 @@ function enterHome(){
   setDraw("3d");
   placeViewer("home");
   var c = cam3d;
-  if (c.mode !== "cam"){ c.mode = "cam"; camApplyMode(); c.modeShown = "cam"; }
-  camUpdate(DEMO);
   c.showPart = true; c.showStock = false; c.showPaths = false; c.showHub = c.showWheel = true;
   c.playing = false; c.t = 1e9; c.hl = 0;
-  camBuild();
-  camView("iso"); c.pitch = 0.42; c.yaw = -0.6;
-  c.sep = c.sepT = 0; c.shT = 0; c.shYaw0 = c.yaw; c.showHold = 0;
   c.showcase = true;
-  camKick();
+  showSlide(0, true);
+  startCarousel();
 }
+
+/* ---------------- landing carousel ----------------
+   One model, three ways to see it, advancing on their own:
+   spin (the original turn, joining and separating) · on the truck (hub, adapter and
+   wheel bolting together) · open & close (a 90° turn, the halves part and close). */
+var SHOW_SLIDES = [
+  {style:"spin",  label:"Spin",          tag:"5x5.5&Prime; &rarr; 6x5.5&Prime; two-piece adapter"},
+  {style:"stack", label:"On the truck",  tag:"How it bolts between hub and wheel"},
+  {style:"turn",  label:"Open &amp; close", tag:"The two halves and the screws that join them"}
+];
+var SLIDE_MS = 12000, slideAt = 0, slideTimer = 0, slidePaused = false;
+var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function showSlide(i, now){
+  var c = cam3d, s = SHOW_SLIDES[i], vp = el("camvp");
+  slideAt = i;
+  var dots = document.querySelectorAll("#herodots button");
+  for (var k = 0; k < dots.length; k++) dots[k].setAttribute("aria-current", k === i);
+  el("herotag").innerHTML = "<b>" + s.label + "</b>" + s.tag;
+  function apply(){
+    if (vp) vp.classList.remove("fading");
+    if (view !== "home" || !c.showcase) return;     /* they left mid-fade: leave the builder alone */
+    var stk = s.style === "stack";
+    if (c.mode !== (stk ? "stack" : "cam")){ c.mode = stk ? "stack" : "cam"; camApplyMode(); c.modeShown = c.mode; }
+    camUpdate(DEMO);
+    camBuild();
+    if (stk){ camView("s-iso"); c.cut = true; c.ex = c.exT = 1; }
+    else { camView("iso"); c.pitch = 0.42; c.yaw = -0.6; c.sep = c.sepT = 0; }
+    c.shT = 0; c.shYaw0 = c.yaw; c.showHold = 0;
+    c.showStyle = REDUCED ? "still" : s.style;
+    camKick();
+    if (vp) vp.classList.remove("fading");
+  }
+  if (now || !vp){ apply(); return; }
+  vp.classList.add("fading");                  /* cross-fade: out, swap, back in */
+  setTimeout(apply, 380);
+}
+function startCarousel(){
+  clearInterval(slideTimer);
+  if (REDUCED) return;
+  slideTimer = setInterval(function(){
+    if (view !== "home" || slidePaused || document.hidden || cam3d.dragging) return;
+    showSlide((slideAt + 1) % SHOW_SLIDES.length);
+  }, SLIDE_MS);
+}
+function buildDots(){
+  el("herodots").innerHTML = SHOW_SLIDES.map(function(s, i){
+    return '<button type="button" data-slide="' + i + '" aria-label="Show: ' + s.label.replace(/&amp;/g, "and") + '">' +
+      "<span>" + s.label + "</span></button>";
+  }).join("");
+}
+buildDots();
+document.addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest("[data-slide]") : null;
+  if (!b) return;
+  showSlide(+b.getAttribute("data-slide"));
+  startCarousel();                             /* a fresh full interval after a manual pick */
+});
+/* hovering the model or the dots holds the current slide */
+["mouseenter", "mouseleave"].forEach(function(t){
+  el("homestage").addEventListener(t, function(){ slidePaused = t === "mouseenter"; });
+});
+
 function leaveHome(){
   cam3d.showcase = false;
+  clearInterval(slideTimer);
   if (camSupported()) placeViewer("builder");
 }
 

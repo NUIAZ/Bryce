@@ -54,11 +54,55 @@ function joinPlan(d){
   var hubR = d.hubBore * mm / 2, lipR = d.wheelBore * mm / 2;
   var halfMin = A0.flangeMax + A0.nutH + 0.15;      /* a half deep enough to bury a lug nut */
 
-  /* A: one ring of screws just outside the lug pockets and stud heads */
-  var rA = Math.max(rs + h.lugR, rd + h.headR) + W + JA.headD / 2;
-  /* one screw at 12 o'clock, so the half-section on the truck cuts through it */
-  var A = {kind:"A", n:JA.n, r:rA, a0:Math.PI / 2,
-           R:Math.max(base, rA + JA.headD / 2 + 0.12), needT:halfMin + 0.5};
+  /* A, as on the shop's parts (photo, 2026-10-07): one screw midway between each pair
+     of VEHICLE lugs, on about the vehicle's bolt circle — so the count follows the
+     vehicle lug count and the OD stays compact. In the hub half a screw must clear the
+     lug pockets and stud holes; in the wheel half it must clear the pressed studs. On a
+     two-piece the studs no longer fight the lug pockets, so they are re-clocked to clear
+     the screws instead (dstOff). Radius: closest to the vehicle circle that leaves
+     ONE_PIECE_WALL_MM everywhere without growing the OD; outward only if it must. */
+  var nA = src.lugs, a0A = Math.PI / 2 - Math.PI / nA, k25 = 25.4;
+  var thru = Math.max(0.5, Math.min(hubR, lipR - A0.lipWall));
+  var rLo = Math.max(thru + JA.clearD / 2, lipR + JA.headD / 2) + W;
+  var rHi = base - JA.headD / 2 - 0.12;
+  function hubWall(r){
+    var m = Infinity;
+    for (var i = 0; i < src.lugs; i++){
+      var ai = Math.PI / 2 - i * 2 * Math.PI / src.lugs;
+      for (var k = 0; k < nA; k++){
+        var ak = a0A - k * 2 * Math.PI / nA, dd = Math.sqrt(r * r + rs * rs - 2 * r * rs * Math.cos(ak - ai));
+        m = Math.min(m, dd - Math.max(h.lugR, h.holeR) - JA.tapD / 2);
+      }
+    }
+    return m;
+  }
+  function wheelWall(r, off){
+    var m = Infinity;
+    for (var j = 0; j < dst.lugs; j++){
+      var aj = Math.PI / 2 - (off + j * 360 / dst.lugs) * Math.PI / 180;
+      for (var k = 0; k < nA; k++){
+        var ak = a0A - k * 2 * Math.PI / nA, dd = Math.sqrt(r * r + rd * rd - 2 * r * rd * Math.cos(ak - aj));
+        m = Math.min(m, dd - Math.max(JA.headD / 2 + h.studR, JA.clearD / 2 + h.headR));
+      }
+    }
+    return m;
+  }
+  function bestOff(r){
+    var half = 360 / dst.lugs / 2, b = {off:half, w:wheelWall(r, half)};
+    for (var q = 0; q < half * 8; q++){ var w = wheelWall(r, q / 4); if (w > b.w + 0.002) b = {off:q / 4, w:w}; }
+    return b;
+  }
+  var pick = null, cands = [], rr;
+  for (rr = rLo; rr <= rHi + 2.0; rr += 0.02) cands.push(rr);
+  cands.sort(function(x, y){ return Math.abs(x - rs) - Math.abs(y - rs) + ((x > rHi) - (y > rHi)) * 100; });
+  for (var ci = 0; ci < cands.length && !pick; ci++){
+    var hw = hubWall(cands[ci]); if (hw < W) continue;
+    var bo = bestOff(cands[ci]); if (bo.w < W) continue;
+    pick = {r:cands[ci], off:bo.off};
+  }
+  if (!pick) pick = {r:rHi, off:bestOff(rHi).off};          /* nothing clears: closest try, flag via review */
+  var A = {kind:"A", n:nA, r:pick.r, a0:a0A, dstOff:pick.off,
+           R:Math.max(base, pick.r + JA.headD / 2 + 0.12), needT:halfMin + 0.5};
 
   /* B: search for an in-between pattern (same thread as the vehicle) that clears
      the vehicle pattern in the hub half and the wheel pattern in the wheel half.
@@ -352,7 +396,7 @@ function faceSvg(d, compact){
         '" r="2.4" fill="none" stroke="var(--cyan)" stroke-width="1.3"/>');
     }
     for (j = 0; j < dst.lugs; j++){
-      ang = (-90 + clockOf(d).off + j * 360 / dst.lugs) * Math.PI / 180;
+      ang = (-90 + (Math.PI / 2 - cgm.dst.a0) * 180 / Math.PI + j * 360 / dst.lugs) * Math.PI / 180;
       s2.push('<circle cx="' + (c + dst.bcd / 2 * cs * Math.cos(ang)).toFixed(1) +
         '" cy="' + (c + dst.bcd / 2 * cs * Math.sin(ang)).toFixed(1) +
         '" r="2.6" fill="var(--stud)"/>');
@@ -411,7 +455,7 @@ function faceSvg(d, compact){
            '" fill="var(--paper)" stroke="var(--cyan)" stroke-width="1.5"/>');
   }
   /* wheel-side pressed studs, clocked off the through holes */
-  var off = clockOf(d).off;
+  var off = (Math.PI / 2 - cgm.dst.a0) * 180 / Math.PI;
   for (i = 0; i < dst.lugs; i++){
     a = (-90 + off + i * 360 / dst.lugs) * Math.PI / 180;
     x = cx + dst.bcd / 2 * S * Math.cos(a);

@@ -49,6 +49,7 @@ function camGeom(d){
   if (jn && jn.kind === "B") tA = T / 2;
   var tB = T - tA;
   if (jn) jn.flangeB = Math.min(A.flangeMax, tB * 0.4);
+  var dOff = jn && jn.kind === "A" ? jn.dstOff : ck.off;          /* two-piece: studs clocked around the screws */
   return {
     T:T, R:jn ? jn.R : (Math.max(src.bcd, dst.bcd) + 2.0) / 2, so:A.stockOver, join:jn, plan:plan,
     lipR:lipR, lipH:A.lipH, hubR:hubR,
@@ -57,7 +58,7 @@ function camGeom(d){
     one:ck.onePiece, tA:ck.onePiece ? T : tA,
     /* a0 matches faceSvg: first hole at 12 o'clock, wheel studs clocked by clockOf() */
     src:{n:src.lugs, r:src.bcd / 2, a0:Math.PI / 2, holeR:h.holeR, nutR:h.lugR, flange:flange},
-    dst:{n:dst.lugs, r:dst.bcd / 2, a0:Math.PI / 2 - ck.off * Math.PI / 180,
+    dst:{n:dst.lugs, r:dst.bcd / 2, a0:Math.PI / 2 - dOff * Math.PI / 180,
          studR:h.studR, headR:h.headR, headDepth:A.headDepth, len:A.studLen}
   };
 }
@@ -948,18 +949,28 @@ function camFrame(now){
   var c = cam3d;
   c.raf = 0;
   if (!c.on || !c.gl) return;
-  /* landing showcase, a calm loop with no tilt: rest, turn 90°, open the halves, close
-     them, turn back. Grabbing it pauses the loop; it carries on from where it was. */
+  /* landing showcase — see SHOW_SLIDES in shell.js. Grabbing it pauses the motion. */
   if (c.showcase){
     var dsh = c.lastSh ? Math.min(100, now - c.lastSh) : 16;
     c.lastSh = now;
-    if (!c.dragging && now > (c.showHold || 0)){
-      if (c.showHold){ c.shYaw0 = c.yaw - camShowTurn(c.shT); c.showHold = 0; }   /* resume from the drag */
-      c.shT = ((c.shT || 0) + dsh) % SHOW_LOOP;
-      c.yaw = c.shYaw0 + camShowTurn(c.shT);
-      c.sepT = c.shT > 4400 && c.shT < 7000 ? 1 : 0;
+    var held = c.dragging || now < (c.showHold || 0);
+    if (!held){
+      if (c.showHold){ c.shYaw0 = c.yaw - (c.showStyle === "turn" ? camShowTurn(c.shT) : 0); c.showHold = 0; }
+      c.shT = (c.shT || 0) + dsh;
+      if (c.showStyle === "spin"){                     /* the original: turn, join, separate */
+        c.yaw -= dsh * 0.00026;
+        c.sepT = Math.floor(c.shT / 3800) % 2 ? 1 : 0;
+      } else if (c.showStyle === "stack"){             /* on the truck: bolt together, pull apart */
+        c.yaw = c.shYaw0 + 0.3 * Math.sin(c.shT * 0.00035);
+        var ex = Math.floor(c.shT / 3600) % 2 ? 0 : 1;
+        if (c.exT !== ex){ c.exT = ex; stackExploded = !!ex; }
+      } else if (c.showStyle === "turn"){              /* 90° turn, open, close, back */
+        c.shT %= SHOW_LOOP;
+        c.yaw = c.shYaw0 + camShowTurn(c.shT);
+        c.sepT = c.shT > 4400 && c.shT < 7000 ? 1 : 0;
+      }
     }
-    camKick();
+    if (c.showStyle !== "still") camKick();
   } else c.lastSh = 0;
   if (c.sep !== c.sepT){
     var ds = c.lastS ? Math.min(100, now - c.lastS) : 16, ss = ds / 600;
@@ -1050,7 +1061,8 @@ function camDraw(){
     Math.sqrt(Math.pow(g.R + g.so + 2, 2) + Math.pow((zTop - zBot) / 2, 2)));
   var ee = c.ex * c.ex * (3 - 2 * c.ex);
   gl.uniform4f(u.uM, stk ? 1 : 0, stk && c.cut ? 1 : 0, ee, SK.rimR);
-  gl.uniform4f(u.uH, g.src.r + 0.8, THREADS[design.vehicleThread].dia / 25.4 / 2, 0,
+  var dd = view === "home" && window.DEMO ? DEMO : design;
+  gl.uniform4f(u.uH, g.src.r + 0.8, THREADS[dd.vehicleThread].dia / 25.4 / 2, 0,
     Math.max(g.src.r + 0.8, g.dst.r + 0.9, g.R + 0.4));
   gl.uniform4f(u.uW, SK.padT, Math.min(SK.nutFlat, g.src.nutR * 0.82), SK.nutH, g.dst.n);
   var jn = g.join, JA = JOIN_A;
@@ -1068,11 +1080,11 @@ function camDraw(){
       Math.min(SK.nutFlat, jn.lugR * 0.82), 0);
   }
   gl.uniform4f(u.uV, c.showHub || stk ? 1 : 0, c.showWheel || stk ? 1 : 0, 0, 0);
-  var pW = THREAD_PITCH[design.studThread] || 0.059;
-  var pV = THREAD_PITCH[design.vehicleThread] || 0.059;
+  var pW = THREAD_PITCH[dd.studThread] || 0.059;
+  var pV = THREAD_PITCH[dd.vehicleThread] || 0.059;
   var foot = dist * 2 * Math.tan(0.3) / h;                 /* inches per pixel at the target */
   var detail = Math.max(0, Math.min(1, (Math.min(pW, pV) * 0.9 - foot) / (Math.min(pW, pV) * 0.5)));
-  gl.uniform4f(u.uThr, view === "home" && window.DEMO ? THREAD_PITCH[DEMO.studThread] : pW, pV, detail, JOIN_A.pitch);
+  gl.uniform4f(u.uThr, pW, pV, detail, JOIN_A.pitch);
   gl.uniform3fv(u.uCAl, c.cols.al); gl.uniform3fv(u.uCSrc, c.cols.src);
   gl.uniform3fv(u.uCDst, c.cols.dst); gl.uniform3fv(u.uCTool, c.cols.tool);
   gl.uniform3fv(u.uCHub, c.cols.hub); gl.uniform3fv(u.uCWhl, c.cols.whl); gl.uniform3fv(u.uCNut, c.cols.nut); gl.uniform3fv(u.uCInt, c.cols.int);
