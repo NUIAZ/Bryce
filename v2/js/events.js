@@ -46,11 +46,13 @@ document.addEventListener("input", function(e){
     el("discard").hidden = false;
     return;
   }
-  var pb = t.getAttribute("data-pb"), pt = t.getAttribute("data-pt"), pc = t.getAttribute("data-pc");
-  if (pb || pt || pc){
-    if (pb) PRICING.base[pb] = parseFloat(t.value) || 0;
-    if (pt) PRICING.thick[pt] = parseFloat(t.value) || 0;
-    if (pc) PRICING.conversion = parseFloat(t.value) || 0;
+  var pcell = t.getAttribute("data-pcell"), phc = t.getAttribute("data-phc");
+  if (pcell || phc){
+    if (pcell){
+      var pp = pcell.split("|"), pv = parseFloat(t.value);
+      PRICING.table[pp[0]][pp[1]][+pp[2]] = isNaN(pv) ? null : pv;      /* blank = quote */
+    }
+    if (phc) PRICING.hubCentric[phc] = parseFloat(t.value) || 0;
     dirty++; renderPriceCheck(); render(true);
     el("verstate").textContent = dirty + (dirty === 1 ? " unsaved change" : " unsaved changes");
     el("verstate").className = "dirty";
@@ -103,6 +105,8 @@ document.addEventListener("click", function(e){
     b.textContent = stackExploded ? "Bolt it together" : "Pull it apart";
     camKick(); return;
   }
+  if (b.hasAttribute("data-ptab")){ priceTab = b.getAttribute("data-ptab"); renderPricing(); return; }
+  if (b.hasAttribute("data-hc")){ design.hubCentric = b.getAttribute("data-hc") === "1"; render(); return; }
   if (b.hasAttribute("data-join")){ joinOpt = b.getAttribute("data-join"); render(true); return; }
   if (b.id === "stk2d" || b.id === "stk3d"){ stack3d = b.id === "stk3d"; setDraw("stack"); return; }
   if (b.id === "stkbtn"){

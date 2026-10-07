@@ -38,7 +38,7 @@ var THREADS = {
   "1/2-20":  {dia:12.7, label:'1/2"-20'},
   "9/16-18": {dia:14.3, label:'9/16"-18'}
 };
-var THICKNESS = [1, 1.25, 1.5, 2, 2.5, 3];
+var THICKNESS = [0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4];   /* the store's options */
 
 /* =====================================================================
    FITMENT TABLE v0.1 — SEED DATA, NOT VERIFIED.
@@ -89,7 +89,7 @@ var POPULAR = [
 var design = {
   hubPattern:"6x5.5", hubBore:78.1, vehicleThread:"14x1.5",
   wheelPattern:"5x4.5", wheelBore:87.1,
-  thickness:2, studThread:"14x1.5", qty:2,
+  thickness:2, studThread:"14x1.5", qty:2, hubCentric:false,
   mode:"popular", vehicle:0,
   pickMake:"Chevrolet", pickModel:"Silverado 1500"
 };

@@ -164,7 +164,7 @@ var HL_MAP = {
   hubBore:      ["hub",   2, "Hub bore", "the recess your hub's centre sits in"],
   wheelPattern: ["dst",   3, "Wheel bolt pattern", "the new studs your wheel bolts onto"],
   studThread:   ["dst",   3, "Pressed stud thread", "the new studs your wheel bolts onto"],
-  wheelBore:    ["lip",   4, "Wheel centre bore", "the raised lip your wheel centres on"],
+  wheelBore:    ["lip",   4, "Wheel centre bore", "the hole in the back of your wheel — on a hub-centric build, the lip it centres on"],
   thickness:    ["thick", 5, "Thickness", "the adapter's depth — how far your wheel moves out"]
 };
 var hlFocus = null, hlHover = null;

@@ -52,7 +52,7 @@ function camGeom(d){
   var dOff = jn && jn.kind === "A" ? jn.dstOff : ck.off;          /* two-piece: studs clocked around the screws */
   return {
     T:T, R:jn ? jn.R : (Math.max(src.bcd, dst.bcd) + 2.0) / 2, so:A.stockOver, join:jn, plan:plan,
-    lipR:lipR, lipH:A.lipH, hubR:hubR,
+    lipR:lipR, lipH:d.hubCentric ? A.lipH : 0, hubR:hubR,      /* lip only on a hub-centric build */
     thruR:Math.max(0.5, Math.min(hubR, lipR - A.lipWall)),
     pocketDepth:Math.min(A.pocketDepth, T * 0.4),
     one:ck.onePiece, tA:ck.onePiece ? T : tA,

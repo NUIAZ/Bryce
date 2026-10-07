@@ -121,6 +121,12 @@ function renderFields(){
            (design.thickness === t) + '">' + t.toFixed(2) + '"</button>';
     });
     h += '</div><span class="hint">Face to face. Studs add height on top of this.</span></div>';
+    var hcAdd = PRICING.hubCentric[Math.max(PATTERNS[design.hubPattern].lugs, PATTERNS[design.wheelPattern].lugs)] || 0;
+    h += '<div class="f full"><label>Centring</label><div class="seg" id="hcseg">' +
+      '<button type="button" data-hc="0" aria-pressed="' + !design.hubCentric + '">Lug-centric</button>' +
+      '<button type="button" data-hc="1" aria-pressed="' + !!design.hubCentric + '">Hub-centric +$' + hcAdd + "</button>" +
+      '</div><span class="hint">Hub-centric adds a machined lip that centres the wheel on the adapter — ' +
+      "smoother at speed. Lug-centric is centred by the lug nuts.</span></div>";
     h += fieldSelect("studThread", "Pressed stud thread", "Studs the new wheel mounts to.", THREADS);
     h += '<div class="f"><label>Quantity</label><div class="seg" id="qtyseg">' +
          ['2','4'].map(function(q){
@@ -165,6 +171,7 @@ function renderTitleBlock(d, issues){
     ["Wheel bore", d.wheelBore.toFixed(1) + " mm"],
     ["Studs", THREADS[d.studThread].label],
     ["Material", "6061-T6 · " + (clockOf(d).onePiece ? "1-piece" : "2-piece")],
+    ["Centring", d.hubCentric ? "Hub-centric" : "Lug-centric"],
     ["Quantity", d.qty + " pc"],
     ["Status", blocked ? "NOT BUILDABLE" : "DRAFT"]
   ];
@@ -183,10 +190,13 @@ function renderPrice(p){
   } else if (p.mode === "quote"){
     a.classList.add("quote");
     a.textContent = "Quote required";
-    per.innerHTML = "<b>Pricing</b>Flagged for engineering review. We will price it and email you.";
+    per.innerHTML = "<b>Pricing</b>" + (p.why === "size"
+      ? "Not a standard size for this build. Our team will price it and email you."
+      : design.cat === "custom" ? "Custom builds are priced by our team. We will email you."
+      : "Flagged for engineering review. We will price it and email you.");
   } else {
     a.textContent = "$" + p.total.toFixed(2);
-    per.innerHTML = "<b>Pricing</b>$" + p.pair.toFixed(2) + " per pair, free shipping in the USA.";
+    per.innerHTML = "<b>Pricing</b>$" + p.pair.toFixed(2) + " per set of 2, free shipping in the USA.";
   }
 }
 
@@ -200,14 +210,18 @@ var AUDIT = [
 ];
 
 /* The catalogue prices the formula has to keep reproducing. */
+/* Real customwheeladapters.com products (lug-centric unless noted), 2026-10-07. */
 var CATALOGUE = [
-  {label:"6x5.5 → 5x4.5, 2.00\"", want:129.95,
-   d:{hubPattern:"6x5.5", wheelPattern:"5x4.5", thickness:2, qty:2}},
-  {label:"8x6.5 → 8x180, 2.00\"", want:157.95,
-   d:{hubPattern:"8x6.5", wheelPattern:"8x180", thickness:2, qty:2}},
-  {label:"6x5.5 spacer, 1.00\"", want:67.95,
-   d:{hubPattern:"6x5.5", wheelPattern:"6x5.5", thickness:1, qty:2}}
+  {label:"6x5.5 → 5x4.5, 2.00\" two-piece", want:197.99, d:{hubPattern:"6x5.5", wheelPattern:"5x4.5", thickness:2}},
+  {label:"5x5.5 → 6x5.5, 2.00\" two-piece", want:210.99, d:{hubPattern:"5x5.5", wheelPattern:"6x5.5", thickness:2}},
+  {label:"8x6.5 → 8x180, 2.00\"", want:188.99, d:{hubPattern:"8x6.5", wheelPattern:"8x180", thickness:2}},
+  {label:"8x6.5 → 8x170, 2.00\"", want:199.00, d:{hubPattern:"8x6.5", wheelPattern:"8x170", thickness:2}},
+  {label:"6x135 → 6x5.5, 1.50\"", want:124.00, d:{hubPattern:"6x135", wheelPattern:"6x5.5", thickness:1.5}},
+  {label:"5x4.5 → 5x5, 1.00\"", want:105.99, d:{hubPattern:"5x4.5", wheelPattern:"5x5", thickness:1}},
+  {label:"6x5.5 spacer, 1.00\"", want:129.00, d:{hubPattern:"6x5.5", wheelPattern:"6x5.5", thickness:1}},
+  {label:"6x5.5 spacer, 2.00\" hub-centric", want:194.99, d:{hubPattern:"6x5.5", wheelPattern:"6x5.5", thickness:2, hubCentric:true}}
 ];
+var PRICE_TOL = 0.10;          /* within 10% of the store counts as a match */
 
 function touch(){ dirty++; renderAdmin(); render(true); }
 
@@ -244,39 +258,48 @@ function renderRules(){
   el("rulelist").innerHTML = h;
 }
 
+var priceTab = "two";
 function renderPricing(){
-  var h = '<div class="pgrid"><span class="plabel">Base per pair</span>';
-  [4,5,6,8].forEach(function(l){
-    h += "<label class='punit'>" + l + " lug<input type='number' data-pb='" + l +
-         "' value='" + PRICING.base[l] + "' step='1' min='0'></label>";
+  var h = '<p class="psrc">Store medians &middot; ' + PRICING.source + '. Blank = goes to quote.</p>' +
+    '<div class="ptabs" role="tablist">' + PRICE_KINDS.map(function(k){
+      return '<button type="button" role="tab" data-ptab="' + k[0] + '" aria-selected="' + (priceTab === k[0]) + '">' + k[1] + "</button>";
+    }).join("") + "</div>";
+  h += '<div class="ptbl-wrap"><table class="ptbl"><thead><tr><th>Lugs</th>' +
+    PRICE_THICK.map(function(t){ return "<th>" + t + "&Prime;</th>"; }).join("") + "</tr></thead><tbody>";
+  PRICE_LUGS.forEach(function(L){
+    h += "<tr><th>" + L + "</th>" + PRICING.table[priceTab][L].map(function(v, i){
+      return '<td><input type="number" step="1" min="0" inputmode="decimal" aria-label="' + L + " lug, " + PRICE_THICK[i] +
+        ' inch" data-pcell="' + priceTab + "|" + L + "|" + i + '" value="' + (v === null ? "" : v) + '" placeholder="quote"></td>';
+    }).join("") + "</tr>";
+  });
+  h += "</tbody></table></div>";
+  h += '<div class="pgrid"><span class="plabel">Hub-centric adds, per set</span>';
+  PRICE_LUGS.forEach(function(L){
+    h += "<label class='punit'>" + L + " lug<input type='number' data-phc='" + L +
+         "' value='" + PRICING.hubCentric[L] + "' step='1' min='0'></label>";
   });
   h += "</div>";
-  h += '<div class="pgrid"><span class="plabel">Thickness multiplier</span>';
-  [1,1.25,1.5,2,2.5,3].forEach(function(t){
-    h += "<label class='punit'>" + t.toFixed(2) + "\"<input type='number' data-pt='" + t +
-         "' value='" + PRICING.thick[t] + "' step='0.01' min='0'></label>";
-  });
-  h += "</div>";
-  h += '<div class="pgrid"><span class="plabel">Conversion surcharge</span>' +
-       "<label class='punit'>added once<input type='number' data-pc='1' value='" +
-       PRICING.conversion + "' step='1' min='0'></label></div>";
   el("priceform").innerHTML = h;
 }
 
 function renderPriceCheck(){
-  var h = "";
+  var h = "", hits = 0;
   CATALOGUE.forEach(function(c){
     var d = {}; for (var kk in design) d[kk] = design[kk];
+    d.hubCentric = false; d.qty = 2;
     for (var j in c.d) d[j] = c.d[j];
     var got = priceOf(d, [{level:"ok"}]);
     var val = got.mode === "price" ? got.pair : null;
-    var ok = val !== null && Math.abs(val - c.want) < 0.005;
+    var diff = val === null ? null : (val - c.want) / c.want, ok = diff !== null && Math.abs(diff) <= PRICE_TOL;
+    if (ok) hits++;
     h += '<div class="ck' + (ok ? " ok" : " off") + '">' +
       "<span class='ck-l'>" + c.label + "</span>" +
-      "<span class='ck-v mono'>" + (val === null ? "—" : "$" + val.toFixed(2)) + "</span>" +
-      "<span class='ck-w mono'>" + (ok ? "matches" : "was $" + c.want.toFixed(2)) + "</span></div>";
+      "<span class='ck-v mono'>" + (val === null ? "quote" : "$" + val.toFixed(2)) + "</span>" +
+      "<span class='ck-w mono'>store $" + c.want.toFixed(2) + (diff === null ? "" : " · " + (diff >= 0 ? "+" : "") +
+        (diff * 100).toFixed(1) + "%") + "</span></div>";
   });
-  el("pricecheck").innerHTML = h;
+  el("pricecheck").innerHTML = '<p class="psrc">' + hits + " of " + CATALOGUE.length + " within " +
+    Math.round(PRICE_TOL * 100) + "% of the store price.</p>" + h;
 }
 
 function renderAudit(){
