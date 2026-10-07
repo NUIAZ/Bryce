@@ -37,19 +37,24 @@
 .hero-stage .cam{position:absolute;inset:0;border:0}
 .hero-stage .cam-vp{height:100%;max-height:none;aspect-ratio:auto;background:transparent}
 .hero-stage .cam-vp canvas{cursor:grab}
+/* touch: let the page scroll through the showcase */
+.hero-stage .cam-vp canvas{touch-action:pan-y}
+@media (hover:none){.hero-stage .cam-vp canvas{cursor:default}}
 /* showcase: just the part — no camera buttons, readouts or tool controls */
 .hero-stage .cam-views,.hero-stage .tag,.hero-stage .cam-lbl,.hero-stage .cam-bp,.hero-stage .cam-tog,
 .hero-stage .cam-join,.hero-stage .cam-opsbox,.hero-stage .cam-note,.hero-stage .hlcap{display:none!important}
 .hero-stage.flat{display:grid;place-items:center;padding:30px}
 .hero-stage.flat #homeface{width:min(440px,90%);background:rgba(255,255,255,.92);border-radius:12px;padding:10px}
-.hero-tag{position:absolute;right:20px;bottom:132px;z-index:2;margin:0;font-size:13.5px;letter-spacing:.04em;
+/* pills and caption line up with the right edge of the cards (1180px column, 16px gutter) */
+.hero-tag,.hero-dots{right:max(16px, calc((100vw - 1180px) / 2 + 16px))}
+.hero-tag{position:absolute;bottom:132px;z-index:2;margin:0;font-size:13.5px;letter-spacing:.04em;
   color:rgba(255,255,255,.85);background:rgba(14,27,77,.55);border:1px solid rgba(255,255,255,.18);
   border-radius:999px;padding:6px 14px;pointer-events:none}
 .hero-tag b{color:var(--warn);font-weight:400;margin-right:8px}
 /* carousel: the three showcase views, a soft cross-fade between them */
 .hero-stage .cam-vp{transition:opacity .38s ease}
 .hero-stage .cam-vp.fading{opacity:0}
-.hero-dots{position:absolute;right:20px;bottom:180px;z-index:2;display:flex;gap:6px}
+.hero-dots{position:absolute;bottom:180px;z-index:2;display:flex;gap:6px}
 .hero-dots button{display:flex;align-items:center;gap:8px;padding:6px 12px 6px 10px;border-radius:999px;cursor:pointer;
   background:rgba(14,27,77,.45);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.75);
   font-family:var(--f-body);font-size:12.5px;letter-spacing:.04em}
@@ -83,11 +88,11 @@
 .cat:hover .cat-go{background:var(--accent-ink)}
 
 @media (max-width:860px){
-  .hero-stage{position:relative;inset:auto;height:56vh;min-height:320px}
+  .hero-stage{position:relative;inset:auto;height:44vh;min-height:280px;max-height:420px}
   .hero{display:flex;flex-direction:column-reverse}
   .hero-copy{padding:30px 16px 10px;min-height:0}
-  .hero-tag{bottom:16px;right:12px;font-size:12px}
-  .hero-dots{bottom:54px;right:12px;left:12px;justify-content:flex-end}
+  .hero-tag{bottom:16px;right:16px;font-size:12px}
+  .hero-dots{bottom:54px;right:16px;left:16px;justify-content:flex-end}
   .hero-dots button{font-size:11.5px;padding:5px 10px 5px 8px}
   .cats{grid-template-columns:1fr;margin-top:18px}
 }

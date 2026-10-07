@@ -644,6 +644,8 @@ function camInit(){
   /* orbit · pinch · wheel */
   var ptrs = {};
   cv.addEventListener("pointerdown", function(e){
+    /* landing showcase: touch scrolls the page, never the model — only a mouse can turn it */
+    if (c.showcase && e.pointerType !== "mouse") return;
     cv.setPointerCapture(e.pointerId);
     ptrs[e.pointerId] = {x:e.clientX, y:e.clientY, x0:e.clientX, y0:e.clientY};
     c.dragging = true; c.moved = false;
@@ -695,6 +697,7 @@ function camInit(){
   cv.addEventListener("pointerup", endp);
   cv.addEventListener("pointercancel", endp);
   cv.addEventListener("wheel", function(e){
+    if (c.showcase) return;                    /* the wheel scrolls the landing page */
     e.preventDefault();
     camZoom(Math.exp(e.deltaY * 0.0012));
     camKick();
