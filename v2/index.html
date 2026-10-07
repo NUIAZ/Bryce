@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Adapter Designer &mdash; Wheel Adapters USA</title>
+  <meta name="description" content="Prototype wheel adapter configurator: live scale drawing, validation rules, pricing and order pipeline.">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* Baseline the artifact platform normally supplies. Keep this block. */
+    :root {
+      color-scheme: light;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body { margin: 0; }
+    body { font: 14px/1.5 system-ui, -apple-system, sans-serif; background: #f2f3f1; }
+    img { max-width: 100%; }
+    [hidden] { display: none !important; }
+  </style>
+  <script>
+    /* Saved theme choice, applied before first paint. No choice = follow the system. */
+    try { var wt = localStorage.getItem("wa-theme");
+          if (wt === "light" || wt === "dark") document.documentElement.setAttribute("data-theme", wt); } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="mark">
+      <img src="img/bronson-b.png" width="48" height="48" alt="Bronson">
+      <div>
+        <div class="wordmark">Wheel Adapters <em>USA</em></div>
+        <span>design.wheeladaptersusa.com</span>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <button type="button" data-view="design" aria-pressed="true">New design</button>
+      <button type="button" data-view="list" aria-pressed="false">My designs <b>6</b></button>
+      <button type="button" data-view="admin" aria-pressed="false" class="admin-tab">Admin</button>
+      <button type="button" data-view="help" aria-pressed="false">Help</button>
+    </nav>
+    <div class="ruleset" id="rulestamp">Rule set v1.0 · draft</div>
+    <button type="button" class="themetog" id="themetog" aria-label="Switch theme"></button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<section id="view-list" hidden>
+  <div class="pipe-hd">
+    <h2>My designs</h2>
+    <p>Everything you have started or sent us. Drawings are rebuilt from your saved
+       specifications, so nothing goes stale.</p>
+  </div>
+  <div id="subs"></div>
+  <div class="notes">
+    <span class="note">Edits stay open 12 hours after you submit</span>
+    <span class="note">After that, a change needs re-approval and may add cost</span>
+  </div>
+</section>
+
+<section id="view-help" hidden>
+
+  <div class="help-hero">
+    <div>
+      <h2>Help</h2>
+      <p>How the designer works, what the checks mean, and what happens after you
+         send us a drawing.</p>
+    </div>
+    <button type="button" class="btn btn-primary" id="starttour">Take the tour</button>
+  </div>
+
+  <nav class="toc" aria-label="Help contents">
+    <a href="#h-start">Getting started</a>
+    <a href="#h-inputs">The eight measurements</a>
+    <a href="#h-views">2D, stack and 3D views</a>
+    <a href="#h-checks">Flags and blocks</a>
+    <a href="#h-price">Pricing</a>
+    <a href="#h-stages">After you submit</a>
+    <a href="#h-edit">Changing a design</a>
+    <a href="#h-admin">For our team</a>
+    <a href="#h-terms">Terms</a>
+  </nav>
+
+  <article class="help">
+
+    <h3 id="h-start">Getting started</h3>
+    <p>There are three ways to begin. <b>Popular trucks</b> fills in the common ones in a
+       single tap. <b>Find my vehicle</b> walks make, model and year range. <b>I know my
+       specs</b> skips straight to entering numbers.</p>
+    <p>Changed your mind? <b>Start over</b> (the yellow button under the form) clears everything
+       back to a fresh design after asking you to confirm.</p>
+    <p>Whichever you use, the measurements stay visible and editable. The lookup is a
+       starting point, not a guarantee &mdash; trim, drivetrain and dually axles all change
+       hub specs. Check the numbers against your actual hub before you submit.</p>
+
+    <h3 id="h-inputs">The eight measurements</h3>
+    <dl class="defs">
+      <dt>Hub bolt pattern</dt>
+      <dd>Number of studs on the vehicle hub and the circle they sit on, like 6x5.5.
+          Count the studs, then measure the circle.</dd>
+      <dt>Hub bore</dt>
+      <dd>Outside diameter of the centre hub the wheel slides over, in millimetres.</dd>
+      <dt>Vehicle stud thread</dt>
+      <dd>Thread on the studs already on your truck. This is what the adapter threads onto.</dd>
+      <dt>Wheel bolt pattern</dt>
+      <dd>Pattern of the wheel you are fitting. Usually in the wheel listing.</dd>
+      <dt>Wheel centre bore</dt>
+      <dd>Diameter of the hole in the back of the wheel, in millimetres.</dd>
+      <dt>Thickness</dt>
+      <dd>How far the adapter pushes the wheel out, measured face to face. Studs add
+          height on top of this.</dd>
+      <dt>Pressed stud thread</dt>
+      <dd>Thread on the new studs your wheel mounts to. It does not have to match the
+          vehicle side.</dd>
+      <dt>Quantity</dt>
+      <dd>Two per axle. Most orders are 2 or 4.</dd>
+    </dl>
+
+    <h3 id="h-views">2D, stack and 3D views</h3>
+    <p>The drawing panel has three views of the same part, switched with the buttons at its
+       top right. It opens in <b>3D CAM</b>; a device that cannot run 3D opens in 2D. All three are rebuilt from your eight numbers every time you change one
+       &mdash; there is no stored picture to go stale.</p>
+    <dl class="defs">
+      <dt>2D</dt>
+      <dd>The face of the adapter, to scale. Blue rings are the holes your vehicle studs pass
+          through; red dots are the new studs your wheel mounts to. The side profile shows the
+          thickness.</dd>
+      <dt>Stack</dt>
+      <dd>The whole setup in 3D: vehicle hub, then your adapter, then the wheel, with the lug
+          nuts where they sit. It is cut in half so you can see the studs, nuts and the
+          centring lip inside &mdash; untick <b>Cutaway</b> to see it whole. Press <b>Bolt it
+          together</b> to slide the parts into place. <b>SIDE</b>, <b>HUB SIDE</b> and
+          <b>WHEEL SIDE</b> jump to those angles. Only the adapter is drawn from your numbers;
+          the hub and wheel are generic. <b>2D section</b> switches to a flat, to-scale cut-through
+          drawing that shows how far the wheel moves out.</dd>
+      <dt>3D CAM</dt>
+      <dd>The finished part as a solid, the way a machinist sees it in CAM software: the bar
+          stock it is cut from, the machining operations in order, and the path each tool
+          takes. Drag to turn it, scroll or pinch to zoom, or use <b>ISO</b>, <b>TOP</b>,
+          <b>FRONT</b> and <b>G55</b> (the hub side, as the part sits for its second setup).
+          A two-piece adapter opens with its two halves pulled apart so you can see both;
+          <b>JOIN</b> puts them together and <b>SEPARATE</b> pulls them apart again.
+          The 3D view needs a reasonably recent phone or computer; if yours cannot run it, the
+          button is greyed out and the 2D drawing is exact.</dd>
+      <dt>Full-size 3D</dt>
+      <dd>Click the 3D view, or the &#x2922; button, to open it large. Click and drag to turn it,
+          the same as in the panel. Press <b>Hover spin</b> (or <kbd>Space</kbd>) and the part follows
+          your mouse with no button held &mdash; a full 360&deg; across the view; click the model or press
+          <kbd>Space</kbd> again to stop. On a phone, drag. Close with the button, <b>Esc</b>, or a tap
+          outside.</dd>
+      <dt>Backplot</dt>
+      <dd>Press <b>Play</b>, or drag the slider, to watch the tool run through the program.
+          The readout gives the tool position in X, Y and Z, the move, the tool and the
+          operation. Untick an operation in the list to hide it.</dd>
+    </dl>
+    <p>The toolpaths, tools, feeds and cycle time are an illustration generated from your
+       numbers, not the program we run. Our machinists program the real job in Mastercam or
+       SolidWorks after review.</p>
+    <p>The wheel studs are automatically turned to whatever angle leaves the most metal
+       between them and your vehicle's lug-nut holes.</p>
+    <p><b>One piece or two.</b> When your truck's bolt circle and your wheel's bolt circle are far
+       enough apart, the adapter is one solid piece. When they are too close, a lug-nut hole and a
+       wheel stud would run into each other, so we build it in two halves: the hub half holds your
+       vehicle's lug nuts, the wheel half holds the new studs, and the two never meet. The designer
+       works this out for you &mdash; the title block says which, and the 3D views show the two halves
+       in slightly different shades.</p>
+
+    <h3 id="h-checks">Flags and blocks</h3>
+    <p>Every change you make runs against our rule set, written by the people who machine
+       these parts. Two outcomes matter:</p>
+    <p><b class="k-block">Block</b> means we will not build it. Usually the geometry does not
+       leave enough material between the through-bolts and the pressed studs. Changing the
+       thickness will not fix a block &mdash; the specs have to change.</p>
+    <p><b class="k-flag">Flag</b> means it is probably fine but a person needs to look first.
+       Flagged designs go through instead of getting a price on the spot, and our team quotes
+       them by email.</p>
+    <p>Each check shows its rule number, like <code>R-201</code>. Quote that number if you
+       call us about it.</p>
+
+    <h3 id="h-price">Pricing</h3>
+    <p>Standard combinations price instantly, per pair, with free shipping in the USA.
+       Anything carrying a flag shows <b>Quote required</b> instead &mdash; we price those by
+       hand because they need a set of eyes on them first.</p>
+    <p>Price depends on lug count, thickness, and whether the adapter changes bolt pattern
+       or just spaces the wheel out.</p>
+
+    <h3 id="h-stages">After you submit</h3>
+    <ol class="stagelist">
+      <li><b>Draft</b> &mdash; the drawing built from your numbers. Nothing sent yet.</li>
+      <li><b>Submitted</b> &mdash; it reaches our office for review.</li>
+      <li><b>Under review</b> &mdash; checked for safety, design, production cost and time.</li>
+      <li><b>Quoted</b> &mdash; we create an invoice and email it to you.</li>
+      <li><b>Paid</b> &mdash; payment creates your order number.</li>
+      <li><b>Production</b> &mdash; a production order goes to the floor.</li>
+      <li><b>Quality control</b> &mdash; checked at the QC station.</li>
+      <li><b>Shipped</b> &mdash; tracking number and photographs of your parts.</li>
+    </ol>
+    <p>You get an email at every change.</p>
+    <p>Before you can submit, the Review step asks you to tick two boxes: that you have checked
+       the specs against your vehicle, and that you have looked over the 3D model. The small
+       <b>i</b> beside the second box opens the model full size.</p>
+
+    <h3 id="h-edit">Changing a design</h3>
+    <p>You have <b>12 hours</b> from submitting to change a design yourself. Open
+       <b>My designs</b> and the countdown is on the row. Inside that window, Edit loads it
+       back into the designer.</p>
+    <p>After 12 hours, or once we have quoted it, changes need re-approval and may add cost
+       &mdash; the longer a job sits, the longer it takes to fulfil. Use <b>Request a change</b>
+       and our team will pick it up.</p>
+    <p>An unsent draft has no time limit. It stays in your list until you submit or delete it.</p>
+
+    <h3 id="h-admin">For our team</h3>
+    <p>The <b>Admin</b> tab holds the rule set and the pricing formula. Rules can be switched
+       off, retuned, or moved between Block and Flag without a developer.</p>
+    <p>Changes stack up as unsaved edits and go live the moment you press Publish, which
+       increments the version and writes to the change log. The catalogue check beside the
+       pricing form shows live whether the formula still reproduces our published prices
+       &mdash; if a number turns red, stop.</p>
+    <p>Two people should review any rule change before it is published. These parts hold
+       wheels onto trucks.</p>
+
+    <h3 id="h-terms">Terms</h3>
+    <dl class="defs">
+      <dt>Bolt circle diameter</dt>
+      <dd>The circle the studs sit on. The 5.5 in 6x5.5 is this, in inches.</dd>
+      <dt>Hub centric</dt>
+      <dd>The wheel is carried by the centre bore rather than the studs. Preferred, and
+          quieter at speed.</dd>
+      <dt>Lug centric</dt>
+      <dd>The wheel is centred by the lug nuts alone. Works, but needs careful torquing.</dd>
+      <dt>Spacer vs adapter</dt>
+      <dd>A spacer keeps the same bolt pattern and only pushes the wheel out. An adapter
+          changes the pattern as well.</dd>
+      <dt>Two-piece adapter</dt>
+      <dd>An adapter made as two halves, used when the two bolt patterns are too close to fit in one
+          piece. The hub half takes the vehicle's lug nuts; the wheel half carries the new studs.</dd>
+      <dt>Clocking</dt>
+      <dd>The angle the wheel stud pattern is turned relative to the vehicle pattern. Chosen to
+          keep the two sets of holes as far apart as possible.</dd>
+      <dt>Section view</dt>
+      <dd>A drawing of the part as if sliced through its centre, so you can see inside it.
+          Cut material is shown hatched.</dd>
+      <dt>Toolpath</dt>
+      <dd>The route a cutting tool follows. Solid lines are cutting moves; dashed lines are
+          rapid moves through the air between cuts.</dd>
+      <dt>G54 / G55</dt>
+      <dd>Work offsets &mdash; where the machine measures zero from. G54 is the first setup,
+          wheel side up; G55 is the second, flipped over with the hub side up.</dd>
+      <dt>6061-T6 billet</dt>
+      <dd>The aluminium we cut these from. Solid extruded stock, not cast.</dd>
+    </dl>
+
+  </article>
+</section>
+
+<section id="view-admin" hidden>
+
+  <div class="verbar">
+    <div class="verbar-l">
+      <b id="verlabel">Rule set v1.0</b>
+      <span id="verstate">Live &middot; no unsaved changes</span>
+    </div>
+    <button type="button" class="btn-sm" id="discard" hidden>Discard</button>
+    <button type="button" class="btn-sm primary" id="publish" disabled>Publish</button>
+  </div>
+
+  <div class="admin-note">
+    Changes here take effect for every customer the moment you publish. Two people
+    should review a rule change before it goes live.
+  </div>
+
+  <div class="adm-grid">
+    <section class="panel">
+      <div class="panel-hd">
+        <h2>Validation rules</h2>
+        <p>What the designer will and will not let a customer submit. Blocks stop the
+           order. Flags let it through but route it to your team for a quote.</p>
+      </div>
+      <div class="panel-bd"><div id="rulelist"></div></div>
+    </section>
+
+    <div class="adm-side">
+      <section class="panel">
+        <div class="panel-hd"><h2>Pricing</h2>
+          <p>Price per pair, before thickness and conversion.</p></div>
+        <div class="panel-bd"><div id="priceform"></div></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-hd"><h2>Check against the catalogue</h2>
+          <p>Live result of the formula above.</p></div>
+        <div class="panel-bd"><div id="pricecheck"></div></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="pipe">
+    <div class="pipe-hd"><h2>Change log</h2>
+      <p>Every publish, who did it and when. Append only.</p></div>
+    <div id="audit"></div>
+  </section>
+
+</section>
+
+<div id="view-design">
+
+  <div id="editbar"></div>
+
+  <nav class="rail" id="rail" aria-label="Design steps"></nav>
+
+  <div class="cols">
+
+    <section class="panel" aria-labelledby="steptitle">
+      <div class="panel-hd">
+        <h2 id="steptitle">Vehicle side</h2>
+        <p id="stepblurb">What the adapter bolts onto. Read these off the hub, not off the wheel.</p>
+      </div>
+      <div class="panel-bd">
+        <div id="alertzone" aria-live="assertive"></div>
+        <div class="fields" id="fields"></div>
+        <div class="checks" id="checks"></div>
+        <div id="reviewzone" hidden>
+          <div class="legalbox">
+            <p id="legaltext"></p>
+            <div class="legalnote">
+              <span>&#9888;</span>
+              <span>Draft language supplied by the shop. Attorney review required before this goes live.</span>
+            </div>
+          </div>
+          <label class="accept" for="accept">
+            <input type="checkbox" id="accept">
+            <span>I have verified these specifications against my vehicle and I accept the terms above.</span>
+          </label>
+          <div class="accept-row">
+            <label class="accept" for="reviewed3d">
+              <input type="checkbox" id="reviewed3d">
+              <span id="rev3dtxt">I have reviewed the 3D model of my adapter and it shows what I want built.</span>
+            </label>
+            <!-- outside the label, so opening the model never ticks the box for them -->
+            <button type="button" class="infobtn" id="open3d" aria-label="Open the 3D model full size"
+                    title="Open the 3D model">i</button>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" id="back" type="button">Back</button>
+          <button class="btn btn-primary" id="next" type="button">Continue</button>
+          <span class="why" id="why"></span>
+          <span class="saved mono" id="saved"></span>
+          <span class="restart">
+            <button class="btn btn-warn" id="startover" type="button"><span class="ic" aria-hidden="true">&#8634;</span>Start over</button>
+            <span class="restart-ask" id="startask" role="group" aria-label="Confirm start over" hidden>
+              <span>Clear this design and start fresh?</span>
+              <button class="btn btn-warn" id="startyes" type="button">Yes, start over</button>
+              <button class="btn btn-ghost" id="startno" type="button">Keep it</button>
+            </span>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel draw" aria-label="Live drawing">
+      <div class="draw-hd">
+        <h2>Drawing</h2>
+        <span class="pc2" id="pc2" hidden>2-PIECE</span>
+        <span class="rev mono" id="rev">REV A · DRAFT</span>
+        <div class="viewtog" role="group" aria-label="Drawing view">
+          <button type="button" id="v2d" aria-pressed="false">2D</button>
+          <button type="button" id="vstack" aria-pressed="false">STACK</button>
+          <button type="button" id="v3d" aria-pressed="false">3D CAM</button>
+        </div>
+      </div>
+      <div class="hlcap" id="hlcap" aria-live="polite" hidden></div>
+      <div class="canvas" id="canvas2d"><div id="face"></div></div>
+      <div class="canvas" id="stack" hidden></div>
+      <div class="cam" id="cam" hidden></div>
+      <div class="legend">
+        <span><i style="background:var(--cyan)"></i>Vehicle studs pass through</span>
+        <span><i style="background:var(--accent)"></i>Pressed wheel studs</span>
+        <span id="lgjoin" hidden><i style="background:#7b5cd6"></i>Joins the halves (concept)</span>
+      </div>
+      <div class="tb">
+        <div class="tb-grid" id="titleblock"></div>
+      </div>
+      <div class="price">
+        <div class="amt" id="amt">&mdash;</div>
+        <div class="per" id="per"><b>Pricing</b>&nbsp;</div>
+      </div>
+    </aside>
+
+  </div>
+
+  <section class="pipe">
+    <div class="pipe-hd">
+      <h2>What happens after you submit</h2>
+      <p>Eight stages. You get an email at every change.</p>
+    </div>
+    <div class="stages" id="stages"></div>
+    <div class="notes">
+      <span class="note">Edits allowed for 12 hours after submit</span>
+      <span class="note">After approval, changes need re-approval and may add cost</span>
+      <span class="note">Review by Design &amp; Sales &mdash; CA and OR</span>
+      <span class="note">Drafts saved automatically, even unfinished</span>
+    </div>
+  </section>
+
+</div>
+
+  <p class="foot">
+    Prototype for internal review. The eight inputs, the validation rules and the price formula are
+    placeholders standing in for the real ones &mdash; every number here needs sign-off from the shop
+    before anyone sees it. Geometry is drawn to scale from the values entered.
+  </p>
+
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/rules.js"></script>
+<script src="js/pricing.js"></script>
+<script src="js/geometry.js"></script>
+<script src="js/render3d.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/events.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
