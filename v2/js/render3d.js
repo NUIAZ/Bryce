@@ -550,9 +550,9 @@ var CAM_FS_SOLID = [
 var CAM_VS_LINE = [
   "#version 300 es",
   "in vec3 aP; in vec4 aC; in vec2 aD; in float aH;",
-  "uniform mat4 uVP; uniform float uSep;",
+  "uniform mat4 uVP; uniform float uSep, uLift;",
   "out vec4 vC; out vec2 vD;",
-  "void main(){ gl_Position = uVP * vec4(aP + vec3(0.0, 0.0, uSep * aH), 1.0);",
+  "void main(){ gl_Position = uVP * vec4(aP + vec3(0.0, 0.0, uSep * aH + uLift), 1.0);",
   "             gl_Position.z -= 0.0008 * gl_Position.w; vC = aC; vD = aD; }"
 ].join("\n");
 
@@ -890,13 +890,16 @@ function camBuild(){
     });
   }
 
-  /* grid under the part, 0.5" minor / 1" major */
+  /* grid under the part, 0.5" minor / 1" major — its vertex range is kept so the
+     on-edge showcase can draw the floor alone, dropped to the part's rim */
+  c.gridStart = v.length / 10;
   var ink = hexRgb(cssVar("--steel")), zg = -g.T - g.so - 0.01, E = Math.ceil(g.R + g.so + 1), k;
   for (k = -E * 2; k <= E * 2; k++){
     var gc = ink.concat([k % 2 === 0 ? 0.32 : 0.13]);
     seg([k / 2, -E, zg], [k / 2, E, zg], gc, 0, -1, -1);
     seg([-E, k / 2, zg], [E, k / 2, zg], gc, 0, -1, -1);
   }
+  c.gridCount = v.length / 10 - c.gridStart;
   /* stock envelope */
   if (c.showStock){
     var Rs = g.R + g.so, zt = g.lipH + g.so, zb = -g.T - g.so, sc = ink.concat([0.6]), a0, a1;
@@ -1069,7 +1072,8 @@ function camDraw(){
   var es = c.sep * c.sep * (3 - 2 * c.sep);
   var sepOff = !stk && !g.one ? CAM_SEP_IN * es : 0;          /* CAM view: wheel half lifted */
   var tgt = stk ? [(-g.T - 3.3 + 4.5) / 2, 0, 0]
-          : rot ? [(g.lipH - g.T + sepOff) / 2, 0, 0] : [0, 0, (g.lipH - g.T + sepOff) / 2];
+          : rot ? [(g.lipH - g.T + sepOff) / 2, 0, g.R * 0.32]   /* aim a little high: the part sits lower */
+          : [0, 0, (g.lipH - g.T + sepOff) / 2];
   var dist = c.dist * Math.max(1, h / w);            /* keep the part in frame when tall and narrow */
   var eye = [tgt[0] + dist * Math.cos(c.pitch) * Math.cos(c.yaw),
              tgt[1] + dist * Math.cos(c.pitch) * Math.sin(c.yaw),
@@ -1157,11 +1161,17 @@ function camDraw(){
   gl.uniform1f(c.pl.u.uProg, done ? 2 : c.t / (c.total || 1));
   gl.uniform1f(c.pl.u.uSep, sepOff);
   gl.bindVertexArray(c.vaoL);
-  if (!rot){                                   /* the floor grid only makes sense with the part lying flat */
+  if (!rot){
+    gl.uniform1f(c.pl.u.uLift, 0);
     gl.depthFunc(gl.GREATER); gl.uniform1f(c.pl.u.uHide, 0.12);
     gl.drawArrays(gl.LINES, 0, c.nLines);
     gl.depthFunc(gl.LEQUAL); gl.uniform1f(c.pl.u.uHide, 1);
     gl.drawArrays(gl.LINES, 0, c.nLines);
+  } else if (c.gridCount){                     /* part on its edge: just the floor, under its rim */
+    gl.uniform1f(c.pl.u.uLift, (-g.R - 0.02) - (-g.T - g.so - 0.01));
+    gl.depthFunc(gl.LEQUAL); gl.uniform1f(c.pl.u.uHide, 1);
+    gl.drawArrays(gl.LINES, c.gridStart, c.gridCount);
+    gl.uniform1f(c.pl.u.uLift, 0);
   }
   gl.bindVertexArray(null);
 

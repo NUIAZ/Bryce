@@ -114,7 +114,7 @@ function showSlide(i, now){
     camUpdate(DEMO);
     camBuild();
     if (stk){ camView("s-iso"); c.cut = true; c.ex = c.exT = 1; }
-    else if (s.style === "side"){ camView("iso"); c.pitch = 0.18; c.yaw = -1.12; c.dist *= 1.5; c.sep = c.sepT = 0; }
+    else if (s.style === "side"){ camView("iso"); c.pitch = 0.3; c.yaw = -1.12;      /* same distance as Spin */ c.sep = c.sepT = 0; }
     else { camView("iso"); c.pitch = 0.42; c.yaw = -0.6; c.sep = c.sepT = 0; }
     c.shT = 0; c.shYaw0 = c.yaw; c.showHold = 0;
     c.showStyle = REDUCED ? "still" : s.style;
