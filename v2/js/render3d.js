@@ -955,7 +955,7 @@ function camFrame(now){
     c.lastSh = now;
     var held = c.dragging || now < (c.showHold || 0);
     if (!held){
-      if (c.showHold){ c.shYaw0 = c.yaw - (c.showStyle === "turn" ? camShowTurn(c.shT) : 0); c.showHold = 0; }
+      if (c.showHold){ c.shYaw0 = c.yaw; c.showHold = 0; }
       c.shT = (c.shT || 0) + dsh;
       if (c.showStyle === "spin"){                     /* the original: turn, join, separate */
         c.yaw -= dsh * 0.00026;
@@ -964,10 +964,9 @@ function camFrame(now){
         c.yaw = c.shYaw0 + 0.3 * Math.sin(c.shT * 0.00035);
         var ex = Math.floor(c.shT / 3600) % 2 ? 0 : 1;
         if (c.exT !== ex){ c.exT = ex; stackExploded = !!ex; }
-      } else if (c.showStyle === "turn"){              /* 90° turn, open, close, back */
-        c.shT %= SHOW_LOOP;
-        c.yaw = c.shYaw0 + camShowTurn(c.shT);
-        c.sepT = c.shT > 4400 && c.shT < 7000 ? 1 : 0;
+      } else if (c.showStyle === "side"){              /* side on: the halves part and close */
+        c.yaw = c.shYaw0 + 0.22 * Math.sin(c.shT * 0.0003);
+        c.sepT = Math.floor(c.shT / 3800) % 2 ? 1 : 0;
       }
     }
     if (c.showStyle !== "still") camKick();

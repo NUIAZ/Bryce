@@ -91,11 +91,11 @@ function enterHome(){
 /* ---------------- landing carousel ----------------
    One model, three ways to see it, advancing on their own:
    spin (the original turn, joining and separating) · on the truck (hub, adapter and
-   wheel bolting together) · open & close (a 90° turn, the halves part and close). */
+   wheel bolting together) · open & close (side on, the halves part and close). */
 var SHOW_SLIDES = [
   {style:"spin",  label:"Spin",          tag:"5x5.5&Prime; &rarr; 6x5.5&Prime; two-piece adapter"},
   {style:"stack", label:"On the truck",  tag:"How it bolts between hub and wheel"},
-  {style:"turn",  label:"Open &amp; close", tag:"The two halves and the screws that join them"}
+  {style:"side",  label:"Open &amp; close", tag:"Side on: the two halves and the screws that join them"}
 ];
 var SLIDE_MS = 12000, slideAt = 0, slideTimer = 0, slidePaused = false;
 var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -114,6 +114,7 @@ function showSlide(i, now){
     camUpdate(DEMO);
     camBuild();
     if (stk){ camView("s-iso"); c.cut = true; c.ex = c.exT = 1; }
+    else if (s.style === "side"){ camView("front"); c.pitch = 0.06; c.yaw = -1.25; c.dist *= 0.92; c.sep = c.sepT = 0; }
     else { camView("iso"); c.pitch = 0.42; c.yaw = -0.6; c.sep = c.sepT = 0; }
     c.shT = 0; c.shYaw0 = c.yaw; c.showHold = 0;
     c.showStyle = REDUCED ? "still" : s.style;
