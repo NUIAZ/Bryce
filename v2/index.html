@@ -23,8 +23,8 @@
     [hidden] { display: none !important; }
   </style>
   <link rel="stylesheet" href="css/site.css">
+  <link rel="stylesheet" href="css/shell.css">
 </head>
-<body>
 <body>
 
 <header class="sh">
@@ -32,41 +32,156 @@
     <button type="button" class="sh-burger" id="shburger" aria-label="Menu" aria-expanded="false">
       <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><path d="M1 1h20M1 8h20M1 15h20" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
     </button>
-    <a class="sh-logo" href="https://customwheeladapters.com/"><img src="img/bronson-b.png" width="50" height="50" alt="Custom Wheel Adapters"></a>
-    <nav class="sh-nav" id="shnav" aria-label="Store"></nav>
-    <div class="sh-icons">
-      <a href="https://customwheeladapters.com/search" aria-label="Search">
-        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="9.5" cy="9.5" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M14.6 14.6l5.4 5.4" stroke="currentColor" stroke-width="1.6"/></svg>
-      </a>
-      <a class="sh-acct" href="https://customwheeladapters.com/account/login" aria-label="Log in">
-        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 21c.8-4.4 4.2-7 8.5-7s7.7 2.6 8.5 7" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-      </a>
-      <a href="https://customwheeladapters.com/cart" aria-label="Cart">
-        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 6.5h16l-1.2 12.2a1.6 1.6 0 0 1-1.6 1.3H5.8a1.6 1.6 0 0 1-1.6-1.3z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7.5 9V5.5a3.5 3.5 0 0 1 7 0V9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-      </a>
-    </div>
+    <a class="sh-logo" href="https://customwheeladapters.com/" title="Custom Wheel Adapters — main site"><img src="img/bronson-b.png" width="50" height="50" alt="Custom Wheel Adapters"></a>
+    <nav class="sh-nav bnav" aria-label="Builder">
+      <a href="#/" data-nav="home">New design</a>
+      <a href="#/designs" data-nav="list">My designs <b class="cnt">6</b></a>
+      <a href="#/help" data-nav="help">Help</a>
+    </nav>
+    <a class="sh-main" href="https://customwheeladapters.com/">Main Site
+      <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 1.5h6.5V8M10.3 1.7L1.5 10.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
   </div>
-  <div class="sh-drawer" id="shdrawer" hidden></div>
+  <nav class="sh-drawer" id="shdrawer" aria-label="Builder" hidden>
+    <a href="#/" data-nav="home">New design</a>
+    <a href="#/designs" data-nav="list">My designs</a>
+    <a href="#/help" data-nav="help">Help</a>
+    <a href="https://customwheeladapters.com/">Main Site &#8599;</a>
+  </nav>
 </header>
 
-<div class="pagehead">
-  <div class="pagehead-in">
-    <h1>Wheel Adapter Builder</h1>
-    <p class="lede">Design your adapter from your own measurements, see it to scale and in 3D, and get a price or a quote.</p>
-    <div class="subnav">
-      <nav class="tabs" aria-label="Builder sections">
-        <button type="button" data-view="design" aria-pressed="true">New design</button>
-        <button type="button" data-view="list" aria-pressed="false">My designs <b>6</b></button>
-        <button type="button" data-view="admin" aria-pressed="false" class="admin-tab">Admin</button>
-        <button type="button" data-view="help" aria-pressed="false">Help</button>
-      </nav>
-      <div class="ruleset" id="rulestamp">Rule set v1.0 · draft</div>
+<main>
+
+<!-- ============ NEW DESIGN: showcase + categories ============ -->
+<section id="view-home" class="home" hidden>
+  <div class="hero">
+    <div class="hero-stage" id="homestage">
+      <p class="hero-tag"><b>Popular build</b> 5x5.5&Prime; &rarr; 6x5.5&Prime; two-piece adapter</p>
+    </div>
+    <div class="hero-copy">
+      <p class="kicker">Wheel Adapter Builder</p>
+      <h1>Design it. See it in 3D. We machine it.</h1>
+      <p class="lede">Pick what you need, enter a few measurements, and watch your adapter take shape as you go.
+        Standard builds price on the spot; anything unusual goes to our team for a quote.</p>
+      <p class="resume" id="resume" hidden></p>
     </div>
   </div>
-</div>
+
+  <div class="cats" role="list">
+    <a class="cat" role="listitem" href="#/build/adapter" data-cat="adapter">
+      <svg class="cat-ic" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="32" r="9" fill="none" stroke="currentColor" stroke-width="3"/><g fill="currentColor"><circle cx="32" cy="13" r="3.2"/><circle cx="50" cy="27" r="3.2"/><circle cx="43" cy="48" r="3.2"/><circle cx="21" cy="48" r="3.2"/><circle cx="14" cy="27" r="3.2"/></g><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="45" cy="17" r="3"/><circle cx="51" cy="40" r="3"/><circle cx="32" cy="53" r="3"/><circle cx="13" cy="40" r="3"/><circle cx="19" cy="17" r="3"/></g></svg>
+      <h2>Adapters</h2>
+      <p>Fit wheels with a different bolt pattern &mdash; including a different number of lugs. We work out one-piece or two-piece for you.</p>
+      <span class="cat-go">Build an adapter &rarr;</span>
+    </a>
+    <a class="cat" role="listitem" href="#/build/spacer" data-cat="spacer">
+      <svg class="cat-ic" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="10" width="14" height="44" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><rect x="28" y="10" width="10" height="44" rx="2" fill="currentColor" opacity=".25" stroke="currentColor" stroke-width="3"/><rect x="42" y="6" width="12" height="52" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><path d="M4 32h56" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/></svg>
+      <h2>Spacers</h2>
+      <p>Same bolt pattern, more room. Push the wheel out for clearance or stance, hub-centric to keep it true.</p>
+      <span class="cat-go">Build a spacer &rarr;</span>
+    </a>
+    <a class="cat" role="listitem" href="#/build/custom" data-cat="custom">
+      <svg class="cat-ic" viewBox="0 0 64 64" aria-hidden="true"><path d="M14 50l9-2 25-25-7-7-25 25z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M37 20l7 7" stroke="currentColor" stroke-width="3"/><circle cx="46" cy="46" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M46 41v10M41 46h10" stroke="currentColor" stroke-width="2.5"/></svg>
+      <h2>Custom</h2>
+      <p>Something unusual &mdash; heavy duty, dually, semi, odd patterns or your own drawing. Build it here and our team quotes it.</p>
+      <span class="cat-go">Start a custom build &rarr;</span>
+    </a>
+  </div>
+</section>
+
+<!-- ============ BUILDER: 3D stage + wizard ============ -->
+<section id="view-design" class="builder" hidden>
+  <div class="bstage draw" aria-label="Your adapter">
+    <div class="bstage-bar">
+      <span class="catchip" id="catchip">Adapter</span>
+      <span class="pc2" id="pc2" hidden>2-PIECE</span>
+      <span class="rev mono" id="rev">REV A &middot; DRAFT</span>
+      <div class="viewtog" role="group" aria-label="Drawing view">
+        <button type="button" id="v3d" aria-pressed="false">3D</button>
+        <button type="button" id="vstack" aria-pressed="false">On the truck</button>
+        <button type="button" id="v2d" aria-pressed="false">2D drawing</button>
+      </div>
+    </div>
+    <div class="hlcap" id="hlcap" aria-live="polite" hidden></div>
+    <div class="canvas" id="canvas2d"><div id="face"></div></div>
+    <div class="canvas" id="stack" hidden></div>
+    <div class="cam" id="cam" hidden></div>
+    <div class="legend">
+      <span><i style="background:var(--cyan)"></i>Vehicle studs pass through</span>
+      <span><i style="background:var(--stud)"></i>Pressed wheel studs</span>
+      <span id="lgjoin" hidden><i style="background:#7b5cd6"></i>Joins the halves (concept)</span>
+    </div>
+  </div>
+
+  <section class="wiz" id="wizard" aria-labelledby="steptitle">
+    <div class="wiz-top">
+      <nav class="rail" id="rail" aria-label="Design steps"></nav>
+      <button type="button" class="wiz-min" id="wizmin" title="Hide the steps and explore the model" aria-label="Explore model">
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 9l5-5 5 5" fill="none" stroke="currentColor" stroke-width="1.8" transform="rotate(180 7 7)"/></svg>
+        <span class="wm-t">Explore model</span></button>
+    </div>
+    <div id="editbar"></div>
+    <div class="wiz-hd">
+      <h2 id="steptitle">Vehicle side</h2>
+      <p id="stepblurb"></p>
+    </div>
+    <div class="wiz-bd">
+      <div id="alertzone" aria-live="assertive"></div>
+      <div class="fields" id="fields"></div>
+      <div id="reviewzone" hidden>
+          <div class="tb"><div class="tb-grid" id="titleblock"></div></div>
+          <div class="legalbox">
+            <p id="legaltext"></p>
+            <div class="legalnote">
+              <span>&#9888;</span>
+              <span>Draft language supplied by the shop. Attorney review required before this goes live.</span>
+            </div>
+          </div>
+          <label class="accept" for="accept">
+            <input type="checkbox" id="accept">
+            <span>I have verified these specifications against my vehicle and I accept the terms above.</span>
+          </label>
+          <div class="accept-row">
+            <label class="accept" for="reviewed3d">
+              <input type="checkbox" id="reviewed3d">
+              <span id="rev3dtxt">I have reviewed the 3D model of my adapter and it shows what I want built.</span>
+            </label>
+            <!-- outside the label, so opening the model never ticks the box for them -->
+            <button type="button" class="infobtn" id="open3d" aria-label="Open the 3D model full size"
+                    title="Open the 3D model">i</button>
+          </div>
+        </div>
+      <div class="checks" id="checks"></div>
+    </div>
+    <div class="wiz-ft">
+      <div class="price">
+        <div class="amt" id="amt">&mdash;</div>
+        <div class="per" id="per"><b>Pricing</b>&nbsp;</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost" id="back" type="button">Back</button>
+        <button class="btn btn-primary" id="next" type="button">Continue</button>
+        <span class="why" id="why"></span>
+        <span class="saved mono" id="saved"></span>
+        <span class="restart">
+          <button class="btn btn-warn" id="startover" type="button"><span class="ic" aria-hidden="true">&#8634;</span>Start over</button>
+          <span class="restart-ask" id="startask" role="group" aria-label="Confirm start over" hidden>
+            <span>Clear this design and start fresh?</span>
+            <button class="btn btn-warn" id="startyes" type="button">Yes, start over</button>
+            <button class="btn btn-ghost" id="startno" type="button">Keep it</button>
+          </span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <div class="dock" id="dock" role="status" hidden>
+    <span class="dock-ic" aria-hidden="true">&#10003;</span>
+    <div class="dock-txt"><b id="docktitle"></b><span id="docksub"></span></div>
+    <button type="button" class="btn btn-primary" id="docknext">Continue</button>
+  </div>
+</section>
 
 <div class="wrap">
-
 <section id="view-list" hidden>
   <div class="pipe-hd">
     <h2>My designs</h2>
@@ -273,9 +388,24 @@
     </dl>
 
   </article>
+
+  <section class="pipe">
+    <div class="pipe-hd">
+      <h2>What happens after you submit</h2>
+      <p>Eight stages. You get an email at every change.</p>
+    </div>
+    <div class="stages" id="stages"></div>
+    <div class="notes">
+      <span class="note">Edits allowed for 12 hours after submit</span>
+      <span class="note">After approval, changes need re-approval and may add cost</span>
+      <span class="note">Review by Design &amp; Sales &mdash; CA and OR</span>
+      <span class="note">Drafts saved automatically, even unfinished</span>
+    </div>
+  </section>
 </section>
 
 <section id="view-admin" hidden>
+  <p class="admin-stamp">Staff only &middot; <span id="rulestamp">Rule set v1.0 &middot; draft</span></p>
 
   <div class="verbar">
     <div class="verbar-l">
@@ -324,117 +454,9 @@
 
 </section>
 
-<div id="view-design">
-
-  <div id="editbar"></div>
-
-  <nav class="rail" id="rail" aria-label="Design steps"></nav>
-
-  <div class="cols">
-
-    <section class="panel" aria-labelledby="steptitle">
-      <div class="panel-hd">
-        <h2 id="steptitle">Vehicle side</h2>
-        <p id="stepblurb">What the adapter bolts onto. Read these off the hub, not off the wheel.</p>
-      </div>
-      <div class="panel-bd">
-        <div id="alertzone" aria-live="assertive"></div>
-        <div class="fields" id="fields"></div>
-        <div class="checks" id="checks"></div>
-        <div id="reviewzone" hidden>
-          <div class="legalbox">
-            <p id="legaltext"></p>
-            <div class="legalnote">
-              <span>&#9888;</span>
-              <span>Draft language supplied by the shop. Attorney review required before this goes live.</span>
-            </div>
-          </div>
-          <label class="accept" for="accept">
-            <input type="checkbox" id="accept">
-            <span>I have verified these specifications against my vehicle and I accept the terms above.</span>
-          </label>
-          <div class="accept-row">
-            <label class="accept" for="reviewed3d">
-              <input type="checkbox" id="reviewed3d">
-              <span id="rev3dtxt">I have reviewed the 3D model of my adapter and it shows what I want built.</span>
-            </label>
-            <!-- outside the label, so opening the model never ticks the box for them -->
-            <button type="button" class="infobtn" id="open3d" aria-label="Open the 3D model full size"
-                    title="Open the 3D model">i</button>
-          </div>
-        </div>
-        <div class="actions">
-          <button class="btn btn-ghost" id="back" type="button">Back</button>
-          <button class="btn btn-primary" id="next" type="button">Continue</button>
-          <span class="why" id="why"></span>
-          <span class="saved mono" id="saved"></span>
-          <span class="restart">
-            <button class="btn btn-warn" id="startover" type="button"><span class="ic" aria-hidden="true">&#8634;</span>Start over</button>
-            <span class="restart-ask" id="startask" role="group" aria-label="Confirm start over" hidden>
-              <span>Clear this design and start fresh?</span>
-              <button class="btn btn-warn" id="startyes" type="button">Yes, start over</button>
-              <button class="btn btn-ghost" id="startno" type="button">Keep it</button>
-            </span>
-          </span>
-        </div>
-      </div>
-    </section>
-
-    <aside class="panel draw" aria-label="Live drawing">
-      <div class="draw-hd">
-        <h2>Drawing</h2>
-        <span class="pc2" id="pc2" hidden>2-PIECE</span>
-        <span class="rev mono" id="rev">REV A · DRAFT</span>
-        <div class="viewtog" role="group" aria-label="Drawing view">
-          <button type="button" id="v2d" aria-pressed="false">2D</button>
-          <button type="button" id="vstack" aria-pressed="false">STACK</button>
-          <button type="button" id="v3d" aria-pressed="false">3D CAM</button>
-        </div>
-      </div>
-      <div class="hlcap" id="hlcap" aria-live="polite" hidden></div>
-      <div class="canvas" id="canvas2d"><div id="face"></div></div>
-      <div class="canvas" id="stack" hidden></div>
-      <div class="cam" id="cam" hidden></div>
-      <div class="legend">
-        <span><i style="background:var(--cyan)"></i>Vehicle studs pass through</span>
-        <span><i style="background:var(--stud)"></i>Pressed wheel studs</span>
-        <span id="lgjoin" hidden><i style="background:#7b5cd6"></i>Joins the halves (concept)</span>
-      </div>
-      <div class="tb">
-        <div class="tb-grid" id="titleblock"></div>
-      </div>
-      <div class="price">
-        <div class="amt" id="amt">&mdash;</div>
-        <div class="per" id="per"><b>Pricing</b>&nbsp;</div>
-      </div>
-    </aside>
-
-  </div>
-
-  <section class="pipe">
-    <div class="pipe-hd">
-      <h2>What happens after you submit</h2>
-      <p>Eight stages. You get an email at every change.</p>
-    </div>
-    <div class="stages" id="stages"></div>
-    <div class="notes">
-      <span class="note">Edits allowed for 12 hours after submit</span>
-      <span class="note">After approval, changes need re-approval and may add cost</span>
-      <span class="note">Review by Design &amp; Sales &mdash; CA and OR</span>
-      <span class="note">Drafts saved automatically, even unfinished</span>
-    </div>
-  </section>
-
 </div>
 
-  <p class="foot">
-    Prototype for internal review. The eight inputs, the validation rules and the price formula are
-    placeholders standing in for the real ones &mdash; every number here needs sign-off from the shop
-    before anyone sees it. Geometry is drawn to scale from the values entered.
-  </p>
-
-</div>
-
+</main>
 
 <footer class="sf">
   <div class="sf-in">
@@ -484,6 +506,7 @@
 <script src="js/render3d.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/events.js"></script>
+<script src="js/shell.js"></script>
 <script src="js/app.js"></script>
 
 </body>

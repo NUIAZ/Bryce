@@ -106,6 +106,12 @@ function renderFields(){
     h += fieldNum("hubBore", "Hub bore (mm)", "Outside diameter of the centre hub.", "0.1");
     h += fieldSelect("vehicleThread", "Vehicle stud thread", "What threads onto the car's studs.", THREADS);
   } else if (step === 1){
+    if (design.cat === "spacer"){
+      /* a spacer keeps the hub's pattern on both faces */
+      h += '<div class="f full"><div class="filled"><span class="ic">&#10003;</span><div><b>Bolt pattern: ' +
+        PATTERNS[design.hubPattern].label + " on both sides</b><p>A spacer keeps your vehicle's pattern and " +
+        "moves the wheel out. Need a different pattern? Choose Adapters instead.</p></div></div></div>";
+    } else
     h += fieldSelect("wheelPattern", "Wheel bolt pattern", "Pattern of the wheel you are fitting.", PATTERNS);
     h += fieldNum("wheelBore", "Wheel centre bore (mm)", "Centre hole in the back of the wheel.", "0.1");
   } else if (step === 2){
@@ -121,6 +127,13 @@ function renderFields(){
            return '<button type="button" data-qty="' + q + '" aria-pressed="' +
              (design.qty === +q) + '">' + q + ' pieces</button>';
          }).join('') + '</div><span class="hint">Two per axle.</span></div>';
+    if (design.cat === "custom"){
+      h += '<div class="f full"><label for="notes">Tell us about the build</label>' +
+        '<textarea id="notes" data-key="notes" rows="4" placeholder="Vehicle, wheels, what it is for, ' +
+        'anything unusual — heavy duty, dually, semi, a drawing you can send…">' +
+        (design.notes ? design.notes.replace(/</g, "&lt;") : "") + "</textarea>" +
+        '<span class="hint">Custom builds are quoted by our team. We reply by email.</span></div>';
+    }
   }
   el("fields").innerHTML = h;
 }
@@ -398,8 +411,11 @@ function renderRail(){
 /* skipFields=true updates the drawing, checks and price without rebuilding the
    inputs — so typing in a number field does not blow away focus or the caret. */
 function render(skipFields){
+  if (window.syncCategory) syncCategory();
   var issues = validate(design);
   var p = priceOf(design, issues);
+  /* custom builds always go to the team for a quote */
+  if (design.cat === "custom" && p.mode !== "blocked") p = {mode:"quote"};
   renderRail();
   el("steptitle").textContent = STEPS[step].title;
   el("stepblurb").textContent = STEPS[step].blurb;
@@ -431,7 +447,7 @@ function render(skipFields){
     el("open3d").setAttribute("aria-label", "Show the drawing"); el("open3d").title = "Show the drawing";
   }
   el("face").innerHTML = faceSvg(design);
-  if (cam3d.on) camUpdate(design);
+  if (cam3d.on && view !== "home") camUpdate(design);     /* the landing page shows the showcase */
   if (drawView === "stack" && !cam3d.on) renderStack();
   renderTitleBlock(design, issues);
   renderPrice(p);

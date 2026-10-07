@@ -210,7 +210,9 @@ document.addEventListener("click", function(e){
       stepsPassed[step] = true;
       step++;
       railGlow = {i:step, at:Date.now()};
-      render(); window.scrollTo({top:0, behavior:"smooth"});
+      render();
+      /* v2: tuck the wizard away so they can look at what the step added */
+      if (window.onStepDone) onStepDone();
     }
     else {
       var d = "WA-" + String(Math.floor(Math.random() * 9000) + 1000);

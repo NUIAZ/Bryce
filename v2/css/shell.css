@@ -1,0 +1,163 @@
+/* ==========================================================
+   v2 SHELL — header menu, landing showcase + categories, and the
+   builder (3D stage with the wizard card over it). Loaded after site.css.
+   Store look: navy #0e1b4d, buttons #4770db, page #eff0f5.
+   ========================================================== */
+
+/* ---------- header: the builder's own menu, store styling ---------- */
+.bnav{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.bnav a{position:relative;padding:12px 14px;font-size:15px;letter-spacing:.04em;color:rgba(255,255,255,.75);
+  text-decoration:none;white-space:nowrap}
+.bnav a:hover{color:#fff;text-decoration:underline;text-underline-offset:5px}
+.bnav a[aria-current="page"]{color:#fff;text-decoration:underline;text-underline-offset:5px}
+.bnav .cnt{font-family:var(--f-mono);font-size:11px;font-weight:500;color:#fff;background:rgba(255,255,255,.16);
+  border-radius:999px;padding:1px 7px;margin-left:4px;text-decoration:none}
+.sh-main{display:inline-flex;align-items:center;gap:7px;margin-left:auto;padding:9px 16px;border-radius:4px;
+  border:1px solid rgba(255,255,255,.4);color:#fff;text-decoration:none;font-size:14.5px;letter-spacing:.04em;white-space:nowrap}
+.sh-main:hover{background:#fff;color:var(--navy)}
+.sh-drawer a{display:block;padding:13px 6px;color:#fff;text-decoration:none;font-size:16px;letter-spacing:.04em;
+  border-bottom:1px solid rgba(255,255,255,.1)}
+.sh-drawer a[aria-current="page"]{text-decoration:underline;text-underline-offset:5px}
+@media (max-width:989px){
+  .bnav{display:none}
+  .sh-main{display:none}
+  .sh-in{justify-content:flex-start}
+}
+
+/* the old in-page title band is gone in v2 */
+.pagehead{display:none}
+
+/* ---------- landing: showcase hero + three cards ---------- */
+.home{padding-bottom:30px}
+.hero{position:relative;background:radial-gradient(120% 90% at 70% 40%,#22357f 0%,#14235f 45%,#0e1b4d 100%);
+  color:#fff;overflow:hidden}
+.hero-stage{position:absolute;inset:0 0 0 34%;}
+.hero-stage .cam{position:absolute;inset:0;border:0}
+.hero-stage .cam-vp{height:100%;max-height:none;aspect-ratio:auto;background:transparent}
+.hero-stage .cam-vp canvas{cursor:grab}
+/* showcase: just the part — no camera buttons, readouts or tool controls */
+.hero-stage .cam-views,.hero-stage .tag,.hero-stage .cam-lbl,.hero-stage .cam-bp,.hero-stage .cam-tog,
+.hero-stage .cam-join,.hero-stage .cam-opsbox,.hero-stage .cam-note,.hero-stage .hlcap{display:none!important}
+.hero-stage.flat{display:grid;place-items:center;padding:30px}
+.hero-stage.flat #homeface{width:min(440px,90%);background:rgba(255,255,255,.92);border-radius:12px;padding:10px}
+.hero-tag{position:absolute;right:20px;bottom:132px;z-index:2;margin:0;font-size:13.5px;letter-spacing:.04em;
+  color:rgba(255,255,255,.85);background:rgba(14,27,77,.55);border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;padding:6px 14px;pointer-events:none}
+.hero-tag b{color:var(--warn);font-weight:400;margin-right:6px}
+.hero-copy{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:64px 16px 190px;pointer-events:none;
+  min-height:min(78vh,700px)}
+.hero-copy>*{max-width:520px;pointer-events:auto}
+.kicker{margin:0 0 12px;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--warn)}
+.hero h1{font-family:var(--f-disp);font-size:clamp(34px,5.2vw,62px);line-height:1.04;font-weight:700;
+  letter-spacing:.005em;color:#fff;text-transform:none}
+.hero .lede{margin:18px 0 0;font-size:17px;line-height:1.6;color:rgba(255,255,255,.8)}
+.resume{margin:22px 0 0;font-size:15px;color:rgba(255,255,255,.85)}
+.resume a{color:#fff;text-decoration:underline;text-underline-offset:4px}
+
+.cats{position:relative;z-index:3;max-width:1180px;margin:-120px auto 0;padding:0 16px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.cat{display:flex;flex-direction:column;gap:10px;padding:26px 24px 22px;background:var(--card);border-radius:10px;
+  color:var(--ink);text-decoration:none;border:1px solid var(--line);
+  box-shadow:0 2px 6px rgba(14,27,77,.08),0 18px 40px rgba(14,27,77,.12);transition:transform .15s,box-shadow .15s}
+.cat:hover{transform:translateY(-3px);box-shadow:0 4px 10px rgba(14,27,77,.1),0 24px 50px rgba(14,27,77,.18)}
+.cat:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.cat-ic{width:52px;height:52px;color:var(--accent)}
+.cat h2{font-family:var(--f-disp);font-size:24px;font-weight:700;color:var(--navy)}
+.cat p{margin:0;font-size:15px;line-height:1.55;color:rgba(14,27,77,.75);flex:1}
+.cat-go{margin-top:6px;align-self:flex-start;background:var(--accent);color:#fff;border-radius:4px;
+  padding:11px 18px;font-size:15px;letter-spacing:.05em}
+.cat:hover .cat-go{background:var(--accent-ink)}
+
+@media (max-width:860px){
+  .hero-stage{position:relative;inset:auto;height:56vh;min-height:320px}
+  .hero{display:flex;flex-direction:column-reverse}
+  .hero-copy{padding:30px 16px 10px;min-height:0}
+  .hero-tag{bottom:16px;right:12px;font-size:12px}
+  .cats{grid-template-columns:1fr;margin-top:18px}
+}
+
+/* ---------- builder: the model fills the stage, the wizard sits on top ---------- */
+.builder{position:relative;height:calc(100vh - 96px);min-height:640px;background:var(--paper)}
+/* .builder prefix: beats the old .draw / .draw.is3d positioning from site.css */
+.builder .bstage.draw{position:absolute;top:0;right:472px;bottom:0;left:0;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,var(--cam-top),var(--cam-bot))}
+.builder.min .bstage.draw{right:0}
+.bstage-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;
+  background:rgba(255,255,255,.7);border-bottom:1px solid var(--line)}
+.catchip{font-family:var(--f-disp);font-weight:700;font-size:15px;color:var(--navy);
+  border-left:4px solid var(--accent);padding-left:9px}
+.bstage-bar .rev{margin-left:auto}
+.bstage-bar .viewtog{margin-left:6px}
+.bstage .cam{flex:1;min-height:0;display:flex;flex-direction:column;border:0}
+.bstage .cam-vp{flex:1;min-height:0;aspect-ratio:auto;max-height:none}
+.bstage .canvas{flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;
+  background:var(--card)}
+.bstage .canvas>#face{width:min(640px,100%)}
+.bstage #stack{flex-direction:column}
+.bstage #stack svg{max-width:640px}
+.bstage .legend{background:rgba(255,255,255,.75);border-top:1px solid var(--line)}
+/* CAM view is retired for customers: no Play bar, readouts, operations or join concepts */
+.bstage #cambp,.bstage #camshow,.bstage #camopsbox,.bstage #camjoin,.bstage .cam-note,
+.bstage .cam-dro,.bstage .cam-wcs{display:none!important}
+.bstage .hlcap{top:64px!important}
+
+.wiz{position:absolute;top:16px;right:16px;bottom:16px;width:440px;z-index:5;display:flex;flex-direction:column;
+  background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  box-shadow:0 2px 8px rgba(14,27,77,.08),0 20px 50px rgba(14,27,77,.16)}
+.wiz-top{display:flex;align-items:stretch;gap:8px;padding:12px 12px 0}
+.wiz .rail{flex:1;margin:0}
+.wiz .rail button{padding:7px 6px 8px}
+.wiz .rail .rl{font-size:13.5px}
+.wiz .rail .rs{display:none}
+.wiz-min{flex:none;display:flex;align-items:center;gap:6px;padding:0 10px;border:1px solid var(--line);
+  border-radius:8px;background:var(--paper);color:var(--navy);cursor:pointer;font-family:var(--f-body);font-size:12.5px;
+  letter-spacing:.03em}
+.wiz-min:hover{border-color:var(--accent);color:var(--accent)}
+.wiz-hd{padding:16px 20px 6px}
+.wiz-hd h2{font-size:24px;color:var(--navy)}
+.wiz-hd p{margin:4px 0 0;font-size:14px;color:rgba(14,27,77,.72)}
+.wiz-bd{flex:1;min-height:0;overflow:auto;padding:10px 20px 16px}
+.wiz .fields{grid-template-columns:1fr}
+.wiz .picks{grid-template-columns:repeat(2,minmax(0,1fr))}
+.wiz .checks{margin-top:14px}
+.wiz textarea{width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line-2);
+  border-radius:6px;background:var(--paper);color:var(--ink);resize:vertical}
+.wiz-ft{border-top:1px solid var(--line);padding:12px 20px 14px;background:var(--card)}
+.wiz .price{padding:0 0 10px;border:0;background:none}
+.wiz .price .amt{font-size:30px}
+.wiz .actions{margin-top:0}
+.wiz .actions .btn{padding:10px 16px;font-size:15px}
+.wiz .modes button{font-size:13.5px;padding-inline:6px}
+.wiz #reviewzone .tb{padding:0 0 12px}
+.wiz #editbar:empty{display:none}
+.wiz #editbar{padding:10px 12px 0}
+
+.dock{position:absolute;left:50%;bottom:22px;z-index:6;transform:translateX(-50%);display:flex;align-items:center;gap:14px;
+  width:min(620px,calc(100% - 32px));padding:12px 12px 12px 16px;background:var(--navy);color:#fff;border-radius:12px;
+  box-shadow:0 10px 30px rgba(14,27,77,.3)}
+.dock-ic{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--go);
+  font-size:15px}
+.dock-txt{flex:1;min-width:0}
+.dock-txt b{display:block;font-weight:400;font-size:15px}
+.dock-txt span{display:block;font-size:12.5px;color:rgba(255,255,255,.7)}
+.dock .btn{flex:none;white-space:nowrap}
+
+@media (max-width:1100px){
+  .wiz{width:400px}
+  .builder .bstage.draw{right:432px}
+}
+/* phones and small tablets: model on top, the wizard as a sheet below it */
+@media (max-width:860px){
+  .builder{height:auto;min-height:0}
+  .builder .bstage.draw,.builder.min .bstage.draw{position:relative;inset:auto;height:56vh;min-height:340px}
+  .wiz{position:relative;inset:auto;width:auto;margin:0;border-radius:16px 16px 0 0;border-bottom:0;
+    box-shadow:0 -8px 24px rgba(14,27,77,.12)}
+  .wiz-bd{overflow:visible}
+  .dock{position:relative;left:auto;bottom:auto;transform:none;width:auto;margin:12px 12px 0}
+  .wiz-min .wm-t{display:none}
+  .wiz-min{padding:0 12px}
+}
+
+/* admin is reachable for staff at #/admin only */
+.admin-stamp{margin:0 0 14px;font-family:var(--f-mono);font-size:12px;color:var(--steel)}
+.wrap>section{padding-top:28px}

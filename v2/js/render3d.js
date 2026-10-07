@@ -662,7 +662,7 @@ function camInit(){
     if (!Object.keys(ptrs).length){
       c.dragging = false; camKick();
       /* a click (not a drag) on the inline view opens the big one */
-      if (e.type === "pointerup" && !c.moved && !c.modal) camModal(true);
+      if (e.type === "pointerup" && !c.moved && !c.modal && !c.showcase) camModal(true);
       /* in the big view a click (not a drag) pauses or resumes the mouse spin */
       else if (e.type === "pointerup" && !c.moved && c.modal && c.hoverSpin) camSpin(false);
     }
@@ -925,6 +925,15 @@ function camFrame(now){
   var c = cam3d;
   c.raf = 0;
   if (!c.on || !c.gl) return;
+  /* landing showcase: turn slowly, join, separate, repeat */
+  if (c.showcase){
+    var dsh = c.lastSh ? Math.min(100, now - c.lastSh) : 16;
+    c.lastSh = now;
+    if (!c.dragging && now > (c.showHold || 0)) c.yaw -= dsh * 0.00026;
+    c.shT = (c.shT || 0) + dsh;
+    if (c.shT > 3800){ c.shT = 0; c.sepT = c.sepT ? 0 : 1; }
+    camKick();
+  } else c.lastSh = 0;
   if (c.sep !== c.sepT){
     var ds = c.lastS ? Math.min(100, now - c.lastS) : 16, ss = ds / 600;
     c.sep = c.sep < c.sepT ? Math.min(c.sepT, c.sep + ss) : Math.max(c.sepT, c.sep - ss);
@@ -949,13 +958,13 @@ function camFrame(now){
 function camDraw(){
   var c = cam3d, gl = c.gl, g = c.g, cv = c.cv;
   if (!gl || !g) return;
-  var dpr = Math.min(window.devicePixelRatio || 1, 1.5) * (c.dragging || c.playing || c.anim ? 0.65 : 1);
+  var dpr = Math.min(window.devicePixelRatio || 1, 1.5) * (c.dragging || c.playing || c.anim ? 0.65 : c.showcase ? 0.85 : 1);
   var stk = c.mode === "stack", SK = STACK_3D;
   var cw = cv.clientWidth, ch = cv.clientHeight;
   var w = Math.max(1, Math.round(cw * dpr)), h = Math.max(1, Math.round(ch * dpr));
   if (cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
   /* settle back to full resolution once interaction stops */
-  if (dpr < 1 && !c.dragging && !c.playing && !c.anim) camKick();
+  if (dpr < 1 && !c.dragging && !c.playing && !c.anim && !c.showcase) camKick();
 
   /* stack: part z runs along world x; frame the assembled stack */
   var es = c.sep * c.sep * (3 - 2 * c.sep);

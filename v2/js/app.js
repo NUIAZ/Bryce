@@ -9,36 +9,28 @@
    spreading out from the highlighted rect.
    ===================================================================== */
 var TOUR = [
-  {view:"design", sel:".tabs", title:"Four sections",
-   body:"Design something new, check what you have already sent, and — for our team — the rules and prices behind it all."},
-  {view:"design", step:0, sel:"#fields .modes", title:"Three ways to start",
-   body:"Tap a popular truck, search by make and model, or type your specs in directly. All three fill the same fields."},
+  {view:"home", sel:".bnav", title:"Three places",
+   body:"Start a new design, check the designs you have already sent us, or get help. The logo and Main Site take you back to the store."},
+  {view:"home", sel:"#homestage", title:"Built live, in 3D",
+   body:"This is a real two-piece adapter, drawn from its measurements. Yours is built the same way, as you fill it in."},
+  {view:"home", sel:".cats", title:"Pick what you need",
+   body:"Adapters change the bolt pattern, spacers keep it and push the wheel out, and Custom covers everything else."},
+  {view:"design", step:0, sel:"#wizard", title:"One step at a time",
+   body:"Each step is a short card over your model. Fill it in, press Continue, and see what it added."},
   {view:"design", step:0, sel:"#fields", title:"Always editable",
    body:"A vehicle lookup fills these in, but it never locks them. Check them against your own hub — trim and drivetrain change the answer."},
-  {view:"design", step:0, draw:"2d", sel:"#canvas2d", title:"Drawn to scale",
-   body:"Not a stock photo. Bolt circles, hole sizes and the centre bore are computed from your numbers and redraw as you type."},
-  {view:"design", step:0, sel:".viewtog", title:"Three ways to look at it",
-   body:"Switch between the flat drawing, a side view of the whole setup, and a 3D model with machining toolpaths."},
-  {view:"design", step:0, draw:"stack", sel:"#camvp, #stack", title:"How it bolts up",
-   body:"Vehicle hub, adapter and wheel in 3D, cut in half so you can see inside. Press Bolt it together to slide the parts into place."},
-  {view:"design", step:0, draw:"3d", sel:"#camvp", title:"The part in 3D",
-   body:"The finished adapter with the stock and the path each cutting tool takes. Drag to turn it. Click to open it full size; turn on Hover spin there and it follows your mouse."},
-  {view:"design", step:0, draw:"3d", sel:"#cambp", title:"Watch it being cut",
-   body:"Press Play or drag the slider. The readout shows where the tool is in X, Y and Z. This is an illustration — our machinists program the real job after review."},
+  {view:"design", step:0, sel:".bstage-bar .viewtog", title:"Three ways to look at it",
+   body:"The adapter in 3D, the whole setup on the truck, or the exact 2D drawing."},
+  {view:"design", step:0, sel:"#wizmin", title:"Get a closer look",
+   body:"Hide the steps any time and turn, zoom and inspect your model. One click brings the steps back."},
   {view:"design", step:0, sel:"#checks", title:"Checks as you go",
    body:"Every change runs against our rule set. Green clears. Amber needs a person to look. Red cannot be built at all."},
-  {view:"design", step:0, sel:".price", title:"Price or quote",
-   body:"Standard builds price on the spot. Anything flagged goes to our team to quote by hand."},
+  {view:"design", step:0, sel:".wiz .price", title:"Price or quote",
+   body:"Standard builds price on the spot. Anything flagged — and every custom build — goes to our team to quote."},
   {view:"list", sel:"#subs .sub:nth-child(2)", title:"Your designs",
    body:"Everything you have started or sent. Each thumbnail is rebuilt from your saved numbers, so it can never go stale."},
   {view:"list", sel:"#subs .sub:nth-child(3) .sub-side", title:"Twelve hours to change your mind",
-   body:"The clock runs from when you submit. Inside it, edit the design yourself. After it, our team has to re-approve."},
-  {view:"admin", sel:"#rulelist .rule", title:"Rules are editable",
-   body:"Switch a rule off, change its threshold, or move it between Block and Flag. It affects every customer the moment you publish."},
-  {view:"admin", sel:"#pricecheck", title:"The safety net",
-   body:"Live check that the pricing formula still reproduces our published prices. If one of these turns red, stop and undo."},
-  {view:"admin", sel:".verbar", title:"Versioned and logged",
-   body:"Edits stack up until you publish. Publishing bumps the version and writes who changed what to a log nobody can edit."}
+   body:"The clock runs from when you submit. Inside it, edit the design yourself. After it, our team has to re-approve."}
 ];
 var tourAt = -1;
 
@@ -68,6 +60,7 @@ function showTour(i){
   var t = TOUR[i];
   tourAt = i;
   if (t.view && view !== t.view) setView(t.view);
+  if (t.view === "design" && wizMin){ wizMin = false; paintWizard(); }
   if (t.step !== undefined && step !== t.step){ step = t.step; render(); }
   if (t.draw && drawView !== t.draw) setDraw(t.draw);
   var m = tourEls(); m.hidden = false;
@@ -142,19 +135,24 @@ function subById(id){
   return null;
 }
 
+/* v2 pages: home (showcase + categories), design (the builder), list, help, admin. */
 function setView(v){
+  var was = view;
   view = v;
-  el("view-design").hidden = v !== "design";
-  el("view-list").hidden = v !== "list";
-  el("view-admin").hidden = v !== "admin";
-  el("view-help").hidden = v !== "help";
-  var tabs = document.querySelectorAll("[data-view]");
-  for (var i = 0; i < tabs.length; i++){
-    tabs[i].setAttribute("aria-pressed", tabs[i].getAttribute("data-view") === v);
+  ["home", "design", "list", "help", "admin"].forEach(function(n){ el("view-" + n).hidden = n !== v; });
+  document.body.setAttribute("data-page", v);
+  var navOn = v === "design" ? "home" : v, links = document.querySelectorAll("[data-nav]");
+  for (var i = 0; i < links.length; i++){
+    if (links[i].getAttribute("data-nav") === navOn) links[i].setAttribute("aria-current", "page");
+    else links[i].removeAttribute("aria-current");
   }
+  if (history.replaceState && location.hash !== routeFor(v) && !(v === "home" && (location.hash === "" || location.hash === "#/")))
+    history.replaceState(null, "", routeFor(v));
+  if (was === "home" && v !== "home") leaveHome();
   if (v === "list") renderDesigns();
   else if (v === "admin") renderAdmin();
-  else render();
+  else if (v === "home"){ render(); enterHome(); }
+  else { enterBuilder(); render(); }
 }
 
 /* ---------------- measurement highlight ----------------
@@ -226,9 +224,11 @@ document.addEventListener("mouseover", function(e){
 /* Back to the design the page opened on, step 1, nothing half-entered. Keeps the
    view choice (2D / stack / 3D) and theme — those are the viewer's, not the design's. */
 function startOver(){
-  var k;
+  var k, cat = design.cat || "adapter";
   for (k in design) delete design[k];
   for (k in DESIGN_START) design[k] = DESIGN_START[k];
+  design.cat = cat;                       /* start over within the same category */
+  wizMin = false; dockMsg = null;
   step = 0; shownErrors = {}; editing = null;
   stepsPassed = {}; railGlow = null;
   joinOpt = "A"; stackExploded = true;
@@ -242,14 +242,17 @@ function startOver(){
   el("startask").hidden = true; el("startover").hidden = false;
   renderStages();
   render();
+  paintWizard();
   if (c.on) camView(c.mode === "stack" ? "s-iso" : "iso");
   window.scrollTo(0, 0);
 }
 
 renderStages();
 renderDesigns();
+view = "";             /* nothing shown yet; route() picks the page from the address */
 render();
-/* Opens in 3D where the device can run it; anything that cannot gets the exact
-   2D drawing — the low-end fallback the brief requires. */
+/* 3D where the device can run it; anything that cannot gets the exact 2D drawing —
+   the low-end fallback the brief requires. */
 setDraw(camSupported() ? "3d" : "2d");
+route();
 setInterval(function(){ if (view === "list") tickClocks(); }, 1000);
