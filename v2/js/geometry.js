@@ -28,13 +28,20 @@ var ONE_PIECE_WALL_MM = 4;    /* ASSUMED: least wall for a one-piece build */
    The shop has not said how its two halves fasten. Two common ways are
    drawn so they can pick one or correct both:
      A  Cap screws: 5/16-18 socket-head screws through the wheel half into
-        tapped holes in the hub half, two dowel pins to locate.
+        tapped holes in the hub half — confirmed by the shop: countersunk flat-head
+        hex-socket screws, black, no dowels.
      B  Stacked: the hub half carries its own pressed studs on an in-between
         bolt circle; the wheel half bolts to those with lug nuts sunk in
         pockets — two one-piece conversions back to back.
    ===================================================================== */
-var JOIN_A = {n:6, clearD:0.344, tapD:0.257, cbD:0.53, cbDepth:0.33,
-              headD:0.469, headH:0.3125, tapDepth:0.6, dowelD:0.25};
+/* A, as the shop builds it (photo, 2026-10-07): black-oxide FLAT-HEAD hex-socket screws,
+   90° countersunk flush in the wheel half, threaded into the hub half. No dowels.
+   Size from the photo looks like 3/8-16 — UNVERIFIED, confirm with the shop. */
+var JOIN_A = {n:6, screwD:0.375, pitch:1 / 16, clearD:0.397, tapD:0.3125,
+              headD:0.762, headH:0.212, socket:0.219, tapDepth:0.6};
+/* Thread pitch in inches, for drawing threads true to size. */
+var THREAD_PITCH = {"12x1.5":1.5 / 25.4, "12x1.25":1.25 / 25.4, "14x1.5":1.5 / 25.4, "14x2.0":2.0 / 25.4,
+                    "1/2-20":1 / 20, "9/16-18":1 / 18};
 var joinOpt = "A";
 
 /* Pure: where each concept puts its fasteners, and what it costs in size. */
@@ -48,9 +55,9 @@ function joinPlan(d){
   var halfMin = A0.flangeMax + A0.nutH + 0.15;      /* a half deep enough to bury a lug nut */
 
   /* A: one ring of screws just outside the lug pockets and stud heads */
-  var rA = Math.max(rs + h.lugR, rd + h.headR) + W + JA.cbD / 2;
+  var rA = Math.max(rs + h.lugR, rd + h.headR) + W + JA.headD / 2;
   var A = {kind:"A", n:JA.n, r:rA, a0:Math.PI / 2 - Math.PI / JA.n,
-           R:Math.max(base, rA + JA.cbD / 2 + 0.12), needT:halfMin + 0.5};
+           R:Math.max(base, rA + JA.headD / 2 + 0.12), needT:halfMin + 0.5};
 
   /* B: search for an in-between pattern (same thread as the vehicle) that clears
      the vehicle pattern in the hub half and the wheel pattern in the wheel half.
@@ -233,7 +240,7 @@ function stackSvg(d){
     s.push(band(0.005, g.dst.headDepth, jn.r - jn.headR * 0.96, jn.r + jn.headR * 0.96, jh, INT));
     s.push(band(g.dst.headDepth, J + jn.flangeB + nutH + 0.12, jn.r - jn.studR, jn.r + jn.studR, jh, INT));
   } else if (jn){
-    s.push(band(J - JA.tapDepth, J + 0.01, jn.r - JA.tapD / 2, jn.r + JA.tapD / 2, "top", VOID));
+    s.push(band(J - JA.tapDepth, J + 0.01, jn.r - JA.screwD / 2, jn.r + JA.screwD / 2, "top", VOID));
   }
   s.push("</g>");
   if (two){
@@ -242,10 +249,14 @@ function stackSvg(d){
     s.push(band(T - 0.01, T + g.lipH, g.thruR, g.lipR, "both", BODY + ' class="hl-lip"'));
     studs(J);
     if (jn && jn.kind === "A"){
+      var SCR = 'fill="#23262b" stroke="var(--ink)" stroke-width=".6"';
       s.push(band(J - 0.01, T + 0.01, jn.r - JA.clearD / 2, jn.r + JA.clearD / 2, "top", VOID));
-      s.push(band(T - JA.cbDepth, T + 0.01, jn.r - JA.cbD / 2, jn.r + JA.cbD / 2, "top", VOID));
-      s.push(band(T - JA.cbDepth, T - JA.cbDepth + JA.headH, jn.r - JA.headD / 2, jn.r + JA.headD / 2, "top", INT));
-      s.push(band(J - 0.55, T - JA.cbDepth, jn.r - JA.clearD * 0.44, jn.r + JA.clearD * 0.44, "top", INT));
+      /* the countersink and the flat head fill it: wide at the wheel face, narrow below */
+      var hx0 = X(T - JA.headH), hx1 = X(T + 0.005), y0 = (cy - (jn.r + JA.screwD / 2) * S).toFixed(1),
+          y1 = (cy - (jn.r - JA.screwD / 2) * S).toFixed(1), Y0 = (cy - (jn.r + JA.headD / 2) * S).toFixed(1),
+          Y1 = (cy - (jn.r - JA.headD / 2) * S).toFixed(1);
+      s.push('<polygon points="' + hx0 + "," + y0 + " " + hx1 + "," + Y0 + " " + hx1 + "," + Y1 + " " + hx0 + "," + y1 + '" ' + SCR + "/>");
+      s.push(band(J - 0.55, T - JA.headH, jn.r - JA.screwD / 2, jn.r + JA.screwD / 2, "top", SCR));
     } else if (jn){
       var bnut = Math.min(0.4, jn.lugR * 0.85);
       s.push(band(J - 0.01, T + 0.01, jn.r - jn.holeR, jn.r + jn.holeR, jh, VOID));
@@ -293,7 +304,7 @@ function stackSvg(d){
 function renderStack(){
   var g = camGeom(design);
   el("stack").innerHTML = stackSvg(design) +
-    (g.one ? "" : '<div class="cam-join">' + joinPicker(g) + "</div>") +
+
     '<div class="stk-bar"><button type="button" class="btn-sm" id="stkbtn">' +
     (stackExploded ? "Bolt it together" : "Pull it apart") + "</button>" +
     (camSupported() ? '<button type="button" class="btn-sm" id="stk3d">View in 3D</button>' : "") +
@@ -309,6 +320,8 @@ function setDraw(v){
     if (!cam3d.on && v === "3d") v = "2d";
   } else camSet(false);
   drawView = v;
+  var bld = document.querySelector(".builder");
+  if (bld) bld.setAttribute("data-draw", v);     /* lets the dock clear the stack view's bar */
   el("canvas2d").hidden = v !== "2d";
   el("stack").hidden = !(v === "stack" && !cam3d.on);
   el("v2d").setAttribute("aria-pressed", v === "2d");
@@ -408,20 +421,24 @@ function faceSvg(d, compact){
 
   /* two-piece: how the halves join — concept for shop review, in violet */
   if (cgm.join){
-    var jn = cgm.join, JC = "#7b5cd6";
+    var jn = cgm.join, JC = jn.kind === "A" ? "#23262b" : "#7b5cd6";
     for (i = 0; i < jn.n; i++){
       a = jn.a0 - i * 2 * Math.PI / jn.n;
       x = cx + jn.r * S * Math.cos(a); y = cy - jn.r * S * Math.sin(a);
-      var rOut = (jn.kind === "A" ? JOIN_A.cbD / 2 : jn.lugR) * S, rIn = (jn.kind === "A" ? JOIN_A.clearD / 2 : jn.holeR) * S;
+      if (jn.kind === "A"){
+        /* flush countersunk head, hex socket */
+        s.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (JOIN_A.headD / 2 * S).toFixed(1) +
+               '" fill="' + JC + '" stroke="var(--ink)" stroke-width=".6"/>');
+        var hx = [], hr = JOIN_A.socket / 2 / Math.cos(Math.PI / 6) * S;
+        for (var q = 0; q < 6; q++) hx.push((x + hr * Math.cos(q * Math.PI / 3)).toFixed(1) + "," + (y + hr * Math.sin(q * Math.PI / 3)).toFixed(1));
+        s.push('<polygon points="' + hx.join(" ") + '" fill="#6b7078"/>');
+        continue;
+      }
+      var rOut = jn.lugR * S, rIn = jn.holeR * S;
       s.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + rOut.toFixed(1) +
              '" fill="none" stroke="' + JC + '" stroke-width=".9" stroke-dasharray="2 2"/>');
       s.push('<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + rIn.toFixed(1) +
              '" fill="var(--paper)" stroke="' + JC + '" stroke-width="1.3"/>');
-    }
-    if (jn.kind === "A") for (i = 0; i < 2; i++){
-      a = jn.a0 + Math.PI / jn.n + i * Math.PI;
-      s.push('<circle cx="' + (cx + jn.r * S * Math.cos(a)).toFixed(1) + '" cy="' + (cy - jn.r * S * Math.sin(a)).toFixed(1) +
-             '" r="' + (JOIN_A.dowelD / 2 * S).toFixed(1) + '" fill="' + JC + '"/>');
     }
   }
 

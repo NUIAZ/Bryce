@@ -161,3 +161,8 @@
 /* admin is reachable for staff at #/admin only */
 .admin-stamp{margin:0 0 14px;font-family:var(--f-mono);font-size:12px;color:var(--steel)}
 .wrap>section{padding-top:28px}
+
+/* in 3D the studs are drawn as they ship (yellow zinc); the 2D drawing keeps red */
+.draw.is3d .lg-stud{background:#c9a646!important}
+.builder[data-draw="stack"] .dock{bottom:96px}
+@media (max-width:860px){.builder[data-draw="stack"] .dock{bottom:auto}}

@@ -184,8 +184,8 @@ function camPaths(g){
   var JP = jn ? ring(jn) : [], DP = jn ? ring({n:2, r:jn.r, a0:jn.a0 + Math.PI / jn.n}) : [];
   var T6 = {id:"T6", name:"drill " + JA.clearD.toFixed(3), d:JA.clearD},
       T7 = {id:"T7", name:"tap drill " + JA.tapD.toFixed(3), d:JA.tapD},
-      T8 = {id:"T8", name:"5/16-18 tap", d:0.3125},
-      T9 = {id:"T9", name:"1/4 drill + ream", d:JA.dowelD},
+      T8 = {id:"T8", name:"3/8-16 tap", d:0.375},
+      T9 = {id:"T9", name:"90° countersink", d:JA.headD},
       T10 = jn && jn.kind === "B" ? {id:"T10", name:"drill " + (jn.studR * 2).toFixed(3), d:jn.studR * 2} : null;
 
   if (g.one){
@@ -213,8 +213,8 @@ function camPaths(g){
     op("Peck drill stud press holes", T5, A.feed.drill, "#e0703a");       peck(D, -tB - 0.15, 0.25);
     op("Helix through bore", T2, A.feed.mill, "#d1495b");                 bore(g.lipH, -tB - 0.03);
     if (jn.kind === "A"){
-      op("Drill screw clearance holes", T6, A.feed.drill, "#7b5cd6");     peck(JP, -tB - 0.15, 0.25);
-      op("Counterbore screw heads", T2, A.feed.mill, "#a48be6");          pockets(JP, JA.cbD / 2, -JA.cbDepth, 0.06);
+      op("Drill screw clearance holes", T6, A.feed.drill, "#4a4f57");     peck(JP, -tB - 0.15, 0.25);
+      op("Countersink screw heads", T9, A.feed.drill, "#4a4f57");         spot(JP);
     } else {
       op("Peck drill in-between stud holes", T4, A.feed.drill, "#7b5cd6"); peck(JP, -tB - 0.15, 0.25);
       op("Helix in-between nut pockets", T2, A.feed.mill, "#a48be6");     pockets(JP, jn.lugR, -(tB - jn.flangeB), 0.08);
@@ -223,7 +223,6 @@ function camPaths(g){
     setup("Wheel half · Setup 2 · G55 · joint face up", "WHEEL HALF · G55 · Z0 JOINT FACE", {flip:true, z0:J}, so, "wheel");
     op("Face joint side", T1, A.feed.face, "#4f8fe0");                    face(0);
     op("Counterbore stud heads", T2, A.feed.mill, "#8a6fd6");             pockets(mirror(D), g.dst.headR, -g.dst.headDepth, 0.06);
-    if (jn.kind === "A"){ op("Drill + ream dowel holes", T9, A.feed.drill, "#5e44b0"); peck(mirror(DP), -0.36, 0.2); }
 
     setup("Hub half · Setup 1 · G56 · joint face up", "HUB HALF · G56 · Z0 JOINT FACE", {flip:false, z0:J}, so, "hub");
     op("Face joint side", T1, A.feed.face, "#4f8fe0");                    face(0);
@@ -233,9 +232,8 @@ function camPaths(g){
     op("Helix lug-nut pockets", T2, A.feed.mill, "#3fa34d");              pockets(S, g.src.nutR, -g.tA + g.src.flange, 0.08);
     op("Helix through bore", T2, A.feed.mill, "#d1495b");                 bore(0, -g.tA - 0.03);
     if (jn.kind === "A"){
-      op("Drill screw tap holes", T7, A.feed.drill, "#7b5cd6");           peck(JP, -JA.tapDepth - 0.1, 0.25);
-      op("Tap 5/16-18", T8, A.feed.drill, "#a48be6");                     peck(JP, -JA.tapDepth, JA.tapDepth);
-      op("Drill + ream dowel holes", T9, A.feed.drill, "#5e44b0");        peck(DP, -0.36, 0.2);
+      op("Drill screw tap holes", T7, A.feed.drill, "#4a4f57");           peck(JP, -JA.tapDepth - 0.1, 0.25);
+      op("Tap 3/8-16", T8, A.feed.drill, "#6b7078");                     peck(JP, -JA.tapDepth, JA.tapDepth);
     }
 
     setup("Hub half · Setup 2 · G57 · hub side up", "HUB HALF · G57 · Z0 HUB FACE", {flip:true, z0:-T}, so, "hub");
@@ -318,11 +316,12 @@ var CAM_FS_SOLID = [
   "uniform vec4 uW;   // wheel pad thickness, nut half-flats, nut height, spokes",
   "uniform vec4 uP;   // two-piece, hub-half thickness, wheel-half pull-apart, screw pull-out",
   "uniform vec4 uJ;   // join kind (0 none, 1 screws, 2 stacked), count, radius, a0",
-  "uniform vec4 uK;   // A: clear r, counterbore r, cb depth, tap r · B: hole r, stud r, head r, pocket r",
-  "uniform vec4 uL;   // A: head r, head h, dowel r, dowel a0 · B: nut floor above joint, stud top z, nut half-flats, -",
+  "uniform vec4 uK;   // A: clear r, head r, head h, tap r · B: hole r, stud r, head r, pocket r",
+  "uniform vec4 uL;   // A: shank r, -, socket r, socket depth · B: nut floor above joint, stud top z, nut half-flats, -",
+  "uniform vec4 uThr; // thread pitch: wheel studs, vehicle studs, detail 0..1 (fades with distance), screws",
   "uniform vec4 uV;   // show hub half, show wheel half",
   "uniform vec4 uG;   // highlighted feature: 0 none, 1 vehicle holes, 2 hub bore, 3 wheel studs, 4 lip, 5 thickness",
-  "uniform vec3 uCAl, uCSrc, uCDst, uCTool, uCHub, uCWhl, uCNut, uCInt, uCNeon;",
+  "uniform vec3 uCAl, uCSrc, uCDst, uCTool, uCHub, uCWhl, uCNut, uCInt, uCNeon, uCScr;",
   "float cyl(vec3 p, float r, float z0, float z1){",
   "  vec2 d = vec2(length(p.xy) - r, max(z0 - p.z, p.z - z1));",
   "  return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));",
@@ -339,6 +338,10 @@ var CAM_FS_SOLID = [
   "  return length(p) * vec2(cos(a), sin(a));",
   "}",
   "void add(inout vec2 r, float d, float m){ if (d < r.x) r = vec2(d, m); }",
+  "/* helical thread groove depth at p (axis = z), pitch pt; 0 when the detail is faded out */",
+  "float thr(vec3 p, float pt){",
+  "  return uThr.z * pt * 0.32 * (0.5 + 0.5 * sin(6.2831853 * (p.z / pt - atan(p.y, p.x) / 6.2831853)));",
+  "}",
   "vec2 scene(vec3 p){",
   "  float T = uA.y;",
   "  vec2 res = vec2(1e3, 0.0);",
@@ -350,8 +353,13 @@ var CAM_FS_SOLID = [
   "    vec3 w = vec3(polar(pb.xy, uD.x, uE.w) - vec2(uD.y, 0.0), pb.z);",
   "    float hb = uP.x > 0.5 ? J : -T;             // where the stud heads seat",
   "    float sh = min(cyl(w, uD.z, -T - 1.0, 1.0), cyl(w, uD.w, hb - 1.0, hb + uE.y));",
-  "    float st = min(min(cyl(w, uD.z * 0.97, hb + 0.004, uE.z - 0.05), cyl(w, uD.z * 0.78, 0.0, uE.z)),",
-  "                   cyl(w, uD.w * 0.96, hb + 0.004, hb + uE.y - 0.004));",
+  "    /* pressed stud: head, knurled spline band, threaded shank, chamfered pilot tip */",
+  "    float sp = atan(w.y, w.x) * 3.8197;                                   // 24 splines",
+  "    float kn = 0.006 * abs(fract(sp) - 0.5) * 2.0;",
+  "    float st = min(min(cyl(w, uD.z * 0.97 - (w.z > hb + uE.y + 0.32 ? thr(w, uThr.x) : 0.0), hb + 0.004, uE.z - 0.13),",
+  "                       cyl(w, uD.z * 0.8, 0.0, uE.z - 0.02 - max(0.0, length(w.xy) - uD.z * 0.62))),",
+  "                   min(cyl(w, uD.w * 0.96, hb + 0.004, hb + uE.y - 0.004),",
+  "                       cyl(w, uD.z * 1.02 + kn, hb + uE.y - 0.004, hb + uE.y + 0.3)));",
   "    if (uP.x < 0.5){",
   "      float d = min(cyl(p, uA.x, -T, 0.0), cyl(p, uA.z, -0.02, uA.w));",
   "      d = max(d, -cyl(p, uB.x, -T - 1.0, uA.w + 1.0));",
@@ -373,14 +381,16 @@ var CAM_FS_SOLID = [
   "      vec3 jq = vec3(polar(p.xy, uJ.y, uJ.w) - vec2(uJ.z, 0.0), p.z);",
   "      vec3 jb = vec3(polar(pb.xy, uJ.y, uJ.w) - vec2(uJ.z, 0.0), pb.z);",
   "      if (uJ.x > 0.5 && uJ.x < 1.5){",
-  "        /* A: cap screws through the wheel half into tapped holes; two dowels locate */",
-  "        vec3 dq = vec3(polar(p.xy, 2.0, uL.w) - vec2(uJ.z, 0.0), p.z);",
-  "        vec3 db = vec3(polar(pb.xy, 2.0, uL.w) - vec2(uJ.z, 0.0), pb.z);",
-  "        a = max(a, -min(cyl(jq, uK.w, J - 0.6, J + 1.0), cyl(dq, uL.z, J - 0.36, J + 1.0)));",
-  "        bw = max(bw, -min(min(cyl(jb, uK.x, -T - 1.0, 1.0), cyl(jb, uK.y, -uK.z, 1.0)), cyl(db, uL.z, J - 1.0, J + 0.36)));",
+  "        /* A: black flat-head hex-socket screws, 90° countersunk flush in the wheel half, tapped into the hub half */",
+  "        a = max(a, -cyl(jq, uK.w, J - 0.6, J + 1.0));",
+  "        float rcs = uL.x + (uK.y - uL.x) * clamp((jb.z + uK.z) / uK.z, 0.0, 1.0);",
+  "        float csk = max(length(jb.xy) - rcs, -uK.z - jb.z);",
+  "        bw = max(bw, -min(cyl(jb, uK.x, -T - 1.0, 1.0), csk));",
   "        vec3 js = jb; js.z -= uP.w;",
-  "        fb = min(cyl(js, uL.x, -uK.z, -uK.z + uL.y), cyl(js, uK.x * 0.88, J - 0.55, -uK.z));",
-  "        fa = cyl(dq, uL.z * 0.94, J - 0.33, J + 0.33);",
+  "        float rhd = uL.x + (uK.y - uL.x) * clamp((js.z + uK.z) / uK.z, 0.0, 1.0) - 0.005;",
+  "        float hd = max(length(js.xy) - rhd, max(-uK.z - js.z, js.z + 0.004));",
+  "        hd = max(hd, -hexz(js, uL.z, -uL.w, 0.2));                       // hex socket",
+  "        fb = min(hd, cyl(js, uL.x * 0.97 - thr(js, uThr.w), J - 0.55, -uK.z + 0.01));",
   "      } else if (uJ.x > 1.5){",
   "        /* B: in-between studs pressed into the hub half, nutted in wheel-half pockets */",
   "        a = max(a, -min(cyl(jq, uK.y, -T - 1.0, J + 1.0), cyl(jq, uK.z, -T - 1.0, -T + uE.y)));",
@@ -409,7 +419,7 @@ var CAM_FS_SOLID = [
   "      add(res, min(min(cyl(h, uH.x, -T - 0.6, -T), cyl(h, uB.y * 1.15, -T - 2.0, -T - 0.6)),",
   "                   min(cyl(h, uB.y * 0.6, -T - 3.3, -T - 2.0), cyl(h, uB.y - 0.015, -T - 0.01, -T + uB.z * 0.85))), 4.0);",
   "      vec3 q = vec3(polar(h.xy, uS.x, 1.5707963) - vec2(uS.y, 0.0), h.z);",
-  "      add(res, min(cyl(q, uH.y, -T - 0.6, -T + uE.x + uW.z + 0.12), cyl(q, uH.y * 1.7, -T - 0.78, -T - 0.6)), 5.0);",
+  "      add(res, min(cyl(q, uH.y - thr(q, uThr.y), -T - 0.6, -T + uE.x + uW.z + 0.12), cyl(q, uH.y * 1.7, -T - 0.78, -T - 0.6)), 5.0);",
   "    }",
   "    /* vehicle lug nuts, seated in the adapter's pockets */",
   "    vec3 vq = vec3(polar(p.xy, uS.x, 1.5707963) - vec2(uS.y, 0.0), p.z);",
@@ -469,14 +479,27 @@ var CAM_FS_SOLID = [
   "  bool cut = m.y > 19.5; float id = cut ? m.y - 20.0 : m.y;",
   "  vec3 base = id < 0.5 ? uCAl : id < 1.5 ? mix(uCAl, uCSrc, 0.6) : id < 2.5 ? uCDst : id < 3.5 ? uCTool :",
   "              id < 4.5 ? uCHub : id < 5.5 ? uCSrc : id < 6.5 ? uCWhl : id < 7.5 ? uCNut :",
-  "              id < 8.5 ? uCAl * vec3(1.04, 1.0, 0.9) :   // wheel half: a warmer aluminium so the halves read apart",
-  "              id < 9.5 ? mix(uCInt, uCNut, 0.25) : uCInt;  // joining hardware: purple, like the legend",
+  "              id < 8.5 ? uCAl * 0.965 :                  // wheel half: the same billet, a shade apart",
+  "              id < 9.5 ? uCScr : uCInt;                   // black-oxide screws · in-between studs",
   "  vec3 L1 = normalize(-rd + vec3(0.0, 0.0, 0.5));",
   "  vec3 L2 = normalize(vec3(-0.5, 0.4, 0.8));",
   "  float dif = max(dot(nw, L1), 0.0) * 0.65 + max(dot(nw, L2), 0.0) * 0.35;",
   "  float ao = 0.55 + 0.45 * clamp(scene(p + n * 0.08).x / 0.08, 0.0, 1.0);",
   "  float spec = pow(max(dot(reflect(rd, nw), L1), 0.0), 36.0) * 0.35;",
   "  vec3 col = base * (0.34 + 0.16 * (0.5 + 0.5 * nw.z) + 0.66 * dif) * ao + spec;",
+  "  /* metals: a simple studio environment in the reflection, plus fresnel */",
+  "  bool al = id < 1.5 || (id > 7.5 && id < 8.5);",
+  "  if (al || (id > 1.5 && id < 2.5) || (id > 8.5 && id < 9.5)){",
+  "    vec3 R = reflect(rd, nw);",
+  "    /* studio: dark floor, bright soft box overhead, a cool horizon between */",
+  "    vec3 env = mix(vec3(0.30, 0.32, 0.36), vec3(0.74, 0.77, 0.81), smoothstep(-0.3, 0.2, R.z));",
+  "    env = mix(env, vec3(0.86, 0.88, 0.91), smoothstep(0.55, 0.95, R.z) * 0.6);",
+  "    env += vec3(0.18) * smoothstep(0.94, 1.0, max(dot(R, L2), 0.0));      // soft key highlight",
+  "    float fr = pow(1.0 - max(dot(-rd, nw), 0.0), 4.0);",
+  "    float k = al ? 0.55 : (id < 2.5 ? 0.42 : 0.18);",
+  "    col = base * (0.20 + 0.42 * dif) * ao + env * (k + 0.3 * fr) * mix(vec3(1.0), base, al ? 0.35 : 0.7);",
+  "    if (al && abs(n.z) > 0.92) col *= 0.988 + 0.012 * uThr.z * sin(length(p.xy) * 420.0);   // fine turned rings",
+  "  }",
   "  if (cut) col = base * (0.62 + 0.3 * step(0.5, fract((p.z + p.x - p.y) * 4.0)));   // hatched section face",
   "  if (uG.x > 0.5){",
   "    float T = uA.y, hl = 0.0, body = (id < 0.5 || (id > 7.5 && id < 8.5)) ? 1.0 : 0.0;",
@@ -773,9 +796,9 @@ function camBuild(){
     v.push(a[0], a[1], a[2], col[0], col[1], col[2], col[3], dash ? 0.001 : 0, s0, h || 0,
            b[0], b[1], b[2], col[0], col[1], col[2], col[3], dash ? dash : 0, s1, h || 0);
   }
-  c.cols = {al:hexRgb("#b3bdc7"), src:hexRgb(cssVar("--cyan")), dst:hexRgb(cssVar("--stud")),
+  c.cols = {al:hexRgb("#c9ced3"), src:hexRgb(cssVar("--cyan")), dst:hexRgb("#c9a646"),   /* billet aluminium · yellow-zinc studs */
             tool:hexRgb("#d4a937"), hub:hexRgb("#6e7780"), whl:hexRgb("#8d969f"), nut:hexRgb("#c9ced3"),
-            int:hexRgb("#7b5cd6"), neon:hexRgb(cssVar("--neon"))};
+            int:hexRgb("#7b5cd6"), neon:hexRgb(cssVar("--neon")), scr:hexRgb("#1f2226")};
   if (c.mode === "stack"){
     /* a shop floor under the wheel, in world coords (axle along X) */
     var ink0 = hexRgb(cssVar("--steel")), fz = -STACK_3D.rimR - 0.36, k0;
@@ -1020,8 +1043,8 @@ function camDraw(){
   if (!jn) gl.uniform4f(u.uJ, 0, 1, 1, 0);
   else if (jn.kind === "A"){
     gl.uniform4f(u.uJ, 1, jn.n, jn.r, jn.a0);
-    gl.uniform4f(u.uK, JA.clearD / 2, JA.cbD / 2, JA.cbDepth, JA.tapD / 2);
-    gl.uniform4f(u.uL, JA.headD / 2, JA.headH, JA.dowelD / 2, jn.a0 + Math.PI / jn.n);
+    gl.uniform4f(u.uK, JA.clearD / 2, JA.headD / 2, JA.headH, JA.tapD / 2);
+    gl.uniform4f(u.uL, JA.screwD / 2, 0, JA.socket / 2, 0.16);
   } else {
     gl.uniform4f(u.uJ, 2, jn.n, jn.r, jn.a0);
     gl.uniform4f(u.uK, jn.holeR, jn.studR, jn.headR, jn.lugR);
@@ -1029,10 +1052,15 @@ function camDraw(){
       Math.min(SK.nutFlat, jn.lugR * 0.82), 0);
   }
   gl.uniform4f(u.uV, c.showHub || stk ? 1 : 0, c.showWheel || stk ? 1 : 0, 0, 0);
+  var pW = THREAD_PITCH[design.studThread] || 0.059;
+  var pV = THREAD_PITCH[design.vehicleThread] || 0.059;
+  var foot = dist * 2 * Math.tan(0.3) / h;                 /* inches per pixel at the target */
+  var detail = Math.max(0, Math.min(1, (Math.min(pW, pV) * 0.9 - foot) / (Math.min(pW, pV) * 0.5)));
+  gl.uniform4f(u.uThr, view === "home" && window.DEMO ? THREAD_PITCH[DEMO.studThread] : pW, pV, detail, JOIN_A.pitch);
   gl.uniform3fv(u.uCAl, c.cols.al); gl.uniform3fv(u.uCSrc, c.cols.src);
   gl.uniform3fv(u.uCDst, c.cols.dst); gl.uniform3fv(u.uCTool, c.cols.tool);
   gl.uniform3fv(u.uCHub, c.cols.hub); gl.uniform3fv(u.uCWhl, c.cols.whl); gl.uniform3fv(u.uCNut, c.cols.nut); gl.uniform3fv(u.uCInt, c.cols.int);
-  gl.uniform3fv(u.uCNeon, c.cols.neon); gl.uniform4f(u.uG, c.hl || 0, 0, 0, 0);
+  gl.uniform3fv(u.uCNeon, c.cols.neon); gl.uniform3fv(u.uCScr, c.cols.scr); gl.uniform4f(u.uG, c.hl || 0, 0, 0, 0);
   gl.bindVertexArray(c.vaoS);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 
