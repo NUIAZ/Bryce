@@ -325,6 +325,7 @@ var CAM_FS_SOLID = [
   "uniform vec4 uL;   // A: shank r, -, socket r, socket depth · B: nut floor above joint, stud top z, nut half-flats, -",
   "uniform sampler2D uLogo;",
   "uniform vec4 uLg;  // engraving: centre angle, half-width (rad), height (in), on",
+  "uniform vec4 uTi;  // wheel half swung open: angle, hinge x, hinge z (part coords)",
   "uniform vec4 uRo;  // x: part on its edge (axis horizontal), without hub or wheel",
   "uniform vec4 uCap; // red plastic thread caps on the pressed studs (showcase only)",
   "uniform vec4 uThr; // thread pitch: wheel studs, vehicle studs, detail 0..1 (fades with distance), screws",
@@ -359,6 +360,10 @@ var CAM_FS_SOLID = [
   "    vec3 q = vec3(polar(p.xy, uS.x, 1.5707963) - vec2(uS.y, 0.0), p.z);",
   "    float hs = min(cyl(q, uS.z, -T - 1.0, uA.w + 1.0), cyl(q, uS.w, -T + uE.x, uA.w + 1.0));",
   "    vec3 pb = p; pb.z -= uP.z;                  // wheel half, pulled apart in the stack",
+  "    if (uTi.x > 0.001){                          // ...and swung open on a hinge at its far edge",
+  "      float cs = cos(uTi.x), sn = sin(uTi.x); vec2 hq = vec2(pb.x - uTi.y, pb.z - uTi.z);",
+  "      pb.x = uTi.y + cs * hq.x - sn * hq.y; pb.z = uTi.z + sn * hq.x + cs * hq.y;",
+  "    }",
   "    vec3 w = vec3(polar(pb.xy, uD.x, uE.w) - vec2(uD.y, 0.0), pb.z);",
   "    float hb = uP.x > 0.5 ? J : -T;             // where the stud heads seat",
   "    float sh = min(cyl(w, uD.z, -T - 1.0, 1.0), cyl(w, uD.w, hb - 1.0, hb + uE.y));",
@@ -516,7 +521,7 @@ var CAM_FS_SOLID = [
   "  }",
   "  if (cut) col = base * (0.62 + 0.3 * step(0.5, fract((p.z + p.x - p.y) * 4.0)));   // hatched section face",
   "  /* Bronson logo, etched faintly on the outside edge of each half */",
-  "  if (uLg.w > 0.5 && !cut && (id < 0.5 || (id > 7.5 && id < 8.5)) && abs(n.z) < 0.4){",
+  "  if (uLg.w > 0.5 && !cut && (id < 0.5 || (id > 7.5 && id < 8.5 && uTi.x < 0.001)) && abs(n.z) < 0.4){",
   "    vec3 pe = p; if (id > 7.5) pe.z -= uP.z;                     // wheel half may be lifted",
   "    if (abs(length(pe.xy) - uA.x) < 0.01){",
   "      float T = uA.y, J = -T + uP.y;",
@@ -1070,15 +1075,17 @@ function camDraw(){
 
   /* stack: part z runs along world x; frame the assembled stack */
   var es = c.sep * c.sep * (3 - 2 * c.sep);
-  var sepOff = !stk && !g.one ? CAM_SEP_IN * es : 0;          /* CAM view: wheel half lifted */
+  var sepOff = !stk && !g.one ? (rot ? 0.8 : CAM_SEP_IN) * es : 0;   /* CAM view: wheel half lifted */
+  var OPEN = 1.05;                                            /* open & close: swing angle, rad */
   var tgt = stk ? [(-g.T - 3.3 + 4.5) / 2, 0, 0]
-          : rot ? [(g.lipH - g.T + sepOff) / 2, 0, g.R * 0.32]   /* aim a little high: the part sits lower */
+          : rot ? [(g.lipH - g.T + sepOff) / 2 + g.R * Math.sin(OPEN * es) * 0.9, 0, g.R * 0.32 - 1.17]
           : [0, 0, (g.lipH - g.T + sepOff) / 2];
   var dist = c.dist * Math.max(1, h / w);            /* keep the part in frame when tall and narrow */
   var eye = [tgt[0] + dist * Math.cos(c.pitch) * Math.cos(c.yaw),
              tgt[1] + dist * Math.cos(c.pitch) * Math.sin(c.yaw),
              tgt[2] + dist * Math.sin(c.pitch)];
   var P = m4persp(0.6, w / h, 0.2, 200), V = m4look(eye, tgt, [0, 0, 1]), VP = m4mul(P, V);
+  c.lastVP = VP;
 
   var done = c.t >= c.total - 1e-9, at = camAt(c.t), A = CAM_ASSUME;
   var op = at && !done && !stk ? c.ops[at.s.op] : null;
@@ -1112,10 +1119,12 @@ function camDraw(){
     gl.uniform4f(u.uBd, (zLo + zHi) / 2, 0, 0,
       Math.sqrt(Math.pow(SK.rimR + 0.6, 2) + Math.pow((zHi - zLo) / 2, 2)));
   } else if (rot) gl.uniform4f(u.uBd, (zTop + zBot) / 2, 0, 0,
-    Math.sqrt(Math.pow(g.R + g.so + 2, 2) + Math.pow((zTop - zBot) / 2, 2)));
+    Math.sqrt(Math.pow(g.R + g.so + 2, 2) + Math.pow((zTop - zBot) / 2, 2)) + 2 * g.R);
   else gl.uniform4f(u.uBd, 0, 0, (zTop + zBot) / 2,
     Math.sqrt(Math.pow(g.R + g.so + 2, 2) + Math.pow((zTop - zBot) / 2, 2)));
   gl.uniform4f(u.uRo, rot ? 1 : 0, 0, 0, 0);
+  /* open & close: the wheel half swings open about its far edge, showing its stud heads */
+  gl.uniform4f(u.uTi, rot && !g.one ? OPEN * es : 0, g.R, -g.T + g.tA, 0);
   var ee = c.ex * c.ex * (3 - 2 * c.ex);
   gl.uniform4f(u.uM, stk ? 1 : 0, stk && c.cut ? 1 : 0, ee, SK.rimR);
   var dd = view === "home" && window.DEMO ? DEMO : design;
