@@ -35,7 +35,7 @@
   color:#fff;overflow:hidden}
 .hero-stage{position:absolute;inset:0 0 0 34%;}
 /* the Bronson B behind the model, drawn like the grid lines; part of the backdrop, so it never turns */
-.hero-stage::before{content:"";position:absolute;inset:18% 40% 26% 2%;pointer-events:none;opacity:.099;
+.hero-stage::before{content:"";position:absolute;inset:23% 44% 31% 2%;pointer-events:none;opacity:.089;
   background:url("../img/bronson-watermark.png") left center/contain no-repeat}   /* smaller, peeking out left of the model */
 .hero-stage .cam{position:absolute;inset:0;border:0}
 .hero-stage .cam-vp{height:100%;max-height:none;aspect-ratio:auto;background:transparent}
