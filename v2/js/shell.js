@@ -87,7 +87,7 @@ function enterHome(){
   c.playing = false; c.t = 1e9; c.hl = 0;
   camBuild();
   camView("iso"); c.pitch = 0.42; c.yaw = -0.6;
-  c.sep = c.sepT = 1; c.shT = 0;
+  c.sep = c.sepT = 0; c.shT = 0; c.shYaw0 = c.yaw; c.showHold = 0;
   c.showcase = true;
   camKick();
 }

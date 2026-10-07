@@ -948,19 +948,17 @@ function camFrame(now){
   var c = cam3d;
   c.raf = 0;
   if (!c.on || !c.gl) return;
-  /* landing showcase: turn slowly, join, separate, repeat */
+  /* landing showcase, a calm loop with no tilt: rest, turn 90°, open the halves, close
+     them, turn back. Grabbing it pauses the loop; it carries on from where it was. */
   if (c.showcase){
     var dsh = c.lastSh ? Math.min(100, now - c.lastSh) : 16;
     c.lastSh = now;
     if (!c.dragging && now > (c.showHold || 0)){
-      c.yaw -= dsh * 0.00026;
-      /* and tilt: from looking down on the wheel face to looking up at the hub face */
-      c.shPh = (c.shPh || 0) + dsh * 0.00032;
-      var want = 0.22 + 0.78 * Math.sin(c.shPh);
-      c.pitch += (want - c.pitch) * Math.min(1, dsh * 0.004);    /* eases back in after a drag */
+      if (c.showHold){ c.shYaw0 = c.yaw - camShowTurn(c.shT); c.showHold = 0; }   /* resume from the drag */
+      c.shT = ((c.shT || 0) + dsh) % SHOW_LOOP;
+      c.yaw = c.shYaw0 + camShowTurn(c.shT);
+      c.sepT = c.shT > 4400 && c.shT < 7000 ? 1 : 0;
     }
-    c.shT = (c.shT || 0) + dsh;
-    if (c.shT > 3800){ c.shT = 0; c.sepT = c.sepT ? 0 : 1; }
     camKick();
   } else c.lastSh = 0;
   if (c.sep !== c.sepT){
@@ -982,6 +980,18 @@ function camFrame(now){
   } else c.last = 0;
   camDraw();
   if (c.playing) camKick();
+}
+
+/* showcase timeline (ms): rest 0-1500, turn 1500-3900, open 4400-7000, close, turn back 8600-11000 */
+var SHOW_LOOP = 11800;
+function camShowTurn(t){
+  function ease(x){ x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+  var q = Math.PI / 2;
+  if (t < 1500) return 0;
+  if (t < 3900) return q * ease((t - 1500) / 2400);
+  if (t < 8600) return q;
+  if (t < 11000) return q * (1 - ease((t - 8600) / 2400));
+  return 0;
 }
 
 function camDraw(){

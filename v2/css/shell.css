@@ -10,8 +10,10 @@
   text-decoration:none;white-space:nowrap}
 .bnav a:hover{color:#fff;text-decoration:underline;text-underline-offset:5px}
 .bnav a[aria-current="page"]{color:#fff;text-decoration:underline;text-underline-offset:5px}
-.bnav .cnt{font-family:var(--f-mono);font-size:11px;font-weight:500;color:#fff;background:rgba(255,255,255,.16);
-  border-radius:999px;padding:1px 7px;margin-left:4px;text-decoration:none}
+/* same yellow as the "Wheel Adapter Builder" kicker over the hero */
+.bnav .cnt{font-family:var(--f-mono);font-size:11px;font-weight:600;color:var(--warn);
+  background:rgba(242,194,48,.14);border:1px solid rgba(242,194,48,.55);
+  border-radius:999px;padding:0 7px;margin-left:4px;text-decoration:none}
 .sh-main{display:inline-flex;align-items:center;gap:7px;margin-left:auto;padding:9px 16px;border-radius:4px;
   border:1px solid rgba(255,255,255,.4);color:#fff;text-decoration:none;font-size:14.5px;letter-spacing:.04em;white-space:nowrap}
 .sh-main:hover{background:#fff;color:var(--navy)}
