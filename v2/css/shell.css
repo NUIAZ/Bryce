@@ -35,8 +35,8 @@
   color:#fff;overflow:hidden}
 .hero-stage{position:absolute;inset:0 0 0 34%;}
 /* the Bronson B behind the model, drawn like the grid lines; part of the backdrop, so it never turns */
-.hero-stage::before{content:"";position:absolute;inset:6% 4% 18%;pointer-events:none;opacity:.11;
-  background:url("../img/bronson-watermark.png") center/contain no-repeat}
+.hero-stage::before{content:"";position:absolute;inset:6% 42% 18% -6%;pointer-events:none;opacity:.099;
+  background:url("../img/bronson-watermark.png") left center/contain no-repeat}   /* floats left, toward the hero text */
 .hero-stage .cam{position:absolute;inset:0;border:0}
 .hero-stage .cam-vp{height:100%;max-height:none;aspect-ratio:auto;background:transparent}
 .hero-stage .cam-vp canvas{cursor:grab}
@@ -83,9 +83,13 @@
 .cat{display:flex;flex-direction:column;border:1px solid transparent;border-radius:19px;
   background:linear-gradient(var(--navy),var(--navy)) padding-box,
              linear-gradient(180deg,#fdf1c2 0,#fdf1c2 50%,#fff 50%) border-box;
-  padding:16px 16px 0;color:rgba(255,255,255,.75);text-decoration:none;overflow:hidden;
+  padding:16px 16px 0;
+  /* layered shadow: a tight contact shadow plus a long soft one, so the cards sit up off the page */
+  box-shadow:0 1px 2px rgba(5,12,40,.35),0 6px 12px rgba(5,12,40,.28),0 22px 44px rgba(8,16,52,.42),
+             inset 0 1px 0 rgba(255,255,255,.06)!important;color:rgba(255,255,255,.75);text-decoration:none;overflow:hidden;
   box-shadow:0 2px 6px rgba(14,27,77,.10),0 18px 40px rgba(14,27,77,.18);transition:transform .15s,box-shadow .15s}
-.cat:hover{transform:translateY(-3px);box-shadow:0 4px 10px rgba(14,27,77,.14),0 24px 50px rgba(14,27,77,.26)}
+.cat:hover{transform:translateY(-4px);box-shadow:0 2px 3px rgba(5,12,40,.35),0 10px 18px rgba(5,12,40,.3),
+  0 32px 60px rgba(8,16,52,.5),inset 0 1px 0 rgba(255,255,255,.06)!important}
 .cat:focus-visible{outline:3px solid var(--warn);outline-offset:3px}
 /* the top of each card sits over the navy hero: a light-yellow panel lifts it off */
 .cat-img{position:relative;aspect-ratio:4/3;background:#fff;border-radius:2px;overflow:hidden}
