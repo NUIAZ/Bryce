@@ -325,6 +325,7 @@ var CAM_FS_SOLID = [
   "uniform vec4 uL;   // A: shank r, -, socket r, socket depth · B: nut floor above joint, stud top z, nut half-flats, -",
   "uniform sampler2D uLogo;",
   "uniform vec4 uLg;  // engraving: centre angle, half-width (rad), height (in), on",
+  "uniform vec4 uRo;  // x: part on its edge (axis horizontal), without hub or wheel",
   "uniform vec4 uCap; // red plastic thread caps on the pressed studs (showcase only)",
   "uniform vec4 uThr; // thread pitch: wheel studs, vehicle studs, detail 0..1 (fades with distance), screws",
   "uniform vec4 uV;   // show hub half, show wheel half",
@@ -477,7 +478,7 @@ var CAM_FS_SOLID = [
   "  hh = sqrt(hh);",
   "  float t = max(-bb - hh, 0.0), tmax = -bb + hh;",
   "  /* the assembly lies along world X (axle horizontal); the part frame has Z on the axis */",
-  "  bool stk = uM.x > 0.5;",
+  "  bool stk = uM.x > 0.5 || uRo.x > 0.5;            // axle along world X: the stack, or the part on its edge",
   "  vec3 rp = stk ? ro.yzx : ro, dp = stk ? rd.yzx : rd;",
   "  vec2 m = vec2(1.0, 0.0); bool hit = false;",
   "  for (int i = 0; i < 220; i++){",
@@ -1057,6 +1058,7 @@ function camDraw(){
   if (!gl || !g) return;
   var dpr = Math.min(window.devicePixelRatio || 1, 1.5) * (c.dragging || c.playing || c.anim ? 0.65 : c.showcase ? 0.85 : 1);
   var stk = c.mode === "stack", SK = STACK_3D;
+  var rot = !stk && c.showcase && c.showStyle === "side";       /* open & close: part stood on its edge */
   var cw = cv.clientWidth, ch = cv.clientHeight;
   var w = Math.max(1, Math.round(cw * dpr)), h = Math.max(1, Math.round(ch * dpr));
   if (cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
@@ -1066,7 +1068,8 @@ function camDraw(){
   /* stack: part z runs along world x; frame the assembled stack */
   var es = c.sep * c.sep * (3 - 2 * c.sep);
   var sepOff = !stk && !g.one ? CAM_SEP_IN * es : 0;          /* CAM view: wheel half lifted */
-  var tgt = stk ? [(-g.T - 3.3 + 4.5) / 2, 0, 0] : [0, 0, (g.lipH - g.T + sepOff) / 2];
+  var tgt = stk ? [(-g.T - 3.3 + 4.5) / 2, 0, 0]
+          : rot ? [(g.lipH - g.T + sepOff) / 2, 0, 0] : [0, 0, (g.lipH - g.T + sepOff) / 2];
   var dist = c.dist * Math.max(1, h / w);            /* keep the part in frame when tall and narrow */
   var eye = [tgt[0] + dist * Math.cos(c.pitch) * Math.cos(c.yaw),
              tgt[1] + dist * Math.cos(c.pitch) * Math.sin(c.yaw),
@@ -1104,8 +1107,11 @@ function camDraw(){
     var zLo = -g.T - 3.5 - 1.6, zHi = 4.7 + 2.4 + 1.2;
     gl.uniform4f(u.uBd, (zLo + zHi) / 2, 0, 0,
       Math.sqrt(Math.pow(SK.rimR + 0.6, 2) + Math.pow((zHi - zLo) / 2, 2)));
-  } else gl.uniform4f(u.uBd, 0, 0, (zTop + zBot) / 2,
+  } else if (rot) gl.uniform4f(u.uBd, (zTop + zBot) / 2, 0, 0,
     Math.sqrt(Math.pow(g.R + g.so + 2, 2) + Math.pow((zTop - zBot) / 2, 2)));
+  else gl.uniform4f(u.uBd, 0, 0, (zTop + zBot) / 2,
+    Math.sqrt(Math.pow(g.R + g.so + 2, 2) + Math.pow((zTop - zBot) / 2, 2)));
+  gl.uniform4f(u.uRo, rot ? 1 : 0, 0, 0, 0);
   var ee = c.ex * c.ex * (3 - 2 * c.ex);
   gl.uniform4f(u.uM, stk ? 1 : 0, stk && c.cut ? 1 : 0, ee, SK.rimR);
   var dd = view === "home" && window.DEMO ? DEMO : design;
@@ -1151,10 +1157,12 @@ function camDraw(){
   gl.uniform1f(c.pl.u.uProg, done ? 2 : c.t / (c.total || 1));
   gl.uniform1f(c.pl.u.uSep, sepOff);
   gl.bindVertexArray(c.vaoL);
-  gl.depthFunc(gl.GREATER); gl.uniform1f(c.pl.u.uHide, 0.12);
-  gl.drawArrays(gl.LINES, 0, c.nLines);
-  gl.depthFunc(gl.LEQUAL); gl.uniform1f(c.pl.u.uHide, 1);
-  gl.drawArrays(gl.LINES, 0, c.nLines);
+  if (!rot){                                   /* the floor grid only makes sense with the part lying flat */
+    gl.depthFunc(gl.GREATER); gl.uniform1f(c.pl.u.uHide, 0.12);
+    gl.drawArrays(gl.LINES, 0, c.nLines);
+    gl.depthFunc(gl.LEQUAL); gl.uniform1f(c.pl.u.uHide, 1);
+    gl.drawArrays(gl.LINES, 0, c.nLines);
+  }
   gl.bindVertexArray(null);
 
   /* HTML overlays: axis labels, WCS tag, DRO */

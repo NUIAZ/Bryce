@@ -34,6 +34,9 @@
 .hero{position:relative;background:radial-gradient(120% 90% at 70% 40%,#22357f 0%,#14235f 45%,#0e1b4d 100%);
   color:#fff;overflow:hidden}
 .hero-stage{position:absolute;inset:0 0 0 34%;}
+/* the Bronson B behind the model, drawn like the grid lines; part of the backdrop, so it never turns */
+.hero-stage::before{content:"";position:absolute;inset:6% 4% 18%;pointer-events:none;opacity:.11;
+  background:url("../img/bronson-watermark.png") center/contain no-repeat}
 .hero-stage .cam{position:absolute;inset:0;border:0}
 .hero-stage .cam-vp{height:100%;max-height:none;aspect-ratio:auto;background:transparent}
 .hero-stage .cam-vp canvas{cursor:grab}
@@ -76,21 +79,21 @@
 .cats{position:relative;z-index:3;max-width:1180px;margin:-120px auto 0;padding:0 16px;
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 /* store collection cards (customwheeladapters.com): navy, white hairline, photo tile, bold white title */
-.cat{display:flex;flex-direction:column;background:var(--navy);border:1px solid #fff;border-radius:19px;
-  padding:0;color:rgba(255,255,255,.75);text-decoration:none;overflow:hidden;
+/* 1px outline: light yellow over the top half (where it meets the navy hero), white below */
+.cat{display:flex;flex-direction:column;border:1px solid transparent;border-radius:19px;
+  background:linear-gradient(var(--navy),var(--navy)) padding-box,
+             linear-gradient(180deg,#fdf1c2 0,#fdf1c2 50%,#fff 50%) border-box;
+  padding:16px 16px 0;color:rgba(255,255,255,.75);text-decoration:none;overflow:hidden;
   box-shadow:0 2px 6px rgba(14,27,77,.10),0 18px 40px rgba(14,27,77,.18);transition:transform .15s,box-shadow .15s}
 .cat:hover{transform:translateY(-3px);box-shadow:0 4px 10px rgba(14,27,77,.14),0 24px 50px rgba(14,27,77,.26)}
 .cat:focus-visible{outline:3px solid var(--warn);outline-offset:3px}
 /* the top of each card sits over the navy hero: a light-yellow panel lifts it off */
-.cat-img{position:relative;aspect-ratio:4/3;background:#fff;border-radius:2px;overflow:hidden;
-  border:16px solid #fdf1c2;border-bottom-width:16px;box-sizing:content-box;background-clip:padding-box}
-.cat-img::after{content:"";position:absolute;inset:0;pointer-events:none;
-  box-shadow:inset 0 0 0 1px rgba(214,165,18,.35)}
+.cat-img{position:relative;aspect-ratio:4/3;background:#fff;border-radius:2px;overflow:hidden}
 .cat-img img{display:block;width:100%;height:100%;object-fit:contain;transition:transform .35s ease}
 .cat:hover .cat-img img{transform:scale(1.04)}
 .cat-badge{position:absolute;right:10px;bottom:10px;background:var(--accent);color:#fff;font-size:13px;
   letter-spacing:.04em;padding:5px 12px;border-radius:0}
-.cat-body{display:flex;flex-direction:column;flex:1;padding:16px 22px 22px}
+.cat-body{display:flex;flex-direction:column;flex:1;padding:16px 6px 22px}
 .cat h2{display:flex;align-items:center;gap:10px;font-family:var(--f-disp);font-size:22px;font-weight:700;color:#fff;margin:0}
 .cat-arr{font-weight:400;transition:transform .2s}
 .cat:hover .cat-arr{transform:translateX(5px)}
@@ -215,3 +218,8 @@
 .bnav a[data-nav="admin"]{color:rgba(255,255,255,.55)}
 .pricing-full{margin-top:18px}
 .pricing-full .ptbl input{width:84px}
+/* New design and the builder have nothing in the shared container: drop its padding, keep a
+   modest gap to the footer */
+body[data-page="home"] .wrap,body[data-page="design"] .wrap{display:none}
+body[data-page="home"] .sf,body[data-page="design"] .sf{margin-top:0}
+.home{padding-bottom:48px}
