@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Adapter Designer &mdash; Wheel Adapters USA</title>
+  <title>Wheel Adapter Builder &ndash; Custom Wheel Adapters</title>
   <meta name="description" content="Prototype wheel adapter configurator: live scale drawing, validation rules, pricing and order pipeline.">
   <meta name="robots" content="noindex">
-  <meta name="color-scheme" content="light dark">
+  <meta name="color-scheme" content="light">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=Questrial&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
   <style>
     /* Baseline the artifact platform normally supplies. Keep this block. */
     :root {
@@ -22,33 +22,46 @@
     img { max-width: 100%; }
     [hidden] { display: none !important; }
   </style>
-  <script>
-    /* Saved theme choice, applied before first paint. No choice = follow the system. */
-    try { var wt = localStorage.getItem("wa-theme");
-          if (wt === "light" || wt === "dark") document.documentElement.setAttribute("data-theme", wt); } catch (e) {}
-  </script>
   <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
 <body>
 
-<div class="topbar">
-  <div class="topbar-in">
-    <div class="mark">
-      <img src="img/bronson-b.png" width="48" height="48" alt="Bronson">
-      <div>
-        <div class="wordmark">Wheel Adapters <em>USA</em></div>
-        <span>design.wheeladaptersusa.com</span>
-      </div>
+<header class="sh">
+  <div class="sh-in">
+    <button type="button" class="sh-burger" id="shburger" aria-label="Menu" aria-expanded="false">
+      <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><path d="M1 1h20M1 8h20M1 15h20" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
+    </button>
+    <a class="sh-logo" href="https://customwheeladapters.com/"><img src="img/bronson-b.png" width="50" height="50" alt="Custom Wheel Adapters"></a>
+    <nav class="sh-nav" id="shnav" aria-label="Store"></nav>
+    <div class="sh-icons">
+      <a href="https://customwheeladapters.com/search" aria-label="Search">
+        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="9.5" cy="9.5" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M14.6 14.6l5.4 5.4" stroke="currentColor" stroke-width="1.6"/></svg>
+      </a>
+      <a class="sh-acct" href="https://customwheeladapters.com/account/login" aria-label="Log in">
+        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 21c.8-4.4 4.2-7 8.5-7s7.7 2.6 8.5 7" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      </a>
+      <a href="https://customwheeladapters.com/cart" aria-label="Cart">
+        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 6.5h16l-1.2 12.2a1.6 1.6 0 0 1-1.6 1.3H5.8a1.6 1.6 0 0 1-1.6-1.3z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7.5 9V5.5a3.5 3.5 0 0 1 7 0V9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      </a>
     </div>
-    <nav class="tabs" aria-label="Sections">
-      <button type="button" data-view="design" aria-pressed="true">New design</button>
-      <button type="button" data-view="list" aria-pressed="false">My designs <b>6</b></button>
-      <button type="button" data-view="admin" aria-pressed="false" class="admin-tab">Admin</button>
-      <button type="button" data-view="help" aria-pressed="false">Help</button>
-    </nav>
-    <div class="ruleset" id="rulestamp">Rule set v1.0 · draft</div>
-    <button type="button" class="themetog" id="themetog" aria-label="Switch theme"></button>
+  </div>
+  <div class="sh-drawer" id="shdrawer" hidden></div>
+</header>
+
+<div class="pagehead">
+  <div class="pagehead-in">
+    <h1>Wheel Adapter Builder</h1>
+    <p class="lede">Design your adapter from your own measurements, see it to scale and in 3D, and get a price or a quote.</p>
+    <div class="subnav">
+      <nav class="tabs" aria-label="Builder sections">
+        <button type="button" data-view="design" aria-pressed="true">New design</button>
+        <button type="button" data-view="list" aria-pressed="false">My designs <b>6</b></button>
+        <button type="button" data-view="admin" aria-pressed="false" class="admin-tab">Admin</button>
+        <button type="button" data-view="help" aria-pressed="false">Help</button>
+      </nav>
+      <div class="ruleset" id="rulestamp">Rule set v1.0 · draft</div>
+    </div>
   </div>
 </div>
 
@@ -384,7 +397,7 @@
       <div class="cam" id="cam" hidden></div>
       <div class="legend">
         <span><i style="background:var(--cyan)"></i>Vehicle studs pass through</span>
-        <span><i style="background:var(--accent)"></i>Pressed wheel studs</span>
+        <span><i style="background:var(--stud)"></i>Pressed wheel studs</span>
         <span id="lgjoin" hidden><i style="background:#7b5cd6"></i>Joins the halves (concept)</span>
       </div>
       <div class="tb">
@@ -422,6 +435,48 @@
 
 </div>
 
+
+<footer class="sf">
+  <div class="sf-in">
+    <div class="sf-cols">
+      <div>
+        <h2>Contact Us</h2>
+        <p>Sales Team</p>
+        <p><a href="mailto:sales@bronson.group">sales@bronson.group</a></p>
+        <p><a href="tel:9098905544">(909) 890-5544</a></p>
+        <p>Customer Service</p>
+        <p><a href="mailto:sales@bronson.group">sales@bronson.group</a></p>
+      </div>
+      <div>
+        <h2>Info</h2>
+        <ul>
+          <li><a href="https://customwheeladapters.com/pages/about-us">About Us</a></li>
+          <li><a href="https://customwheeladapters.com/policies/terms-of-service">Terms of Service</a></li>
+          <li><a href="https://customwheeladapters.com/policies/refund-policy">Returns &amp; Refunds Policy</a></li>
+          <li><a href="https://customwheeladapters.com/pages/shipping-info">Shipping Info</a></li>
+          <li><a href="https://customwheeladapters.com/policies/privacy-policy">Privacy Policy</a></li>
+          <li><a href="https://customwheeladapters.com/pages/faq">FAQ</a></li>
+          <li><a href="https://customwheeladapters.com/pages/ccpa-opt-out">Do not sell my personal information</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Store Info</h2>
+        <p>Monday - Friday 8am - 3:30pm PST</p>
+        <p><b>Bronson Investments, Inc. DBA Custom Wheel Adapters</b></p>
+        <p><a href="https://goo.gl/maps/doaj7Wj7aerCM47Y7">367 E. Redlands Blvd. San Bernardino, CA 92408</a></p>
+      </div>
+    </div>
+    <div class="sf-social">
+      <a href="https://www.facebook.com/customwheeladapters" aria-label="Facebook"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.8c0-.9.3-1.5 1.6-1.5h1.7V4.4c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.4-4 4.1v2.4H7.7V14h2.7v8z"/></svg></a>
+      <a href="https://www.instagram.com/customwheelspacersusa" aria-label="Instagram"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.3" cy="6.7" r="1.2" fill="currentColor"/></svg></a>
+      <a href="https://www.tiktok.com/@customspacersusa" aria-label="TikTok"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.6 3c.4 2.2 1.8 3.6 4 3.8v3.3c-1.5 0-2.8-.4-4-1.2v6.1a5.9 5.9 0 1 1-5.9-5.9h.6v3.4a2.6 2.6 0 1 0 2 2.5V3z"/></svg></a>
+      <a href="https://www.youtube.com/channel/UC8FpU3VObyVtCtGmQ1mce7A" aria-label="YouTube"><svg width="22" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22.5 7.2a2.8 2.8 0 0 0-2-2C18.8 4.8 12 4.8 12 4.8s-6.8 0-8.5.4a2.8 2.8 0 0 0-2 2C1.1 8.9 1.1 12 1.1 12s0 3.1.4 4.8a2.8 2.8 0 0 0 2 2c1.7.4 8.5.4 8.5.4s6.8 0 8.5-.4a2.8 2.8 0 0 0 2-2c.4-1.7.4-4.8.4-4.8s0-3.1-.4-4.8zM9.8 15.1V8.9l5.6 3.1z"/></svg></a>
+    </div>
+    <div class="sf-base">&copy; 2026, <a href="https://customwheeladapters.com/">Custom Wheel Adapters</a></div>
+  </div>
+</footer>
+
+<script src="js/store.js"></script>
 <script src="js/data.js"></script>
 <script src="js/rules.js"></script>
 <script src="js/pricing.js"></script>

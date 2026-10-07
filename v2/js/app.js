@@ -1,4 +1,4 @@
-/* Adapter Designer v2 — Tour, measurement highlight, start over, theme switch, start-up.
+/* Adapter Designer v2 — Tour, measurement highlight, start over, start-up.
    Split from v1 index.html lines 3728-4008; load order matters (see index.html). */
 
 /* =====================================================================
@@ -245,35 +245,6 @@ function startOver(){
   if (c.on) camView(c.mode === "stack" ? "s-iso" : "iso");
   window.scrollTo(0, 0);
 }
-
-/* ---------------- theme switch ---------------- */
-function themeNow(){
-  var t = document.documentElement.getAttribute("data-theme");
-  if (t === "light" || t === "dark") return t;
-  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-function paintThemeBtn(){
-  var dark = themeNow() === "dark", b = el("themetog");
-  /* the button names the theme it switches TO */
-  b.innerHTML = dark
-    ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
-      '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>Light'
-    : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">' +
-      '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>Dark';
-  b.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
-}
-function setTheme(t){
-  document.documentElement.setAttribute("data-theme", t);
-  try { localStorage.setItem("wa-theme", t); } catch (e) {}
-  paintThemeBtn();
-  if (cam3d.on && cam3d.gl){ camBuild(); camKick(); }   /* the 3D view reads its colours from the tokens */
-}
-el("themetog").addEventListener("click", function(){ setTheme(themeNow() === "dark" ? "light" : "dark"); });
-if (window.matchMedia){
-  var tmq = window.matchMedia("(prefers-color-scheme: dark)");
-  if (tmq.addEventListener) tmq.addEventListener("change", paintThemeBtn); else if (tmq.addListener) tmq.addListener(paintThemeBtn);
-}
-paintThemeBtn();
 
 renderStages();
 renderDesigns();

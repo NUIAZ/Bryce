@@ -773,7 +773,7 @@ function camBuild(){
     v.push(a[0], a[1], a[2], col[0], col[1], col[2], col[3], dash ? 0.001 : 0, s0, h || 0,
            b[0], b[1], b[2], col[0], col[1], col[2], col[3], dash ? dash : 0, s1, h || 0);
   }
-  c.cols = {al:hexRgb("#b3bdc7"), src:hexRgb(cssVar("--cyan")), dst:hexRgb(cssVar("--accent")),
+  c.cols = {al:hexRgb("#b3bdc7"), src:hexRgb(cssVar("--cyan")), dst:hexRgb(cssVar("--stud")),
             tool:hexRgb("#d4a937"), hub:hexRgb("#6e7780"), whl:hexRgb("#8d969f"), nut:hexRgb("#c9ced3"),
             int:hexRgb("#7b5cd6"), neon:hexRgb(cssVar("--neon"))};
   if (c.mode === "stack"){

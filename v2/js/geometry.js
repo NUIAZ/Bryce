@@ -183,7 +183,7 @@ function stackSvg(d){
   var VEH = 'fill="var(--cyan-soft)" stroke="var(--cyan)" stroke-width="1.1"';
   var BODY = 'fill="url(#hatch2)" stroke="var(--ink)" stroke-width="1.2"';
   var VOID = 'fill="var(--paper)" stroke="var(--ink)" stroke-width=".8"';
-  var RED = 'fill="var(--accent)" stroke="var(--ink)" stroke-width=".6"';
+  var RED = 'fill="var(--stud)" stroke="var(--ink)" stroke-width=".6"';
   var WHL = 'fill="var(--line-2)" fill-opacity=".55" stroke="var(--ink)" stroke-width=".9"';
   var NUT = 'fill="var(--steel-2)" stroke="var(--ink)" stroke-width=".7"';
 
@@ -341,7 +341,7 @@ function faceSvg(d, compact){
       ang = (-90 + clockOf(d).off + j * 360 / dst.lugs) * Math.PI / 180;
       s2.push('<circle cx="' + (c + dst.bcd / 2 * cs * Math.cos(ang)).toFixed(1) +
         '" cy="' + (c + dst.bcd / 2 * cs * Math.sin(ang)).toFixed(1) +
-        '" r="2.6" fill="var(--accent)"/>');
+        '" r="2.6" fill="var(--stud)"/>');
     }
     s2.push("</svg>");
     return s2.join("");
@@ -378,7 +378,7 @@ function faceSvg(d, compact){
   s.push('<circle class="hl-src" cx="' + cx + '" cy="' + cy + '" r="' + (src.bcd / 2 * S).toFixed(1) +
          '" fill="none" stroke="var(--cyan)" stroke-width=".9" stroke-dasharray="4 4" opacity=".85"/>');
   s.push('<circle class="hl-dst" cx="' + cx + '" cy="' + cy + '" r="' + (dst.bcd / 2 * S).toFixed(1) +
-         '" fill="none" stroke="var(--accent)" stroke-width=".9" stroke-dasharray="4 4" opacity=".85"/>');
+         '" fill="none" stroke="var(--stud)" stroke-width=".9" stroke-dasharray="4 4" opacity=".85"/>');
 
   /* centre bore */
   /* centring lip (wheel bore), then the hub bore inside it */
@@ -403,7 +403,7 @@ function faceSvg(d, compact){
     x = cx + dst.bcd / 2 * S * Math.cos(a);
     y = cy + dst.bcd / 2 * S * Math.sin(a);
     s.push('<circle class="hl-dst" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + dstStudR.toFixed(1) +
-           '" fill="var(--accent)" stroke="var(--ink)" stroke-width=".8"/>');
+           '" fill="var(--stud)" stroke="var(--ink)" stroke-width=".8"/>');
   }
 
   /* two-piece: how the halves join — concept for shop review, in violet */
@@ -440,7 +440,7 @@ function faceSvg(d, compact){
   var py = cy - ph / 2;
   s.push('<rect class="hl-thick" x="' + (px - tw / 2) + '" y="' + py + '" width="' + tw + '" height="' + ph +
          '" fill="url(#hatch)" stroke="var(--ink)" stroke-width="1.3"/>');
-  s.push('<g stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round">');
+  s.push('<g stroke="var(--stud)" stroke-width="2.4" stroke-linecap="round">');
   s.push('<line x1="' + (px + tw / 2) + '" y1="' + (py + 12) + '" x2="' + (px + tw / 2 + 13) + '" y2="' + (py + 12) + '"/>');
   s.push('<line x1="' + (px + tw / 2) + '" y1="' + (py + ph - 12) + '" x2="' + (px + tw / 2 + 13) + '" y2="' + (py + ph - 12) + '"/>');
   s.push('</g>');

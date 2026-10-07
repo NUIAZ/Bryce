@@ -1,141 +1,143 @@
 /* ==========================================================
-   BRAND TOKENS — swap these four to match the real logo.
-   --accent   primary action + wheel-side studs   (flag red)
-   --navy     headers, active states              (deep steel navy)
-   --cyan     vehicle-side drawing lines          (must stay distinct from accent)
-   --paper    page ground
+   BRAND TOKENS — matched to customwheeladapters.com (same business) so the
+   builder reads as one more page of the store. Light only: no theme switch.
+   --navy     store header / footer / headings     #0e1b4d
+   --accent   store buttons and links              #4770db
+   --stud     pressed wheel studs in the drawings  (red: it is a part colour)
+   --cyan     vehicle-side drawing lines
+   --paper    store page ground                    #eff0f5
    ========================================================== */
 :root{
   color-scheme: light;
-  --accent:#bf1e2e;
-  --accent-ink:#8d1421;
-  --accent-soft:#fae9ea;
-  --navy:#132435;
-  --ink:#132435;
-  --paper:#eef1f4;
+  --accent:#4770db;
+  --accent-ink:#2f55b8;
+  --accent-soft:#e7edfb;
+  --stud:#bf1e2e;
+  --navy:#0e1b4d;
+  --ink:#0e1b4d;
+  --paper:#eff0f5;
   --card:#ffffff;
-  --line:#d3dae1;
-  --line-2:#bcc6cf;
-  --steel:#5a6a78;
-  --steel-2:#8895a2;
+  --line:#d9dce8;
+  --line-2:#c2c7d8;
+  --steel:#5a6283;
+  --steel-2:#8a90aa;
   --cyan:#1d6f86;
   --cyan-soft:#e2eef2;
-  --sel:#2f80d0;              /* selected / pressed / current: light blue, not red */
+  --sel:#2f80d0;              /* selected / pressed / current: light blue */
   --sel-soft:#e4f0fc;
   --sel-ink:#1b5c9e;
   --sel-on-ink:#8cc4f5;       /* on the dark ink background of the current step */
-  --warn:#f2c230;             /* start over: yellow to stand out, navy text to stay readable */
+  --warn:#f2c230;             /* start over / play / join: yellow, navy text */
   --warn-edge:#d6a512;
-  --warn-ink:#132435;
+  --warn-ink:#0e1b4d;
   --warn-glow:rgba(242,194,48,.55);
   --neon:#12c444;             /* "which part is this measurement?" highlight */
   --flag:#bf1e2e;
   --flag-soft:#fae9ea;
   --go:#2f6b4b;
   --go-soft:#e4f0ea;
-  --grid:#e1e6eb;
-  --cam-top:#e8edf2;
-  --cam-bot:#c3ced9;
-  --cam-ink:#132435;
-  --cam-panel:rgba(255,255,255,.8);
-  --shadow:0 1px 2px rgba(19,36,53,.07),0 4px 14px rgba(19,36,53,.06);
-  --f-disp:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
-  --f-body:"Barlow",system-ui,-apple-system,sans-serif;
+  --grid:#e2e4ee;
+  --cam-top:#e9ebf3;
+  --cam-bot:#c6cbdc;
+  --cam-ink:#0e1b4d;
+  --cam-panel:rgba(255,255,255,.82);
+  --shadow:0 1px 2px rgba(14,27,77,.07),0 4px 14px rgba(14,27,77,.06);
+  --f-disp:"Archivo",system-ui,sans-serif;
+  --f-body:"Questrial",system-ui,-apple-system,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    color-scheme: dark;
-    --accent:#e8505f;
-    --accent-ink:#f28791;
-    --accent-soft:#3a1519;
-    --navy:#0d1926;
-    --ink:#e6ecf2;
-    --paper:#0d1926;
-    --card:#152435;
-    --line:#26384c;
-    --line-2:#354a61;
-    --steel:#93a3b3;
-    --steel-2:#6a7d90;
-    --cyan:#4fa8c4;
-    --cyan-soft:#102934;
-    --sel:#5aaaf0;
-    --sel-soft:#132c45;
-    --sel-ink:#9ccdf7;
-    --sel-on-ink:#1b5c9e;
-    --warn:#e8bd3a;
-    --warn-edge:#f5d266;
-    --warn-ink:#0d1926;
-    --warn-glow:rgba(232,189,58,.5);
-    --neon:#39ff6e;
-    --flag:#e8505f;
-    --flag-soft:#3a1519;
-    --go:#6aab86;
-    --go-soft:#152a20;
-    --grid:#1b2b3c;
-    --cam-top:#1f3247;
-    --cam-bot:#09121b;
-    --cam-ink:#e6ecf2;
-    --cam-panel:rgba(9,18,27,.72);
-    --shadow:0 1px 2px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35);
-  }
-}
-:root[data-theme="dark"]{
-  color-scheme: dark;
-  --accent:#e8505f; --accent-ink:#f28791; --accent-soft:#3a1519;
-  --navy:#0d1926; --ink:#e6ecf2; --paper:#0d1926; --card:#152435;
-  --line:#26384c; --line-2:#354a61; --steel:#93a3b3; --steel-2:#6a7d90;
-  --cyan:#4fa8c4; --cyan-soft:#102934;
-  --sel:#5aaaf0; --sel-soft:#132c45; --sel-ink:#9ccdf7; --sel-on-ink:#1b5c9e;
-  --warn:#e8bd3a; --warn-edge:#f5d266; --warn-ink:#0d1926; --warn-glow:rgba(232,189,58,.5);
-  --neon:#39ff6e; --flag:#e8505f; --flag-soft:#3a1519;
-  --go:#6aab86; --go-soft:#152a20; --grid:#1b2b3c;
-  --cam-top:#1f3247; --cam-bot:#09121b; --cam-ink:#e6ecf2; --cam-panel:rgba(9,18,27,.72);
-  --shadow:0 1px 2px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
 body{
   margin:0;background:var(--paper);color:var(--ink);
-  font-family:var(--f-body);font-size:15px;line-height:1.55;
+  font-family:var(--f-body);font-size:15px;line-height:1.55;letter-spacing:.02em;
   -webkit-font-smoothing:antialiased;
 }
-h1,h2,h3{font-family:var(--f-disp);font-weight:600;text-wrap:balance;margin:0;letter-spacing:.005em}
+h1,h2,h3{font-family:var(--f-disp);font-weight:700;text-wrap:balance;margin:0;letter-spacing:.005em}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 .eyebrow{
   font-family:var(--f-disp);font-size:12px;font-weight:600;letter-spacing:.14em;
   text-transform:uppercase;color:var(--steel);
 }
 
-/* ---------- shell ---------- */
-.topbar{
-  position:sticky;top:env(safe-area-inset-top,0px);z-index:40;
-  background:var(--navy);border-bottom:3px solid var(--accent);
+/* ---------- store header (as customwheeladapters.com) ---------- */
+.sh{position:relative;z-index:40;background:var(--navy);color:rgba(255,255,255,.75)}
+.sh-in{max-width:1400px;margin:0 auto;min-height:96px;padding:4px 52px;display:flex;align-items:center;gap:28px}
+.sh-logo{flex:none;display:block}
+.sh-logo img{display:block;width:50px;height:50px}
+.sh-nav{flex:1;min-width:0}
+.sh-list{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;align-items:center}
+.sh-list>li{position:relative}
+.sh-top{display:flex;align-items:center;gap:8px;padding:12px 14px 12px 12px;cursor:pointer;list-style:none;
+  font-size:14.7px;letter-spacing:.04em;color:rgba(255,255,255,.75);text-decoration:none;white-space:nowrap}
+.sh-top::-webkit-details-marker{display:none}
+.sh-top:hover{color:#fff;text-decoration:underline;text-underline-offset:4px}
+.sh-here{color:#fff;text-decoration:underline;text-underline-offset:4px}
+.sh-chev{flex:none;transition:transform .15s}
+details[open]>summary .sh-chev{transform:rotate(180deg)}
+.sh-dd[open]>.sh-top{color:#fff}
+.sh-panel{position:absolute;left:0;top:100%;z-index:50;min-width:240px;max-height:70vh;overflow:auto;
+  display:flex;gap:28px;padding:18px 22px;background:var(--navy);border:1px solid rgba(255,255,255,.12);
+  border-radius:0 0 6px 6px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+/* the big menus flow as newspaper columns, so a long list never leaves a hole */
+.sh-panel.wide{display:block;width:min(1020px,calc(100vw - 80px));column-width:210px;column-gap:28px}
+.sh-col{min-width:170px}
+.sh-panel.wide .sh-col{break-inside:avoid;display:inline-block;width:100%;margin-bottom:16px}
+.sh-col ul{list-style:none;margin:0;padding:0}
+.sh-colh{margin:0 0 6px;color:#fff;font-size:14px;letter-spacing:.04em}
+.sh-col a{display:block;padding:4px 0;font-size:13.6px;color:rgba(255,255,255,.75);text-decoration:none}
+.sh-col a:hover{color:#fff;text-decoration:underline}
+.sh-col a.sh-strong{color:#fff}
+.sh-icons{display:flex;align-items:center;gap:4px;margin-left:auto}
+.sh-icons a,.sh-burger{display:grid;place-items:center;width:44px;height:44px;color:#fff;background:none;border:0;
+  border-radius:50%;cursor:pointer}
+.sh-icons a:hover,.sh-burger:hover{transform:scale(1.07)}
+.sh-icons svg,.sh-burger svg{display:block}
+.sh-burger{display:none}
+.sh a:focus-visible,.sh summary:focus-visible,.sh button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.sh-drawer{background:var(--navy);border-top:1px solid rgba(255,255,255,.12);padding:8px 16px 18px}
+.sh-dr-top,.sh-dr-sub,.sh-dr-link{display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+  list-style:none;color:#fff;text-decoration:none;padding:12px 4px;font-size:16px;letter-spacing:.04em}
+.sh-dr-top::-webkit-details-marker,.sh-dr-sub::-webkit-details-marker{display:none}
+.sh-dr-sub{font-size:15px;padding-left:14px;color:rgba(255,255,255,.85)}
+.sh-dr-link{font-size:14.5px;padding:8px 4px 8px 14px;color:rgba(255,255,255,.75)}
+.sh-dr.sh-sub .sh-dr-link{padding-left:30px}
+.sh-dr>summary~*{animation:none}
+@media (max-width:989px){
+  .sh-in{min-height:70px;padding:2px 16px;gap:8px;justify-content:space-between}
+  .sh-nav{display:none}
+  .sh-burger{display:grid}
+  .sh-logo{position:absolute;left:50%;transform:translateX(-50%)}
+  .sh-icons{margin-left:0}
+  .sh-icons .sh-acct{display:none}
 }
-.topbar-in{
-  max-width:1180px;margin:0 auto;padding:11px 16px;
-  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-}
-/* ---- LOGO SLOT: drop the real mark in here as an <img> data URI ---- */
-.mark{display:flex;align-items:center;gap:10px;min-width:0;color:#fff}
-.mark svg,.mark img{flex:none;display:block}
-.mark img{height:48px;width:auto;max-width:190px}   /* Bronson B: big enough to read the script */
-.wordmark{font-family:var(--f-disp);font-size:20px;font-weight:700;line-height:1;
-  letter-spacing:.015em;text-transform:uppercase;color:#fff;white-space:nowrap}
-.wordmark em{font-style:normal;color:var(--accent-ink)}
-:root:not([data-theme="light"]) .wordmark em{color:#ff8a93}
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .wordmark em{color:#ff5c69}}
-.mark span{display:block;font-family:var(--f-mono);font-size:10.5px;
-  color:rgba(255,255,255,.62);letter-spacing:.02em;margin-top:2px}
-.ruleset{
-  margin-left:auto;font-family:var(--f-mono);font-size:11px;color:rgba(255,255,255,.72);
-  border:1px solid rgba(255,255,255,.26);border-radius:999px;padding:3px 10px;white-space:nowrap;
-}
-.themetog{display:inline-flex;align-items:center;gap:6px;flex:none;margin-left:8px;cursor:pointer;
-  font-family:var(--f-mono);font-size:11px;color:rgba(255,255,255,.85);background:transparent;
-  border:1px solid rgba(255,255,255,.26);border-radius:999px;padding:3px 10px 3px 8px;white-space:nowrap}
-.themetog:hover{background:rgba(255,255,255,.1)}
-.themetog:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.themetog svg{display:block}
+
+/* ---------- page head: title + the builder's own sections ---------- */
+.pagehead-in{max-width:1180px;margin:0 auto;padding:34px 16px 0}
+.pagehead h1{font-family:var(--f-disp);font-weight:700;font-size:clamp(30px,5vw,52px);line-height:1.08;
+  letter-spacing:.012em;text-transform:uppercase;color:var(--navy)}
+.pagehead .lede{margin:10px 0 0;max-width:62ch;font-size:16px;color:rgba(14,27,77,.75)}
+.subnav{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:20px;
+  border-bottom:1px solid var(--line)}
+.ruleset{margin-left:auto;font-family:var(--f-mono);font-size:11px;color:var(--steel);
+  border:1px solid var(--line-2);border-radius:999px;padding:3px 10px;white-space:nowrap}
+
+/* ---------- store footer ---------- */
+.sf{background:var(--navy);color:rgba(239,240,245,.75);margin-top:40px}
+.sf-in{max-width:1180px;margin:0 auto;padding:56px 16px 24px}
+.sf-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+@media (max-width:760px){.sf-cols{grid-template-columns:1fr}}
+.sf h2{font-family:var(--f-disp);font-size:20px;font-weight:700;color:#fff;margin:0 0 18px}
+.sf p{margin:0 0 14px;font-size:16px}
+.sf a{color:rgba(239,240,245,.75)}
+.sf a:hover{color:#fff}
+.sf ul{list-style:none;margin:0;padding:0}
+.sf li{margin:0 0 10px;font-size:14.5px}
+.sf li a{text-decoration:none}
+.sf li a:hover{text-decoration:underline}
+.sf b{color:rgba(239,240,245,.85)}
+.sf-social{display:flex;justify-content:center;gap:22px;margin:30px 0 10px}
+.sf-social a{display:block;color:#fff}
+.sf-base{border-top:1px solid rgba(255,255,255,.1);margin-top:26px;padding-top:22px;text-align:center;font-size:12px}
 .wrap{max-width:1180px;margin:0 auto;padding:0 16px;padding-block:22px 64px}
 
 /* ---------- step rail ---------- */
@@ -309,28 +311,23 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
 .aud-when{font-size:11.5px;color:var(--steel-2);min-width:88px}
 .aud-who{font-family:var(--f-disp);font-size:14px;font-weight:600;min-width:80px}
 .aud-what{flex:1;min-width:200px;font-size:13px;color:var(--steel)}
-.admin-tab{border-color:rgba(255,255,255,.22)!important}
+.admin-tab{color:var(--steel)!important}
 
-/* ---------- tabs ---------- */
-.tabs{display:flex;gap:2px;margin-left:8px}
+/* ---------- builder sections (under the page title) ---------- */
+.tabs{display:flex;gap:2px;flex-wrap:wrap}
 .tabs button{
-  font-family:var(--f-disp);font-size:14.5px;font-weight:600;letter-spacing:.03em;
-  padding:7px 13px;border-radius:6px;cursor:pointer;border:1px solid transparent;
-  background:transparent;color:rgba(255,255,255,.66);white-space:nowrap;
+  font-family:var(--f-body);font-size:15px;letter-spacing:.04em;
+  padding:10px 14px 11px;cursor:pointer;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
+  background:transparent;color:rgba(14,27,77,.7);white-space:nowrap;
 }
-.tabs button b{font-family:var(--f-mono);font-size:11px;font-weight:500;
-  background:rgba(255,255,255,.16);border-radius:999px;padding:1px 6px;margin-left:5px}
-.tabs button[aria-pressed="true"]{background:rgba(255,255,255,.12);color:#fff}
+.tabs button:hover{color:var(--navy)}
+.tabs button b{font-family:var(--f-mono);font-size:11px;font-weight:500;color:var(--steel);
+  background:var(--card);border:1px solid var(--line);border-radius:999px;padding:1px 6px;margin-left:5px}
+.tabs button[aria-pressed="true"]{color:var(--navy);border-bottom-color:var(--accent)}
 .tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-/* Four tabs do not fit a phone in one row — give them their own line and tighten up. */
 @media (max-width:620px){
-  .tabs{width:100%;margin:2px 0 0;flex-wrap:wrap}
-  .tabs button{padding:6px 9px;font-size:13.5px}
-  .tabs button b{margin-left:4px;padding:1px 5px}
-  .ruleset{margin-left:0;order:3}
-  /* keep the theme switch top right, on the logo's row */
-  .themetog{order:1;margin-left:auto}
-  .tabs{order:2}
+  .tabs button{padding:9px 10px 10px;font-size:14px}
+  .ruleset{display:none}
 }
 
 /* ---------- submissions ---------- */
@@ -437,13 +434,13 @@ input.mini{width:72px;flex:none;padding:5px 7px;font-size:13px}
 .chk b{font-family:var(--f-disp);font-size:15px;font-weight:600;letter-spacing:.02em;display:block}
 .chk code{font-family:var(--f-mono);font-size:12px;color:inherit;opacity:.72}
 .chk.block{background:var(--flag-soft);border-color:var(--flag);color:var(--flag)}
-.chk.flag{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.chk.flag{background:#fdf6e1;border-color:#d6a512;color:#8a6400}
 .chk.ok{background:var(--go-soft);border-color:var(--go);color:var(--go)}
 .chk .body{min-width:0}
 .chk .body p{margin:2px 0 0;color:var(--ink);opacity:.86}
 
 /* ---------- drawing ---------- */
-.draw{position:sticky;top:calc(env(safe-area-inset-top,0px) + 68px)}
+.draw{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
 @media (max-width:900px){.draw{position:relative;top:auto;order:-1}}
 .draw.is3d{position:relative;top:auto}
 /* "which part is this measurement?" — neon green on the drawing, any view */
