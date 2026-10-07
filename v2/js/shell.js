@@ -140,6 +140,22 @@ function buildDots(){
   }).join("");
 }
 buildDots();
+
+/* "From $X" on the cards, straight from the price table, so the two never disagree */
+function paintCardPrices(){
+  function low(kinds){
+    var m = Infinity;
+    kinds.forEach(function(k){ PRICE_LUGS.forEach(function(L){ PRICING.table[k][L].forEach(function(v){ if (v !== null && v < m) m = v; }); }); });
+    return m;
+  }
+  var map = {adapter:low(["one", "two"]), spacer:low(["spacer"])};
+  var ps = document.querySelectorAll("[data-from]");
+  for (var i = 0; i < ps.length; i++){
+    var v = map[ps[i].getAttribute("data-from")];
+    ps[i].innerHTML = "<small>From</small>$" + v.toFixed(2) + " USD";
+  }
+}
+paintCardPrices();
 document.addEventListener("click", function(e){
   var b = e.target.closest ? e.target.closest("[data-slide]") : null;
   if (!b) return;

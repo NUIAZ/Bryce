@@ -319,6 +319,7 @@ var CAM_FS_SOLID = [
   "uniform vec4 uJ;   // join kind (0 none, 1 screws, 2 stacked), count, radius, a0",
   "uniform vec4 uK;   // A: clear r, head r, head h, tap r · B: hole r, stud r, head r, pocket r",
   "uniform vec4 uL;   // A: shank r, -, socket r, socket depth · B: nut floor above joint, stud top z, nut half-flats, -",
+  "uniform vec4 uCap; // red plastic thread caps on the pressed studs (showcase only)",
   "uniform vec4 uThr; // thread pitch: wheel studs, vehicle studs, detail 0..1 (fades with distance), screws",
   "uniform vec4 uV;   // show hub half, show wheel half",
   "uniform vec4 uG;   // highlighted feature: 0 none, 1 vehicle holes, 2 hub bore, 3 wheel studs, 4 lip, 5 thickness",
@@ -407,6 +408,11 @@ var CAM_FS_SOLID = [
   "      add(res, min(fa, fb), 9.0);",
   "      add(res, fi, 10.0);",
   "    }",
+  "    if (uCap.x > 0.5 && (uP.x < 0.5 || uV.y > 0.5)){    // shipping cap: rounded red sleeve over each stud tip",
+  "      float cr = uD.z * 1.18, rb = cr * 0.75, ch = 0.3, cz = uE.z - 0.2;   // slim sleeve, domed top",
+  "      vec2 cq = vec2(length(w.xy) - cr + rb, abs(w.z - cz) - ch + rb);",
+  "      add(res, min(max(cq.x, cq.y), 0.0) + length(max(cq, 0.0)) - rb, 11.0);",
+  "    }",
   "  }",
   "  if (uTm.y > 0.5){",
   "    vec3 t = p - uTl.xyz; t.z *= uTm.x;",
@@ -481,7 +487,7 @@ var CAM_FS_SOLID = [
   "  vec3 base = id < 0.5 ? uCAl : id < 1.5 ? mix(uCAl, uCSrc, 0.6) : id < 2.5 ? uCDst : id < 3.5 ? uCTool :",
   "              id < 4.5 ? uCHub : id < 5.5 ? uCSrc : id < 6.5 ? uCWhl : id < 7.5 ? uCNut :",
   "              id < 8.5 ? uCAl * 0.965 :                  // wheel half: the same billet, a shade apart",
-  "              id < 9.5 ? uCScr : uCInt;                   // black-oxide screws · in-between studs",
+  "              id < 9.5 ? uCScr : id < 10.5 ? uCInt : vec3(0.80, 0.06, 0.07);   // screws · in-between studs · red caps",
   "  vec3 L1 = normalize(-rd + vec3(0.0, 0.0, 0.5));",
   "  vec3 L2 = normalize(vec3(-0.5, 0.4, 0.8));",
   "  float dif = max(dot(nw, L1), 0.0) * 0.65 + max(dot(nw, L2), 0.0) * 0.35;",
@@ -1087,6 +1093,7 @@ function camDraw(){
   var foot = dist * 2 * Math.tan(0.3) / h;                 /* inches per pixel at the target */
   var detail = Math.max(0, Math.min(1, (Math.min(pW, pV) * 0.9 - foot) / (Math.min(pW, pV) * 0.5)));
   gl.uniform4f(u.uThr, pW, pV, detail, JOIN_A.pitch);
+  gl.uniform4f(u.uCap, c.showcase && !stk ? 1 : 0, 0, 0, 0);
   gl.uniform3fv(u.uCAl, c.cols.al); gl.uniform3fv(u.uCSrc, c.cols.src);
   gl.uniform3fv(u.uCDst, c.cols.dst); gl.uniform3fv(u.uCTool, c.cols.tool);
   gl.uniform3fv(u.uCHub, c.cols.hub); gl.uniform3fv(u.uCWhl, c.cols.whl); gl.uniform3fv(u.uCNut, c.cols.nut); gl.uniform3fv(u.uCInt, c.cols.int);
