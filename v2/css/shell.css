@@ -77,16 +77,20 @@
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 /* store collection cards (customwheeladapters.com): navy, white hairline, photo tile, bold white title */
 .cat{display:flex;flex-direction:column;background:var(--navy);border:1px solid #fff;border-radius:19px;
-  padding:16px;color:rgba(255,255,255,.75);text-decoration:none;overflow:hidden;
+  padding:0;color:rgba(255,255,255,.75);text-decoration:none;overflow:hidden;
   box-shadow:0 2px 6px rgba(14,27,77,.10),0 18px 40px rgba(14,27,77,.18);transition:transform .15s,box-shadow .15s}
 .cat:hover{transform:translateY(-3px);box-shadow:0 4px 10px rgba(14,27,77,.14),0 24px 50px rgba(14,27,77,.26)}
 .cat:focus-visible{outline:3px solid var(--warn);outline-offset:3px}
-.cat-img{position:relative;aspect-ratio:4/3;background:#fff;border-radius:2px;overflow:hidden}
+/* the top of each card sits over the navy hero: a light-yellow panel lifts it off */
+.cat-img{position:relative;aspect-ratio:4/3;background:#fff;border-radius:2px;overflow:hidden;
+  border:16px solid #fdf1c2;border-bottom-width:16px;box-sizing:content-box;background-clip:padding-box}
+.cat-img::after{content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(214,165,18,.35)}
 .cat-img img{display:block;width:100%;height:100%;object-fit:contain;transition:transform .35s ease}
 .cat:hover .cat-img img{transform:scale(1.04)}
 .cat-badge{position:absolute;right:10px;bottom:10px;background:var(--accent);color:#fff;font-size:13px;
   letter-spacing:.04em;padding:5px 12px;border-radius:0}
-.cat-body{display:flex;flex-direction:column;flex:1;padding:16px 6px 4px}
+.cat-body{display:flex;flex-direction:column;flex:1;padding:16px 22px 22px}
 .cat h2{display:flex;align-items:center;gap:10px;font-family:var(--f-disp);font-size:22px;font-weight:700;color:#fff;margin:0}
 .cat-arr{font-weight:400;transition:transform .2s}
 .cat:hover .cat-arr{transform:translateX(5px)}
