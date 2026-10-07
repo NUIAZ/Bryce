@@ -382,7 +382,7 @@ var CAM_FS_SOLID = [
   "      vec3 jb = vec3(polar(pb.xy, uJ.y, uJ.w) - vec2(uJ.z, 0.0), pb.z);",
   "      if (uJ.x > 0.5 && uJ.x < 1.5){",
   "        /* A: black flat-head hex-socket screws, 90° countersunk flush in the wheel half, tapped into the hub half */",
-  "        a = max(a, -cyl(jq, uK.w, J - 0.6, J + 1.0));",
+  "        a = max(a, -cyl(jq, uK.w + thr(jq, uThr.w), J - 0.6, J + 1.0));   // tapped hole, internal thread",
   "        float rcs = uL.x + (uK.y - uL.x) * clamp((jb.z + uK.z) / uK.z, 0.0, 1.0);",
   "        float csk = max(length(jb.xy) - rcs, -uK.z - jb.z);",
   "        bw = max(bw, -min(cyl(jb, uK.x, -T - 1.0, 1.0), csk));",
@@ -952,7 +952,13 @@ function camFrame(now){
   if (c.showcase){
     var dsh = c.lastSh ? Math.min(100, now - c.lastSh) : 16;
     c.lastSh = now;
-    if (!c.dragging && now > (c.showHold || 0)) c.yaw -= dsh * 0.00026;
+    if (!c.dragging && now > (c.showHold || 0)){
+      c.yaw -= dsh * 0.00026;
+      /* and tilt: from looking down on the wheel face to looking up at the hub face */
+      c.shPh = (c.shPh || 0) + dsh * 0.00032;
+      var want = 0.22 + 0.78 * Math.sin(c.shPh);
+      c.pitch += (want - c.pitch) * Math.min(1, dsh * 0.004);    /* eases back in after a drag */
+    }
     c.shT = (c.shT || 0) + dsh;
     if (c.shT > 3800){ c.shT = 0; c.sepT = c.sepT ? 0 : 1; }
     camKick();

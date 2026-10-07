@@ -56,7 +56,8 @@ function joinPlan(d){
 
   /* A: one ring of screws just outside the lug pockets and stud heads */
   var rA = Math.max(rs + h.lugR, rd + h.headR) + W + JA.headD / 2;
-  var A = {kind:"A", n:JA.n, r:rA, a0:Math.PI / 2 - Math.PI / JA.n,
+  /* one screw at 12 o'clock, so the half-section on the truck cuts through it */
+  var A = {kind:"A", n:JA.n, r:rA, a0:Math.PI / 2,
            R:Math.max(base, rA + JA.headD / 2 + 0.12), needT:halfMin + 0.5};
 
   /* B: search for an in-between pattern (same thread as the vehicle) that clears
