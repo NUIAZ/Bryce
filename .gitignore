@@ -10,3 +10,11 @@ CLAUDE.md
 *.zip
 guide/
 *.docx
+
+# PDFs (guides, personal forms like I-9) stay local
+*.pdf
+# reference photos
+*.jpeg
+measurelugs.jpg
+# local plan
+V2-PLAN.md
